@@ -76,26 +76,26 @@ import static org.powermock.api.mockito.PowerMockito.when;
     assertThat(integration.useHTTPS).isTrue();
   }
 
-  //@Test public void initialize() throws IllegalStateException {
-  //  integration = new ComScoreIntegration(analytics, new ValueMap() //
-  //      .putValue("customerC2", "foobarbar")
-  //      .putValue("publisherSecret", "illnevertell")
-  //      .putValue("appName", "testApp")
-  //      .putValue("useHTTPS", true)
-  //      .putValue("autoUpdateInterval", 2000)
-  //      .putValue("autoUpdateMode", "foreground"));
-  //
-  //  verifyStatic();
-  //  comScore.setAppContext(analytics.getApplication());
-  //  verifyStatic();
-  //  comScore.setCustomerC2("foobarbar");
-  //  verifyStatic();
-  //  comScore.setPublisherSecret("illnevertell");
-  //  verifyStatic();
-  //  comScore.setAppName("testApp");
-  //  verifyStatic();
-  //  comScore.setSecure(true);
-  //  verifyStatic();
-  //  comScore.enableAutoUpdate(2000, true);
-  //}
+  @Test public void initializeWithAutoUpdateMode() throws IllegalStateException {
+    integration = new ComScoreIntegration(analytics, new ValueMap() //
+        .putValue("customerC2", "foobarbar")
+        .putValue("publisherSecret", "illnevertell")
+        .putValue("appName", "testApp")
+        .putValue("useHTTPS", true)
+        .putValue("autoUpdateInterval", 2000)
+        .putValue("autoUpdateMode", "foreground"));
+
+    verifyStatic();
+    comScore.setAppContext(analytics.getApplication());
+    verifyStatic();
+    comScore.setCustomerC2("foobarbar");
+    verifyStatic();
+    comScore.setPublisherSecret("illnevertell");
+    verifyStatic();
+    comScore.setAppName("testApp");
+    verifyStatic();
+    comScore.setSecure(true);
+    verifyStatic();
+    comScore.enableAutoUpdate(2000, true);
+  }
 }
