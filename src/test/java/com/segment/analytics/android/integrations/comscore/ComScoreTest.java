@@ -5,11 +5,14 @@ import android.app.Application;
 import com.comscore.analytics.comScore;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.Properties;
+import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.Logger;
+import com.segment.analytics.test.IdentifyPayloadBuilder;
 import com.segment.analytics.test.TrackPayloadBuilder;
 import java.util.HashMap;
 import java.util.Map;
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -23,6 +26,7 @@ import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.annotation.Config;
 
 import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
+import static com.segment.analytics.Utils.createTraits;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
@@ -108,11 +112,40 @@ import static org.powermock.api.mockito.PowerMockito.when;
   }
 
   @Test public void trackWithProps() {
-    integration.track(new TrackPayloadBuilder().event("foo").properties(new Properties().putValue(20.0)).build());
+    integration.track(new TrackPayloadBuilder() //
+        .event("Completed Order")
+        .properties(new Properties()
+            .putValue(20.0)
+            .putValue("product","Ukelele")
+        ).build());
 
-    Properties expected = new Properties().putValue("name", "foo").putValue("value", "20.0");
+    Properties expected = new Properties() //
+        .putValue("name", "Completed Order")
+        .putValue("value", "20.0")
+        .putValue("product", "Ukelele");
+
     Map<String, String> properties = expected.toStringMap();
     verifyStatic();
     comScore.hidden((HashMap<String, String>) properties);
+  }
+
+  @Test public void identify() throws JSONException {
+    Traits traits = createTraits("foo") //
+        .putValue("anonymousId", "foobar")
+        .putValue("firstName", "Kylo")
+        .putValue("lastName", "Ren");
+
+    integration.identify(new IdentifyPayloadBuilder().traits(traits).build());
+
+    Traits expected = new Traits();
+    expected.put("anonymousId", "foobar");
+    expected.put("firstname", "Kylo");
+    expected.put("lastname", "Ren");
+    expected.put("userId", "foo");
+    
+    Map<String, String> attributes = expected.toStringMap();
+
+    verifyStatic();
+    comScore.setLabels((HashMap<String, String>) attributes);
   }
 }

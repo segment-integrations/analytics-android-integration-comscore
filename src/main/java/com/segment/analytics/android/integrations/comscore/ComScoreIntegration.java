@@ -67,7 +67,9 @@ public class ComScoreIntegration extends Integration<comScore> {
 
   @Override public void identify(IdentifyPayload identify) {
     super.identify(identify);
+    String userId = identify.userId();
     Map<String, String> traits = new ValueMap(identify.traits()).toStringMap();
+    traits.put("userId", userId);
     HashMap<String, String> hashMapTraits = new HashMap<>(traits);
     comScore.setLabels(hashMapTraits);
     logger.verbose("comScore.setLabels(%s)", hashMapTraits);
