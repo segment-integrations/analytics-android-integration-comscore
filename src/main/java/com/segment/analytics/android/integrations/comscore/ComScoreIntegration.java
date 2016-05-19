@@ -7,7 +7,7 @@ import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
 
 
-public class ComScoreIntegration extends Integration<Void> {
+public class ComScoreIntegration extends Integration<comScore> {
   public static final Factory FACTORY = new Factory() {
     @Override public Integration<?> create(ValueMap settings, Analytics analytics) {
       return new ComScoreIntegration(analytics, settings);
@@ -17,15 +17,39 @@ public class ComScoreIntegration extends Integration<Void> {
       return COMSCORE_KEY;
     }
   };
+
   private static final String COMSCORE_KEY = "ComScore";
-  private final Logger logger;
+  final Logger logger;
+  String customerC2;
+  String publisherSecret;
+  String appName;
+  boolean useHTTPS;
+  int autoUpdateInterval;
+  String autoUpdateMode;
 
   ComScoreIntegration(Analytics analytics, ValueMap settings) {
     logger = analytics.logger(COMSCORE_KEY);
+    customerC2 = settings.getString("customerC2");
+    publisherSecret = settings.getString("publisherSecret");
+    appName = settings.getString("appName");
+    useHTTPS = settings.getBoolean("useHTTPS", true);
+    autoUpdateInterval = settings.getInt("autoUpdateInterval", 60);
+    autoUpdateMode = settings.getString("autoUpdateMode");
 
     comScore.setAppContext(analytics.getApplication());
-
-    String customerC2 = settings.getString("customerC2");
+    logger.verbose("comScore.setAppContext(analytics.getApplication())");
     comScore.setCustomerC2(customerC2);
+    comScore.setPublisherSecret(publisherSecret);
+    comScore.setAppName(appName);
+    comScore.setSecure(useHTTPS);
+    if (autoUpdateMode != null) {
+      if (autoUpdateMode.equals("foreground")) {
+        comScore.enableAutoUpdate(autoUpdateInterval, true);
+      } else if (autoUpdateMode.equals("background")) {
+        comScore.enableAutoUpdate(autoUpdateInterval, false);
+      } else {
+        comScore.disableAutoUpdate();
+      }
+    }
   }
 }
