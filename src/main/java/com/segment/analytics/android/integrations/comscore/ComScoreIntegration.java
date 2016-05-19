@@ -3,9 +3,12 @@ package com.segment.analytics.android.integrations.comscore;
 import com.comscore.analytics.comScore;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.ValueMap;
+import com.segment.analytics.integrations.IdentifyPayload;
 import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
-
+import com.segment.analytics.integrations.TrackPayload;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ComScoreIntegration extends Integration<comScore> {
   public static final Factory FACTORY = new Factory() {
@@ -52,4 +55,22 @@ public class ComScoreIntegration extends Integration<comScore> {
       }
     }
   }
+
+  @Override public void track(TrackPayload track) {
+    String name = track.event();
+    Map<String, String> properties = track.properties().toStringMap();
+    properties.put("name", name);
+    HashMap<String, String> hashMapProps = new HashMap<>(properties);
+    comScore.hidden(hashMapProps);
+    logger.verbose("comScore.hidden(%s)", hashMapProps);
+  }
+
+  @Override public void identify(IdentifyPayload identify) {
+    super.identify(identify);
+    Map<String, String> traits = new ValueMap(identify.traits()).toStringMap();
+    HashMap<String, String> hashMapTraits = new HashMap<>(traits);
+    comScore.setLabels(hashMapTraits);
+    logger.verbose("comScore.setLabels(%s)", hashMapTraits);
+  }
+
 }

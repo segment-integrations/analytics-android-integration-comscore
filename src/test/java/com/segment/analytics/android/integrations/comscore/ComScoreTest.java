@@ -4,15 +4,18 @@ package com.segment.analytics.android.integrations.comscore;
 import android.app.Application;
 import com.comscore.analytics.comScore;
 import com.segment.analytics.Analytics;
+import com.segment.analytics.Properties;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.Logger;
+import com.segment.analytics.test.TrackPayloadBuilder;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
@@ -20,13 +23,8 @@ import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.annotation.Config;
 
 import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
-import static com.segment.analytics.Utils.createContext;
-import static com.segment.analytics.Utils.createTraits;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Matchers.eq;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -97,5 +95,24 @@ import static org.powermock.api.mockito.PowerMockito.when;
     comScore.setSecure(true);
     verifyStatic();
     comScore.enableAutoUpdate(2000, true);
+  }
+
+
+  @Test public void track() {
+    integration.track(new TrackPayloadBuilder().event("foo").build());
+
+    Properties expected = new Properties().putValue("name", "foo");
+    Map<String, String> properties = expected.toStringMap();
+    verifyStatic();
+    comScore.hidden((HashMap<String, String>) properties);
+  }
+
+  @Test public void trackWithProps() {
+    integration.track(new TrackPayloadBuilder().event("foo").properties(new Properties().putValue(20.0)).build());
+
+    Properties expected = new Properties().putValue("name", "foo").putValue("value", "20.0");
+    Map<String, String> properties = expected.toStringMap();
+    verifyStatic();
+    comScore.hidden((HashMap<String, String>) properties);
   }
 }
