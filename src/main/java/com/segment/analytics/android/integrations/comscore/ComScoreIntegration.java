@@ -8,7 +8,6 @@ import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.TrackPayload;
 import java.util.HashMap;
-import java.util.Map;
 
 public class ComScoreIntegration extends Integration<comScore> {
   public static final Factory FACTORY = new Factory() {
@@ -58,21 +57,19 @@ public class ComScoreIntegration extends Integration<comScore> {
 
   @Override public void track(TrackPayload track) {
     String name = track.event();
-    Map<String, String> properties = track.properties().toStringMap();
+    HashMap<String, String> properties = (HashMap<String, String>) track.properties().toStringMap();
     properties.put("name", name);
-    HashMap<String, String> hashMapProps = new HashMap<>(properties);
-    comScore.hidden(hashMapProps);
-    logger.verbose("comScore.hidden(%s)", hashMapProps);
+    comScore.hidden(properties);
+    logger.verbose("comScore.hidden(%s)", properties);
   }
 
   @Override public void identify(IdentifyPayload identify) {
     super.identify(identify);
     String userId = identify.userId();
-    Map<String, String> traits = new ValueMap(identify.traits()).toStringMap();
+    HashMap<String, String> traits = (HashMap<String, String>) identify.traits().toStringMap();
     traits.put("userId", userId);
-    HashMap<String, String> hashMapTraits = new HashMap<>(traits);
-    comScore.setLabels(hashMapTraits);
-    logger.verbose("comScore.setLabels(%s)", hashMapTraits);
+    comScore.setLabels(traits);
+    logger.verbose("comScore.setLabels(%s)", traits);
   }
 
 }

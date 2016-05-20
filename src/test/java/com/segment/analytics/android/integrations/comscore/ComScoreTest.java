@@ -119,14 +119,13 @@ import static org.powermock.api.mockito.PowerMockito.when;
             .putValue("product","Ukelele")
         ).build());
 
-    Properties expected = new Properties() //
-        .putValue("name", "Completed Order")
-        .putValue("value", "20.0")
-        .putValue("product", "Ukelele");
+    HashMap<String, String> expected = new HashMap<>();
+    expected.put("name", "Completed Order");
+    expected.put("value", "20.0");
+    expected.put("product", "Ukelele");
 
-    Map<String, String> properties = expected.toStringMap();
     verifyStatic();
-    comScore.hidden((HashMap<String, String>) properties);
+    comScore.hidden(expected);
   }
 
   @Test public void identify() throws JSONException {
@@ -137,15 +136,13 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
     integration.identify(new IdentifyPayloadBuilder().traits(traits).build());
 
-    Traits expected = new Traits();
+    HashMap<String, String> expected = new HashMap<>();
     expected.put("anonymousId", "foobar");
     expected.put("firstname", "Kylo");
     expected.put("lastname", "Ren");
     expected.put("userId", "foo");
-    
-    Map<String, String> attributes = expected.toStringMap();
 
     verifyStatic();
-    comScore.setLabels((HashMap<String, String>) attributes);
+    comScore.setLabels(expected);
   }
 }
