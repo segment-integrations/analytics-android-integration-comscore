@@ -11,6 +11,7 @@ import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.test.IdentifyPayloadBuilder;
 import com.segment.analytics.test.TrackPayloadBuilder;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.json.JSONException;
 import org.junit.Before;
@@ -119,7 +120,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
             .putValue("product","Ukelele")
         ).build());
 
-    HashMap<String, String> expected = new HashMap<>();
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("name", "Completed Order");
     expected.put("value", "20.0");
     expected.put("product", "Ukelele");
@@ -136,10 +137,10 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
     integration.identify(new IdentifyPayloadBuilder().traits(traits).build());
 
-    HashMap<String, String> expected = new HashMap<>();
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("anonymousId", "foobar");
-    expected.put("firstname", "Kylo");
-    expected.put("lastname", "Ren");
+    expected.put("firstName", "Kylo");
+    expected.put("lastName", "Ren");
     expected.put("userId", "foo");
 
     verifyStatic();
