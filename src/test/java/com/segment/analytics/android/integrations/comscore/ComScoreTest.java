@@ -59,7 +59,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
   @Test public void factory() {
     ValueMap settings = new ValueMap() //
-        .putValue("customerC2", "foobarbar").putValue("publisherSecret", "illnevertell");
+        .putValue("c2", "foobarbar").putValue("publisherSecret", "illnevertell");
     integration =
         (ComScoreIntegration) ComScoreIntegration.FACTORY.create(settings, analytics);
     verifyStatic();
@@ -69,7 +69,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
   @Test public void initializeWithDefaultArguments() {
     ValueMap settings = new ValueMap() //
-        .putValue("customerC2", "foobarbar")
+        .putValue("c2", "foobarbar")
         .putValue("publisherSecret", "illnevertell")
         .putValue("setSecure", true);
     ComScoreIntegration integration =
@@ -82,7 +82,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
   @Test public void initializeWithAutoUpdateMode() throws IllegalStateException {
     integration = new ComScoreIntegration(analytics, new ValueMap() //
-        .putValue("customerC2", "foobarbar")
+        .putValue("c2", "foobarbar")
         .putValue("publisherSecret", "illnevertell")
         .putValue("appName", "testApp")
         .putValue("useHTTPS", true)

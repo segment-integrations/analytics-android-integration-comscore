@@ -33,7 +33,7 @@ public class ComScoreIntegration extends Integration<comScore> {
 
   ComScoreIntegration(Analytics analytics, ValueMap settings) {
     logger = analytics.logger(COMSCORE_KEY);
-    customerC2 = settings.getString("customerC2");
+    customerC2 = settings.getString("c2");
     publisherSecret = settings.getString("publisherSecret");
     appName = settings.getString("appName");
     useHTTPS = settings.getBoolean("useHTTPS", true);
