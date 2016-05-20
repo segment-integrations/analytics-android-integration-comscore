@@ -28,7 +28,8 @@ public class ComScoreIntegration extends Integration<comScore> {
   String appName;
   boolean useHTTPS;
   int autoUpdateInterval;
-  String autoUpdateMode;
+  boolean autoUpdate;
+  boolean foregroundOnly;
 
   ComScoreIntegration(Analytics analytics, ValueMap settings) {
     logger = analytics.logger(COMSCORE_KEY);
@@ -37,7 +38,8 @@ public class ComScoreIntegration extends Integration<comScore> {
     appName = settings.getString("appName");
     useHTTPS = settings.getBoolean("useHTTPS", true);
     autoUpdateInterval = settings.getInt("autoUpdateInterval", 60);
-    autoUpdateMode = settings.getString("autoUpdateMode");
+    autoUpdate = settings.getBoolean("autoUpdate", false);
+    foregroundOnly = settings.getBoolean("foregroundOnly", true);
 
     comScore.setAppContext(analytics.getApplication());
     logger.verbose("comScore.setAppContext(analytics.getApplication())");
@@ -45,13 +47,11 @@ public class ComScoreIntegration extends Integration<comScore> {
     comScore.setPublisherSecret(publisherSecret);
     comScore.setAppName(appName);
     comScore.setSecure(useHTTPS);
-    if (autoUpdateMode != null) {
-      if (autoUpdateMode.equals("foreground")) {
+    if (autoUpdate) {
+      if (foregroundOnly) {
         comScore.enableAutoUpdate(autoUpdateInterval, true);
-      } else if (autoUpdateMode.equals("background")) {
-        comScore.enableAutoUpdate(autoUpdateInterval, false);
       } else {
-        comScore.disableAutoUpdate();
+        comScore.enableAutoUpdate(autoUpdateInterval, false);
       }
     }
   }

@@ -87,7 +87,8 @@ import static org.powermock.api.mockito.PowerMockito.when;
         .putValue("appName", "testApp")
         .putValue("useHTTPS", true)
         .putValue("autoUpdateInterval", 2000)
-        .putValue("autoUpdateMode", "foreground"));
+        .putValue("autoUpdate", true)
+        .putValue("foregroundOnly", true));
 
     verifyStatic();
     comScore.setAppContext(analytics.getApplication());
