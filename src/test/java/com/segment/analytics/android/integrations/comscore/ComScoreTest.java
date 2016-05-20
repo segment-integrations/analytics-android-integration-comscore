@@ -9,6 +9,7 @@ import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.test.IdentifyPayloadBuilder;
+import com.segment.analytics.test.ScreenPayloadBuilder;
 import com.segment.analytics.test.TrackPayloadBuilder;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -145,5 +146,16 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
     verifyStatic();
     comScore.setLabels(expected);
+  }
+
+  @Test public void screen() {
+    integration.screen(new ScreenPayloadBuilder().name("SmartWatches").category("Purchase Screen").build());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("name", "SmartWatches");
+    expected.put("category", "Purchase Screen");
+
+    verifyStatic();
+    comScore.view(expected);
   }
 }

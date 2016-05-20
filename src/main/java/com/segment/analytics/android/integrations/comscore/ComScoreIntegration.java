@@ -6,6 +6,7 @@ import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.IdentifyPayload;
 import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
+import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
 import java.util.HashMap;
 
@@ -70,6 +71,18 @@ public class ComScoreIntegration extends Integration<comScore> {
     traits.put("userId", userId);
     comScore.setLabels(traits);
     logger.verbose("comScore.setLabels(%s)", traits);
+  }
+
+  @Override public void screen(ScreenPayload screen) {
+    String name = screen.name();
+    String category = screen.category();
+    HashMap<String, String> properties = (HashMap<String, String>) //
+        screen.properties().toStringMap();
+    properties.put("name", name);
+    properties.put("category", category);
+
+    comScore.view(properties);
+    logger.verbose("comScore.hidden(%s)", properties);
   }
 
 }
