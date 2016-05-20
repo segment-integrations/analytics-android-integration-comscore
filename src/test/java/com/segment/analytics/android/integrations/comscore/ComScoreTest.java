@@ -5,11 +5,15 @@ import android.app.Application;
 import com.comscore.analytics.comScore;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.Properties;
+import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.Logger;
+import com.segment.analytics.test.IdentifyPayloadBuilder;
 import com.segment.analytics.test.TrackPayloadBuilder;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -23,6 +27,7 @@ import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.annotation.Config;
 
 import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
+import static com.segment.analytics.Utils.createTraits;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
@@ -108,11 +113,37 @@ import static org.powermock.api.mockito.PowerMockito.when;
   }
 
   @Test public void trackWithProps() {
-    integration.track(new TrackPayloadBuilder().event("foo").properties(new Properties().putValue(20.0)).build());
+    integration.track(new TrackPayloadBuilder() //
+        .event("Completed Order")
+        .properties(new Properties()
+            .putValue(20.0)
+            .putValue("product","Ukelele")
+        ).build());
 
-    Properties expected = new Properties().putValue("name", "foo").putValue("value", "20.0");
-    Map<String, String> properties = expected.toStringMap();
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("name", "Completed Order");
+    expected.put("value", "20.0");
+    expected.put("product", "Ukelele");
+
     verifyStatic();
-    comScore.hidden((HashMap<String, String>) properties);
+    comScore.hidden(expected);
+  }
+
+  @Test public void identify() throws JSONException {
+    Traits traits = createTraits("foo") //
+        .putValue("anonymousId", "foobar")
+        .putValue("firstName", "Kylo")
+        .putValue("lastName", "Ren");
+
+    integration.identify(new IdentifyPayloadBuilder().traits(traits).build());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("anonymousId", "foobar");
+    expected.put("firstName", "Kylo");
+    expected.put("lastName", "Ren");
+    expected.put("userId", "foo");
+
+    verifyStatic();
+    comScore.setLabels(expected);
   }
 }
