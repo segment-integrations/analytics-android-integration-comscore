@@ -21,7 +21,7 @@ public class ComScoreIntegration extends Integration<comScore> {
     }
   };
 
-  private static final String COMSCORE_KEY = "ComScore";
+  private static final String COMSCORE_KEY = "comScore";
   final Logger logger;
   String customerC2;
   String publisherSecret;
