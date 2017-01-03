@@ -4,7 +4,37 @@ analytics-android-integration-comscore
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.segment.analytics.android.integrations/comscore/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.segment.analytics.android.integrations/comscore)
 [![Javadocs](http://javadoc-badge.appspot.com/com.segment.analytics.android.integrations/comscore.svg?label=javadoc)](http://javadoc-badge.appspot.com/com.segment.analytics.android.integrations/comscore)
 
-Flurry integration for [analytics-android](https://github.com/segmentio/analytics-android).
+comScore integration for [analytics-android](https://github.com/segmentio/analytics-android).
+
+
+## Installation
+
+To install the Segment-comScore integration, simply add this line to your gradle file:
+
+
+```
+compile 'com.segment.analytics.android.integrations:comscore:1.0.2'
+```
+
+## Usage
+
+After adding the dependency, you must register the integration with our SDK.  To do this, import the comScore integration:
+
+
+```
+import com.segment.analytics.android.integrations.comscore.ComScoreIntegration;
+
+```
+
+And add the following line:
+
+```
+ analytics = new Analytics.Builder(this, "write_key")
+                .use(ComScoreIntegration.FACTORY)
+                .build();
+```
+
+Please see [our documentation](https://segment.com/docs/integrations/comscore/#mobile) for more information.
 
 ## License
 
