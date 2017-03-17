@@ -1,6 +1,7 @@
 package com.segment.analytics.android.integrations.comscore;
 
-import com.comscore.analytics.comScore;
+import com.comscore.PublisherConfiguration;
+import com.comscore.UsagePropertiesAutoUpdateMode;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.IdentifyPayload;
@@ -41,26 +42,27 @@ public class ComScoreIntegration extends Integration<comScore> {
     autoUpdate = settings.getBoolean("autoUpdate", false);
     foregroundOnly = settings.getBoolean("foregroundOnly", true);
 
-    comScore.setAppContext(analytics.getApplication());
-    logger.verbose("comScore.setAppContext(analytics.getApplication())");
-    comScore.setCustomerC2(customerC2);
-    comScore.setPublisherSecret(publisherSecret);
-    comScore.setAppName(appName);
-    comScore.setSecure(useHTTPS);
-    if (autoUpdate) {
-      if (foregroundOnly) {
-        comScore.enableAutoUpdate(autoUpdateInterval, true);
-      } else {
-        comScore.enableAutoUpdate(autoUpdateInterval, false);
-      }
-    }
+
+
+
+    PublisherConfiguration myPublisherConfig = new PublisherConfiguration.Builder()
+            .publisherId(customerC2)
+            .publisherSecret(publisherSecret)
+            .usagePropertiesAutoUpdateInterval(autoUpdateInterval)
+            // how do I set usagePropertiesAutoUpdateMode to ForegroundOnly, ForegroundAndBackground, or Disabled
+            .usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.DISABLED)
+            .build();
+    com.comscore.Analytics.getConfiguration().addClient(myPublisherConfig);
+    // unsure as to why getApplicationContext isn't found
+    com.comscore.Analytics.start(this.getApplicationContext());
   }
 
   @Override public void track(TrackPayload track) {
     String name = track.event();
     HashMap<String, String> properties = (HashMap<String, String>) track.properties().toStringMap();
     properties.put("name", name);
-    comScore.hidden(properties);
+    com.comscore.Analytics.notifyHiddenEvent(properties);
+    // comScore.hidden(properties);
     logger.verbose("comScore.hidden(%s)", properties);
   }
 
@@ -69,8 +71,8 @@ public class ComScoreIntegration extends Integration<comScore> {
     String userId = identify.userId();
     HashMap<String, String> traits = (HashMap<String, String>) identify.traits().toStringMap();
     traits.put("userId", userId);
-    comScore.setLabels(traits);
-    logger.verbose("comScore.setLabels(%s)", traits);
+    com.comscore.Analytics.getConfiguration().setPersistentLabels(traits);
+    logger.verbose("comScore.setPersistentLabels(%s)", traits);
   }
 
   @Override public void screen(ScreenPayload screen) {
@@ -81,8 +83,9 @@ public class ComScoreIntegration extends Integration<comScore> {
     properties.put("name", name);
     properties.put("category", category);
 
-    comScore.view(properties);
-    logger.verbose("comScore.hidden(%s)", properties);
+    // comScore.view(properties);
+    com.comscore.Analytics.notifyViewEvent(properties);
+    logger.verbose("comScore.notifyViewEvent(%s)", properties);
   }
 
 }

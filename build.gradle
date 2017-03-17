@@ -33,6 +33,14 @@ checkstyle {
   configFile rootProject.file('gradle/checkstyle.xml')
 }
 
+allprojects {
+  repositories {
+    maven {
+      url "https://comscore.bintray.com/Analytics"
+    }
+  }
+}
+
 dependencies {
   repositories {
     mavenCentral()
@@ -40,7 +48,7 @@ dependencies {
 
   provided 'com.segment.analytics.android:analytics:4.0.0'
 
-  compile files('libs/comscore.jar')
+  compile "com.comscore:android-analytics:5.+"
 
   testCompile 'junit:junit:4.12'
   testCompile('org.robolectric:robolectric:3.0') {
