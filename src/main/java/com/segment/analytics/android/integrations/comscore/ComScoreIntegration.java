@@ -1,5 +1,6 @@
 package com.segment.analytics.android.integrations.comscore;
 
+import com.comscore.Analytics;
 import com.comscore.PublisherConfiguration;
 import com.comscore.UsagePropertiesAutoUpdateMode;
 import com.segment.analytics.ValueMap;
@@ -60,15 +61,15 @@ public class ComScoreIntegration extends Integration<Void> {
 
       PublisherConfiguration myPublisherConfig = builder.build();
 
-      com.comscore.Analytics.getConfiguration().addClient(myPublisherConfig);
-      com.comscore.Analytics.start(analytics.getApplication());
+      Analytics.getConfiguration().addClient(myPublisherConfig);
+      Analytics.start(analytics.getApplication());
   }
 
   @Override public void track(TrackPayload track) {
     String name = track.event();
     HashMap<String, String> properties = (HashMap<String, String>) track.properties().toStringMap();
     properties.put("name", name);
-      com.comscore.Analytics.notifyHiddenEvent(properties);
+      Analytics.notifyHiddenEvent(properties);
     logger.verbose("Analytics.hidden(%s)", properties);
   }
 
@@ -77,7 +78,7 @@ public class ComScoreIntegration extends Integration<Void> {
     String userId = identify.userId();
     HashMap<String, String> traits = (HashMap<String, String>) identify.traits().toStringMap();
     traits.put("userId", userId);
-      com.comscore.Analytics.getConfiguration().setPersistentLabels(traits);
+      Analytics.getConfiguration().setPersistentLabels(traits);
     logger.verbose("Analytics.setPersistentLabels(%s)", traits);
   }
 
@@ -89,7 +90,7 @@ public class ComScoreIntegration extends Integration<Void> {
     properties.put("name", name);
     properties.put("category", category);
 
-      com.comscore.Analytics.notifyViewEvent(properties);
+      Analytics.notifyViewEvent(properties);
     logger.verbose("Analytics.notifyViewEvent(%s)", properties);
   }
 

@@ -2,8 +2,11 @@ package com.segment.analytics.android.integrations.comscore;
 
 
 import android.app.Application;
-import com.comscore.analytics.comScore;
-import com.segment.analytics.Analytics;
+import android.app.usage.UsageStatsManager;
+
+import com.comscore.PublisherConfiguration;
+import com.comscore.UsagePropertiesAutoUpdateMode;
+import com.comscore.Analytics;
 import com.segment.analytics.Properties;
 import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
@@ -38,23 +41,24 @@ import static org.powermock.api.mockito.PowerMockito.when;
 @RunWith(RobolectricGradleTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
 @PowerMockIgnore({ "org.mockito.*", "org.robolectric.*", "android.*" })
-@PrepareForTest(comScore.class) public class ComScoreTest {
+@PrepareForTest(Analytics.class) public class ComScoreTest {
 
   @Rule public PowerMockRule rule = new PowerMockRule();
   @Mock Application context;
   Logger logger;
-  @Mock Analytics analytics;
+  @Mock
+  com.segment.analytics.Analytics analytics;
   ComScoreIntegration integration;
-  @Mock comScore Comscore;
+  @Mock Analytics Comscore;
 
   @Before public void setUp() {
     initMocks(this);
-    mockStatic(comScore.class);
-    logger = Logger.with(Analytics.LogLevel.DEBUG);
+    mockStatic(Analytics.class);
+    logger = Logger.with(com.segment.analytics.Analytics.LogLevel.DEBUG);
     when(analytics.logger("ComScore")).thenReturn(Logger.with(VERBOSE));
     when(analytics.getApplication()).thenReturn(context);
     integration = new ComScoreIntegration(analytics, new ValueMap().putValue("customerC2", "foobarbar").putValue("publisherSecret", "illnevertell"));
-    mockStatic(comScore.class);
+    mockStatic(Analytics.class);
   }
 
   @Test public void factory() {
@@ -90,18 +94,17 @@ import static org.powermock.api.mockito.PowerMockito.when;
         .putValue("autoUpdate", true)
         .putValue("foregroundOnly", true));
 
+    PublisherConfiguration.Builder builder = new PublisherConfiguration.Builder();
     verifyStatic();
-    comScore.setAppContext(analytics.getApplication());
+    builder.publisherId("foobarbar");
     verifyStatic();
-    comScore.setCustomerC2("foobarbar");
+    builder.publisherSecret("illnevertell");
     verifyStatic();
-    comScore.setPublisherSecret("illnevertell");
+    builder.applicationName("testApp");
     verifyStatic();
-    comScore.setAppName("testApp");
+    builder.secureTransmission(true);
     verifyStatic();
-    comScore.setSecure(true);
-    verifyStatic();
-    comScore.enableAutoUpdate(2000, true);
+    builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
   }
 
 
@@ -111,7 +114,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
     Properties expected = new Properties().putValue("name", "foo");
     Map<String, String> properties = expected.toStringMap();
     verifyStatic();
-    comScore.hidden((HashMap<String, String>) properties);
+    Analytics.notifyHiddenEvent((HashMap<String, String>) properties);
   }
 
   @Test public void trackWithProps() {
@@ -128,7 +131,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
     expected.put("product", "Ukelele");
 
     verifyStatic();
-    comScore.hidden(expected);
+    Analytics.notifyHiddenEvent(expected);
   }
 
   @Test public void identify() throws JSONException {
@@ -146,7 +149,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
     expected.put("userId", "foo");
 
     verifyStatic();
-    comScore.setLabels(expected);
+      Analytics.getConfiguration().setPersistentLabels(expected);
   }
 
   @Test public void screen() {
@@ -157,6 +160,6 @@ import static org.powermock.api.mockito.PowerMockito.when;
     expected.put("category", "Purchase Screen");
 
     verifyStatic();
-    comScore.view(expected);
+      Analytics.notifyViewEvent(expected);
   }
 }
