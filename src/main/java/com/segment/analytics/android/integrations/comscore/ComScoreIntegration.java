@@ -2,18 +2,18 @@ package com.segment.analytics.android.integrations.comscore;
 
 import com.comscore.PublisherConfiguration;
 import com.comscore.UsagePropertiesAutoUpdateMode;
-import com.segment.analytics.Analytics;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.IdentifyPayload;
 import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
+
 import java.util.HashMap;
 
-public class ComScoreIntegration extends Integration<comScore> {
+public class ComScoreIntegration extends Integration<Void> {
   public static final Factory FACTORY = new Factory() {
-    @Override public Integration<?> create(ValueMap settings, Analytics analytics) {
+    @Override public Integration<?> create(ValueMap settings, com.segment.analytics.Analytics analytics) {
       return new ComScoreIntegration(analytics, settings);
     }
 
@@ -32,7 +32,8 @@ public class ComScoreIntegration extends Integration<comScore> {
   boolean autoUpdate;
   boolean foregroundOnly;
 
-  ComScoreIntegration(Analytics analytics, ValueMap settings) {
+
+    ComScoreIntegration(com.segment.analytics.Analytics analytics, ValueMap settings) {
     logger = analytics.logger(COMSCORE_KEY);
     customerC2 = settings.getString("c2");
     publisherSecret = settings.getString("publisherSecret");
@@ -42,28 +43,33 @@ public class ComScoreIntegration extends Integration<comScore> {
     autoUpdate = settings.getBoolean("autoUpdate", false);
     foregroundOnly = settings.getBoolean("foregroundOnly", true);
 
+        PublisherConfiguration.Builder builder = new PublisherConfiguration.Builder();
+        builder.publisherId(customerC2);
+        builder.publisherSecret(publisherSecret);
+        builder.applicationName(appName);
+        builder.secureTransmission(useHTTPS);
+        builder.usagePropertiesAutoUpdateInterval(autoUpdateInterval);
 
+        if (autoUpdate) {
+          builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
+      } else if (foregroundOnly) {
+          builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.FOREGROUND_ONLY);
+      } else {
+          builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.DISABLED);
+      }
 
+      PublisherConfiguration myPublisherConfig = builder.build();
 
-    PublisherConfiguration myPublisherConfig = new PublisherConfiguration.Builder()
-            .publisherId(customerC2)
-            .publisherSecret(publisherSecret)
-            .usagePropertiesAutoUpdateInterval(autoUpdateInterval)
-            // how do I set usagePropertiesAutoUpdateMode to ForegroundOnly, ForegroundAndBackground, or Disabled
-            .usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.DISABLED)
-            .build();
-    com.comscore.Analytics.getConfiguration().addClient(myPublisherConfig);
-    // unsure as to why getApplicationContext isn't found
-    com.comscore.Analytics.start(this.getApplicationContext());
+      com.comscore.Analytics.getConfiguration().addClient(myPublisherConfig);
+      com.comscore.Analytics.start(analytics.getApplication());
   }
 
   @Override public void track(TrackPayload track) {
     String name = track.event();
     HashMap<String, String> properties = (HashMap<String, String>) track.properties().toStringMap();
     properties.put("name", name);
-    com.comscore.Analytics.notifyHiddenEvent(properties);
-    // comScore.hidden(properties);
-    logger.verbose("comScore.hidden(%s)", properties);
+      com.comscore.Analytics.notifyHiddenEvent(properties);
+    logger.verbose("Analytics.hidden(%s)", properties);
   }
 
   @Override public void identify(IdentifyPayload identify) {
@@ -71,8 +77,8 @@ public class ComScoreIntegration extends Integration<comScore> {
     String userId = identify.userId();
     HashMap<String, String> traits = (HashMap<String, String>) identify.traits().toStringMap();
     traits.put("userId", userId);
-    com.comscore.Analytics.getConfiguration().setPersistentLabels(traits);
-    logger.verbose("comScore.setPersistentLabels(%s)", traits);
+      com.comscore.Analytics.getConfiguration().setPersistentLabels(traits);
+    logger.verbose("Analytics.setPersistentLabels(%s)", traits);
   }
 
   @Override public void screen(ScreenPayload screen) {
@@ -83,9 +89,8 @@ public class ComScoreIntegration extends Integration<comScore> {
     properties.put("name", name);
     properties.put("category", category);
 
-    // comScore.view(properties);
-    com.comscore.Analytics.notifyViewEvent(properties);
-    logger.verbose("comScore.notifyViewEvent(%s)", properties);
+      com.comscore.Analytics.notifyViewEvent(properties);
+    logger.verbose("Analytics.notifyViewEvent(%s)", properties);
   }
 
 }
