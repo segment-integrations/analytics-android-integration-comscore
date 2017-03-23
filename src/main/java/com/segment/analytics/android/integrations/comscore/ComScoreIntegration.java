@@ -1,6 +1,7 @@
 package com.segment.analytics.android.integrations.comscore;
 
 import com.comscore.Analytics;
+import com.comscore.Configuration;
 import com.comscore.PublisherConfiguration;
 import com.comscore.UsagePropertiesAutoUpdateMode;
 import com.segment.analytics.ValueMap;
@@ -64,7 +65,8 @@ public class ComScoreIntegration extends Integration<Void> {
 
       PublisherConfiguration myPublisherConfig = builder.build();
 
-      Analytics.getConfiguration().addClient(myPublisherConfig);
+      Configuration configuration = Analytics.getConfiguration();
+      configuration.addClient(myPublisherConfig);
       Analytics.start(analytics.getApplication());
   }
 

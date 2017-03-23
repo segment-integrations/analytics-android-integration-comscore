@@ -1,8 +1,6 @@
 package com.segment.analytics.android.integrations.comscore;
 
-
 import android.app.Application;
-import android.app.usage.UsageStatsManager;
 
 import com.comscore.Configuration;
 import com.comscore.PublisherConfiguration;
@@ -23,6 +21,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
@@ -34,6 +33,9 @@ import org.robolectric.annotation.Config;
 import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
 import static com.segment.analytics.Utils.createTraits;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.verifyStatic;
@@ -59,14 +61,15 @@ import static org.powermock.api.mockito.PowerMockito.when;
     when(analytics.logger("comScore")).thenReturn(Logger.with(VERBOSE));
     when(Analytics.getConfiguration()).thenReturn(myConfig);
     when(analytics.getApplication()).thenReturn(context);
-    integration = new ComScoreIntegration(analytics, new ValueMap().putValue("customerC2", "foobarbar").putValue("publisherSecret", "illnevertell"));
+    integration = new ComScoreIntegration(analytics,
+        new ValueMap().putValue("customerC2", "foobarbar")
+            .putValue("publisherSecret", "illnevertell"));
   }
 
   @Test public void factory() {
     ValueMap settings = new ValueMap() //
         .putValue("c2", "foobarbar").putValue("publisherSecret", "illnevertell");
-    integration =
-        (ComScoreIntegration) ComScoreIntegration.FACTORY.create(settings, analytics);
+    integration = (ComScoreIntegration) ComScoreIntegration.FACTORY.create(settings, analytics);
     verifyStatic();
     assertThat(integration.customerC2).isEqualTo("foobarbar");
     assertThat(integration.publisherSecret).isEqualTo("illnevertell");
@@ -86,7 +89,11 @@ import static org.powermock.api.mockito.PowerMockito.when;
   }
 
   @Test public void initializeWithAutoUpdateMode() throws IllegalStateException {
+    // 1. Setup the mocks.
+    Configuration configuration = mock(Configuration.class);
+    when(Analytics.getConfiguration()).thenReturn(configuration);
 
+    // 2. use the mocks.
     integration = new ComScoreIntegration(analytics, new ValueMap() //
         .putValue("c2", "foobarbar")
         .putValue("publisherSecret", "illnevertell")
@@ -96,17 +103,18 @@ import static org.powermock.api.mockito.PowerMockito.when;
         .putValue("autoUpdate", true)
         .putValue("foregroundOnly", true));
 
-    PublisherConfiguration.Builder builder = new PublisherConfiguration.Builder();
-    builder.publisherId("foobarbar");
-    builder.publisherSecret("illnevertell");
-    builder.applicationName("testApp");
-    builder.secureTransmission(true);
-    builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
-    PublisherConfiguration testConfig = builder.build();
+    // 3. verify the mocks.
+    ArgumentCaptor<PublisherConfiguration> publisherConfigurationArgumentCaptor =
+        ArgumentCaptor.forClass(PublisherConfiguration.class);
+    verify(configuration).addClient(publisherConfigurationArgumentCaptor.capture());
+    PublisherConfiguration publisherConfiguration = publisherConfigurationArgumentCaptor.getValue();
+  assertThat(publisherConfiguration.getPublisherId()).isEqualTo("foobarbar");
+    assertThat(publisherConfiguration.getPublisherSecret()).isEqualTo("illnevertell");
+    assertThat(publisherConfiguration.getApplicationName()).isEqualTo("testApp");
+    assertThat(publisherConfiguration.getUsagePropertiesAutoUpdateInterval()).isEqualTo(2000);
+    assertThat(publisherConfiguration.getUsagePropertiesAutoUpdateMode()).isEqualTo(UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
 
-    when(Analytics.getConfiguration()).thenReturn(testConfig);
   }
-
 
   @Test public void track() {
     integration.track(new TrackPayloadBuilder().event("foo").build());
@@ -120,10 +128,8 @@ import static org.powermock.api.mockito.PowerMockito.when;
   @Test public void trackWithProps() {
     integration.track(new TrackPayloadBuilder() //
         .event("Completed Order")
-        .properties(new Properties()
-            .putValue(20.0)
-            .putValue("product","Ukelele")
-        ).build());
+        .properties(new Properties().putValue(20.0).putValue("product", "Ukelele"))
+        .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("name", "Completed Order");
@@ -153,13 +159,14 @@ import static org.powermock.api.mockito.PowerMockito.when;
   }
 
   @Test public void screen() {
-    integration.screen(new ScreenPayloadBuilder().name("SmartWatches").category("Purchase Screen").build());
+    integration.screen(
+        new ScreenPayloadBuilder().name("SmartWatches").category("Purchase Screen").build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("name", "SmartWatches");
     expected.put("category", "Purchase Screen");
 
     verifyStatic();
-      Analytics.notifyViewEvent(expected);
+    Analytics.notifyViewEvent(expected);
   }
 }
