@@ -4,6 +4,7 @@ package com.segment.analytics.android.integrations.comscore;
 import android.app.Application;
 import android.app.usage.UsageStatsManager;
 
+import com.comscore.Configuration;
 import com.comscore.PublisherConfiguration;
 import com.comscore.UsagePropertiesAutoUpdateMode;
 import com.comscore.Analytics;
@@ -45,9 +46,9 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
   @Rule public PowerMockRule rule = new PowerMockRule();
   @Mock Application context;
+  @Mock Configuration myConfig;
   Logger logger;
-  @Mock
-  com.segment.analytics.Analytics analytics;
+  @Mock com.segment.analytics.Analytics analytics;
   ComScoreIntegration integration;
   @Mock Analytics Comscore;
 
@@ -55,10 +56,10 @@ import static org.powermock.api.mockito.PowerMockito.when;
     initMocks(this);
     mockStatic(Analytics.class);
     logger = Logger.with(com.segment.analytics.Analytics.LogLevel.DEBUG);
-    when(analytics.logger("ComScore")).thenReturn(Logger.with(VERBOSE));
+    when(analytics.logger("comScore")).thenReturn(Logger.with(VERBOSE));
+    when(Analytics.getConfiguration()).thenReturn(myConfig);
     when(analytics.getApplication()).thenReturn(context);
     integration = new ComScoreIntegration(analytics, new ValueMap().putValue("customerC2", "foobarbar").putValue("publisherSecret", "illnevertell"));
-    mockStatic(Analytics.class);
   }
 
   @Test public void factory() {
@@ -85,6 +86,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
   }
 
   @Test public void initializeWithAutoUpdateMode() throws IllegalStateException {
+
     integration = new ComScoreIntegration(analytics, new ValueMap() //
         .putValue("c2", "foobarbar")
         .putValue("publisherSecret", "illnevertell")
@@ -95,16 +97,14 @@ import static org.powermock.api.mockito.PowerMockito.when;
         .putValue("foregroundOnly", true));
 
     PublisherConfiguration.Builder builder = new PublisherConfiguration.Builder();
-    verifyStatic();
     builder.publisherId("foobarbar");
-    verifyStatic();
     builder.publisherSecret("illnevertell");
-    verifyStatic();
     builder.applicationName("testApp");
-    verifyStatic();
     builder.secureTransmission(true);
-    verifyStatic();
     builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
+    PublisherConfiguration testConfig = builder.build();
+
+    when(Analytics.getConfiguration()).thenReturn(testConfig);
   }
 
 
@@ -149,7 +149,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
     expected.put("userId", "foo");
 
     verifyStatic();
-      Analytics.getConfiguration().setPersistentLabels(expected);
+    Analytics.getConfiguration().setPersistentLabels(expected);
   }
 
   @Test public void screen() {

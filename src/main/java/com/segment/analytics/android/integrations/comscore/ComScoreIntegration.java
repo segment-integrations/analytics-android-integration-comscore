@@ -14,7 +14,8 @@ import java.util.HashMap;
 
 public class ComScoreIntegration extends Integration<Void> {
   public static final Factory FACTORY = new Factory() {
-    @Override public Integration<?> create(ValueMap settings, com.segment.analytics.Analytics analytics) {
+    @Override public Integration<?>
+    create(ValueMap settings, com.segment.analytics.Analytics analytics) {
       return new ComScoreIntegration(analytics, settings);
     }
 
@@ -51,12 +52,14 @@ public class ComScoreIntegration extends Integration<Void> {
         builder.secureTransmission(useHTTPS);
         builder.usagePropertiesAutoUpdateInterval(autoUpdateInterval);
 
-        if (autoUpdate) {
-          builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
+      if (autoUpdate) {
+        builder.usagePropertiesAutoUpdateMode(
+            UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND
+        );
       } else if (foregroundOnly) {
-          builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.FOREGROUND_ONLY);
+        builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.FOREGROUND_ONLY);
       } else {
-          builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.DISABLED);
+        builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.DISABLED);
       }
 
       PublisherConfiguration myPublisherConfig = builder.build();
