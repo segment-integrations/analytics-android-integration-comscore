@@ -1,7 +1,6 @@
 package com.segment.analytics.android.integrations.comscore;
 
 import com.comscore.Analytics;
-import com.comscore.Configuration;
 import com.comscore.PublisherConfiguration;
 import com.comscore.UsagePropertiesAutoUpdateMode;
 import com.segment.analytics.ValueMap;
@@ -36,7 +35,7 @@ public class ComScoreIntegration extends Integration<Void> {
   boolean foregroundOnly;
 
 
-    ComScoreIntegration(com.segment.analytics.Analytics analytics, ValueMap settings) {
+  ComScoreIntegration(com.segment.analytics.Analytics analytics, ValueMap settings) {
     logger = analytics.logger(COMSCORE_KEY);
     customerC2 = settings.getString("c2");
     publisherSecret = settings.getString("publisherSecret");
@@ -49,7 +48,9 @@ public class ComScoreIntegration extends Integration<Void> {
         PublisherConfiguration.Builder builder = new PublisherConfiguration.Builder();
         builder.publisherId(customerC2);
         builder.publisherSecret(publisherSecret);
+      if (appName != null && appName.trim().length() == 0) {
         builder.applicationName(appName);
+      }
         builder.secureTransmission(useHTTPS);
         builder.usagePropertiesAutoUpdateInterval(autoUpdateInterval);
 
@@ -65,8 +66,7 @@ public class ComScoreIntegration extends Integration<Void> {
 
       PublisherConfiguration myPublisherConfig = builder.build();
 
-      Configuration configuration = Analytics.getConfiguration();
-      configuration.addClient(myPublisherConfig);
+      Analytics.getConfiguration().addClient(myPublisherConfig);
       Analytics.start(analytics.getApplication());
   }
 
@@ -83,7 +83,7 @@ public class ComScoreIntegration extends Integration<Void> {
     String userId = identify.userId();
     HashMap<String, String> traits = (HashMap<String, String>) identify.traits().toStringMap();
     traits.put("userId", userId);
-      Analytics.getConfiguration().setPersistentLabels(traits);
+    Analytics.getConfiguration().setPersistentLabels(traits);
     logger.verbose("Analytics.setPersistentLabels(%s)", traits);
   }
 

@@ -13,7 +13,6 @@ import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.test.IdentifyPayloadBuilder;
 import com.segment.analytics.test.ScreenPayloadBuilder;
 import com.segment.analytics.test.TrackPayloadBuilder;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.json.JSONException;
@@ -33,7 +32,6 @@ import org.robolectric.annotation.Config;
 import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
 import static com.segment.analytics.Utils.createTraits;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -48,29 +46,34 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
   @Rule public PowerMockRule rule = new PowerMockRule();
   @Mock Application context;
-  @Mock Configuration myConfig;
+  @Mock Configuration configuration;
   Logger logger;
   @Mock com.segment.analytics.Analytics analytics;
   ComScoreIntegration integration;
-  @Mock Analytics Comscore;
+  @Mock Analytics comScore;
 
   @Before public void setUp() {
     initMocks(this);
     mockStatic(Analytics.class);
     logger = Logger.with(com.segment.analytics.Analytics.LogLevel.DEBUG);
     when(analytics.logger("comScore")).thenReturn(Logger.with(VERBOSE));
-    when(Analytics.getConfiguration()).thenReturn(myConfig);
+    when(Analytics.getConfiguration()).thenReturn(configuration);
     when(analytics.getApplication()).thenReturn(context);
     integration = new ComScoreIntegration(analytics,
         new ValueMap().putValue("customerC2", "foobarbar")
             .putValue("publisherSecret", "illnevertell"));
+
+    // mock it twice so we can initialize it for tests, but reset the mock after initialization.
+    mockStatic(Analytics.class);
   }
 
   @Test public void factory() {
-    ValueMap settings = new ValueMap() //
-        .putValue("c2", "foobarbar").putValue("publisherSecret", "illnevertell");
+    ValueMap settings =
+        new ValueMap().putValue("c2", "foobarbar").putValue("publisherSecret", "illnevertell");
+    when(Analytics.getConfiguration()).thenReturn(configuration);
+
     integration = (ComScoreIntegration) ComScoreIntegration.FACTORY.create(settings, analytics);
-    verifyStatic();
+
     assertThat(integration.customerC2).isEqualTo("foobarbar");
     assertThat(integration.publisherSecret).isEqualTo("illnevertell");
   }
@@ -80,20 +83,20 @@ import static org.powermock.api.mockito.PowerMockito.when;
         .putValue("c2", "foobarbar")
         .putValue("publisherSecret", "illnevertell")
         .putValue("setSecure", true);
+    when(Analytics.getConfiguration()).thenReturn(configuration);
+
     ComScoreIntegration integration =
         (ComScoreIntegration) ComScoreIntegration.FACTORY.create(settings, analytics);
-    verifyStatic();
+
     assertThat(integration.customerC2).isEqualTo("foobarbar");
     assertThat(integration.publisherSecret).isEqualTo("illnevertell");
     assertThat(integration.useHTTPS).isTrue();
   }
 
   @Test public void initializeWithAutoUpdateMode() throws IllegalStateException {
-    // 1. Setup the mocks.
     Configuration configuration = mock(Configuration.class);
     when(Analytics.getConfiguration()).thenReturn(configuration);
 
-    // 2. use the mocks.
     integration = new ComScoreIntegration(analytics, new ValueMap() //
         .putValue("c2", "foobarbar")
         .putValue("publisherSecret", "illnevertell")
@@ -103,17 +106,16 @@ import static org.powermock.api.mockito.PowerMockito.when;
         .putValue("autoUpdate", true)
         .putValue("foregroundOnly", true));
 
-    // 3. verify the mocks.
     ArgumentCaptor<PublisherConfiguration> publisherConfigurationArgumentCaptor =
         ArgumentCaptor.forClass(PublisherConfiguration.class);
     verify(configuration).addClient(publisherConfigurationArgumentCaptor.capture());
     PublisherConfiguration publisherConfiguration = publisherConfigurationArgumentCaptor.getValue();
-  assertThat(publisherConfiguration.getPublisherId()).isEqualTo("foobarbar");
+    assertThat(publisherConfiguration.getPublisherId()).isEqualTo("foobarbar");
     assertThat(publisherConfiguration.getPublisherSecret()).isEqualTo("illnevertell");
     assertThat(publisherConfiguration.getApplicationName()).isEqualTo("testApp");
     assertThat(publisherConfiguration.getUsagePropertiesAutoUpdateInterval()).isEqualTo(2000);
-    assertThat(publisherConfiguration.getUsagePropertiesAutoUpdateMode()).isEqualTo(UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
-
+    assertThat(publisherConfiguration.getUsagePropertiesAutoUpdateMode()).isEqualTo(
+        UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
   }
 
   @Test public void track() {
@@ -121,8 +123,9 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
     Properties expected = new Properties().putValue("name", "foo");
     Map<String, String> properties = expected.toStringMap();
+
     verifyStatic();
-    Analytics.notifyHiddenEvent((HashMap<String, String>) properties);
+    Analytics.notifyHiddenEvent(properties);
   }
 
   @Test public void trackWithProps() {
@@ -141,6 +144,8 @@ import static org.powermock.api.mockito.PowerMockito.when;
   }
 
   @Test public void identify() throws JSONException {
+    Configuration configuration = mock(Configuration.class);
+    when(Analytics.getConfiguration()).thenReturn(configuration);
     Traits traits = createTraits("foo") //
         .putValue("anonymousId", "foobar")
         .putValue("firstName", "Kylo")
@@ -154,8 +159,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
     expected.put("lastName", "Ren");
     expected.put("userId", "foo");
 
-    verifyStatic();
-    Analytics.getConfiguration().setPersistentLabels(expected);
+    verify(configuration).setPersistentLabels(expected);
   }
 
   @Test public void screen() {
