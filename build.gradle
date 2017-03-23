@@ -58,7 +58,7 @@ dependencies {
 
   provided 'com.segment.analytics.android:analytics:4.0.0'
 
-  compile 'com.comscore:android-analytics:5.+'
+  compile 'com.comscore:android-analytics:5.1.0'
 
   testCompile 'junit:junit:4.12'
   testCompile('org.robolectric:robolectric:3.0') {

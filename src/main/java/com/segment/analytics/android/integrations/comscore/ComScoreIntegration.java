@@ -48,7 +48,7 @@ public class ComScoreIntegration extends Integration<Void> {
     PublisherConfiguration.Builder builder = new PublisherConfiguration.Builder();
     builder.publisherId(customerC2);
     builder.publisherSecret(publisherSecret);
-    if (appName != null && appName.trim().length() == 0) {
+    if (appName != null && appName.trim().length() != 0) {
       builder.applicationName(appName);
     }
     builder.secureTransmission(useHTTPS);
