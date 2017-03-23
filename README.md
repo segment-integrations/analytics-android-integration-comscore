@@ -9,11 +9,21 @@ comScore integration for [analytics-android](https://github.com/segmentio/analyt
 
 ## Installation
 
-To install the Segment-comScore integration, simply add this line to your gradle file:
+To install the Segment-comScore integration, simply add the following to your gradle file:
 
 
 ```
 compile 'com.segment.analytics.android.integrations:comscore:1.0.2'
+```
+
+```
+allprojects {
+  repositories {
+    maven {
+      url "https://comscore.bintray.com/Analytics"
+    }
+  }
+}
 ```
 
 ## Usage

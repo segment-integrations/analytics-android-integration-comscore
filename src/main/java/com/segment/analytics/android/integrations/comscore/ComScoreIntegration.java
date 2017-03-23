@@ -9,20 +9,21 @@ import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
-
 import java.util.HashMap;
 
 public class ComScoreIntegration extends Integration<Void> {
-  public static final Factory FACTORY = new Factory() {
-    @Override public Integration<?>
-    create(ValueMap settings, com.segment.analytics.Analytics analytics) {
-      return new ComScoreIntegration(analytics, settings);
-    }
+  public static final Factory FACTORY =
+      new Factory() {
+        @Override
+        public Integration<?> create(ValueMap settings, com.segment.analytics.Analytics analytics) {
+          return new ComScoreIntegration(analytics, settings);
+        }
 
-    @Override public String key() {
-      return COMSCORE_KEY;
-    }
-  };
+        @Override
+        public String key() {
+          return COMSCORE_KEY;
+        }
+      };
 
   private static final String COMSCORE_KEY = "comScore";
   final Logger logger;
@@ -34,7 +35,6 @@ public class ComScoreIntegration extends Integration<Void> {
   boolean autoUpdate;
   boolean foregroundOnly;
 
-
   ComScoreIntegration(com.segment.analytics.Analytics analytics, ValueMap settings) {
     logger = analytics.logger(COMSCORE_KEY);
     customerC2 = settings.getString("c2");
@@ -45,40 +45,41 @@ public class ComScoreIntegration extends Integration<Void> {
     autoUpdate = settings.getBoolean("autoUpdate", false);
     foregroundOnly = settings.getBoolean("foregroundOnly", true);
 
-        PublisherConfiguration.Builder builder = new PublisherConfiguration.Builder();
-        builder.publisherId(customerC2);
-        builder.publisherSecret(publisherSecret);
-      if (appName != null && appName.trim().length() == 0) {
-        builder.applicationName(appName);
-      }
-        builder.secureTransmission(useHTTPS);
-        builder.usagePropertiesAutoUpdateInterval(autoUpdateInterval);
+    PublisherConfiguration.Builder builder = new PublisherConfiguration.Builder();
+    builder.publisherId(customerC2);
+    builder.publisherSecret(publisherSecret);
+    if (appName != null && appName.trim().length() == 0) {
+      builder.applicationName(appName);
+    }
+    builder.secureTransmission(useHTTPS);
+    builder.usagePropertiesAutoUpdateInterval(autoUpdateInterval);
 
-      if (autoUpdate) {
-        builder.usagePropertiesAutoUpdateMode(
-            UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND
-        );
-      } else if (foregroundOnly) {
-        builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.FOREGROUND_ONLY);
-      } else {
-        builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.DISABLED);
-      }
+    if (autoUpdate) {
+      builder.usagePropertiesAutoUpdateMode(
+          UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
+    } else if (foregroundOnly) {
+      builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.FOREGROUND_ONLY);
+    } else {
+      builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.DISABLED);
+    }
 
-      PublisherConfiguration myPublisherConfig = builder.build();
+    PublisherConfiguration myPublisherConfig = builder.build();
 
-      Analytics.getConfiguration().addClient(myPublisherConfig);
-      Analytics.start(analytics.getApplication());
+    Analytics.getConfiguration().addClient(myPublisherConfig);
+    Analytics.start(analytics.getApplication());
   }
 
-  @Override public void track(TrackPayload track) {
+  @Override
+  public void track(TrackPayload track) {
     String name = track.event();
     HashMap<String, String> properties = (HashMap<String, String>) track.properties().toStringMap();
     properties.put("name", name);
-      Analytics.notifyHiddenEvent(properties);
+    Analytics.notifyHiddenEvent(properties);
     logger.verbose("Analytics.hidden(%s)", properties);
   }
 
-  @Override public void identify(IdentifyPayload identify) {
+  @Override
+  public void identify(IdentifyPayload identify) {
     super.identify(identify);
     String userId = identify.userId();
     HashMap<String, String> traits = (HashMap<String, String>) identify.traits().toStringMap();
@@ -87,16 +88,16 @@ public class ComScoreIntegration extends Integration<Void> {
     logger.verbose("Analytics.setPersistentLabels(%s)", traits);
   }
 
-  @Override public void screen(ScreenPayload screen) {
+  @Override
+  public void screen(ScreenPayload screen) {
     String name = screen.name();
     String category = screen.category();
-    HashMap<String, String> properties = (HashMap<String, String>) //
-        screen.properties().toStringMap();
+    HashMap<String, String> properties =
+        (HashMap<String, String>) //
+            screen.properties().toStringMap();
     properties.put("name", name);
     properties.put("category", category);
-
-      Analytics.notifyViewEvent(properties);
+    Analytics.notifyViewEvent(properties);
     logger.verbose("Analytics.notifyViewEvent(%s)", properties);
   }
-
 }
