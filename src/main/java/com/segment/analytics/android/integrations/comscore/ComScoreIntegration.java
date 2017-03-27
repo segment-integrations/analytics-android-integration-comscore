@@ -9,6 +9,7 @@ import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
+import com.comscore.PartnerConfiguration;
 import java.util.HashMap;
 
 public class ComScoreIntegration extends Integration<Void> {
@@ -63,8 +64,12 @@ public class ComScoreIntegration extends Integration<Void> {
       builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.DISABLED);
     }
 
+    PartnerConfiguration partnerConfig = new PartnerConfiguration.Builder()
+        .partnerId("24186693")
+        .build();
     PublisherConfiguration myPublisherConfig = builder.build();
 
+    Analytics.getConfiguration().addClient(partnerConfig);
     Analytics.getConfiguration().addClient(myPublisherConfig);
     Analytics.start(analytics.getApplication());
   }
