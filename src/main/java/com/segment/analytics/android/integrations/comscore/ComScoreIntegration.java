@@ -64,9 +64,8 @@ public class ComScoreIntegration extends Integration<Void> {
       builder.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.DISABLED);
     }
 
-    PartnerConfiguration partnerConfig = new PartnerConfiguration.Builder()
-        .partnerId("24186693")
-        .build();
+    PartnerConfiguration partnerConfig =
+        new PartnerConfiguration.Builder().partnerId("24186693").build();
     PublisherConfiguration myPublisherConfig = builder.build();
 
     Analytics.getConfiguration().addClient(partnerConfig);

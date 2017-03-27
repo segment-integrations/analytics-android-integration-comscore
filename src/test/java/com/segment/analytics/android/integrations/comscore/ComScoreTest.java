@@ -2,6 +2,7 @@ package com.segment.analytics.android.integrations.comscore;
 
 import android.app.Application;
 import com.comscore.Configuration;
+import com.comscore.PartnerConfiguration;
 import com.comscore.PublisherConfiguration;
 import com.comscore.UsagePropertiesAutoUpdateMode;
 import com.comscore.Analytics;
@@ -30,6 +31,7 @@ import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
 import static com.segment.analytics.Utils.createTraits;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
@@ -79,6 +81,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
     ValueMap settings = new ValueMap() //
         .putValue("c2", "foobarbar")
         .putValue("publisherSecret", "illnevertell")
+        .putValue("partnerId", "barbarfoo")
         .putValue("setSecure", true);
     when(Analytics.getConfiguration()).thenReturn(configuration);
 
@@ -105,7 +108,8 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
     ArgumentCaptor<PublisherConfiguration> publisherConfigurationArgumentCaptor =
         ArgumentCaptor.forClass(PublisherConfiguration.class);
-    verify(configuration).addClient(publisherConfigurationArgumentCaptor.capture());
+    verify(configuration, times(2)).addClient(publisherConfigurationArgumentCaptor.capture());
+
     PublisherConfiguration publisherConfiguration = publisherConfigurationArgumentCaptor.getValue();
     assertThat(publisherConfiguration.getPublisherId()).isEqualTo("foobarbar");
     assertThat(publisherConfiguration.getPublisherSecret()).isEqualTo("illnevertell");
