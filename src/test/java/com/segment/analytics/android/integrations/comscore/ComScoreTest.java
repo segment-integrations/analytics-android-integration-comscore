@@ -121,8 +121,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
     assertThat(capturedConfig.get(1).getUsagePropertiesAutoUpdateInterval()).isEqualTo(2000);
     assertThat(capturedConfig.get(1).getUsagePropertiesAutoUpdateMode()).isEqualTo(
         UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
-  };
-
+  }
 
   @Test public void track() {
     integration.track(new TrackPayloadBuilder().event("foo").build());
