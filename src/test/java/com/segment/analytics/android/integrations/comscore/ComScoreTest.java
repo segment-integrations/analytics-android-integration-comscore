@@ -1,6 +1,7 @@
 package com.segment.analytics.android.integrations.comscore;
 
 import android.app.Application;
+import com.comscore.ClientConfiguration;
 import com.comscore.Configuration;
 import com.comscore.PartnerConfiguration;
 import com.comscore.PublisherConfiguration;
@@ -14,6 +15,7 @@ import com.segment.analytics.test.IdentifyPayloadBuilder;
 import com.segment.analytics.test.ScreenPayloadBuilder;
 import com.segment.analytics.test.TrackPayloadBuilder;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.json.JSONException;
 import org.junit.Before;
@@ -81,7 +83,6 @@ import static org.powermock.api.mockito.PowerMockito.when;
     ValueMap settings = new ValueMap() //
         .putValue("c2", "foobarbar")
         .putValue("publisherSecret", "illnevertell")
-        .putValue("partnerId", "barbarfoo")
         .putValue("setSecure", true);
     when(Analytics.getConfiguration()).thenReturn(configuration);
 
@@ -98,6 +99,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
     when(Analytics.getConfiguration()).thenReturn(configuration);
 
     integration = new ComScoreIntegration(analytics, new ValueMap() //
+        .putValue("partnerId", "24186693")
         .putValue("c2", "foobarbar")
         .putValue("publisherSecret", "illnevertell")
         .putValue("appName", "testApp")
@@ -106,18 +108,21 @@ import static org.powermock.api.mockito.PowerMockito.when;
         .putValue("autoUpdate", true)
         .putValue("foregroundOnly", true));
 
-    ArgumentCaptor<PublisherConfiguration> publisherConfigurationArgumentCaptor =
-        ArgumentCaptor.forClass(PublisherConfiguration.class);
-    verify(configuration, times(2)).addClient(publisherConfigurationArgumentCaptor.capture());
 
-    PublisherConfiguration publisherConfiguration = publisherConfigurationArgumentCaptor.getValue();
-    assertThat(publisherConfiguration.getPublisherId()).isEqualTo("foobarbar");
-    assertThat(publisherConfiguration.getPublisherSecret()).isEqualTo("illnevertell");
-    assertThat(publisherConfiguration.getApplicationName()).isEqualTo("testApp");
-    assertThat(publisherConfiguration.getUsagePropertiesAutoUpdateInterval()).isEqualTo(2000);
-    assertThat(publisherConfiguration.getUsagePropertiesAutoUpdateMode()).isEqualTo(
+    ArgumentCaptor<ClientConfiguration> configurationCaptor =
+        ArgumentCaptor.forClass(ClientConfiguration.class);
+    verify(configuration, times(2)).addClient(configurationCaptor.capture());
+
+    List<ClientConfiguration> capturedConfig = configurationCaptor.getAllValues();
+    assertThat(((PartnerConfiguration) capturedConfig.get(0)).getPartnerId()).isEqualTo("24186693");
+    assertThat(((PublisherConfiguration) capturedConfig.get(1)).getPublisherId()).isEqualTo("foobarbar");
+    assertThat(((PublisherConfiguration) capturedConfig.get(1)).getPublisherSecret()).isEqualTo("illnevertell");
+    assertThat(capturedConfig.get(1).getApplicationName()).isEqualTo("testApp");
+    assertThat(capturedConfig.get(1).getUsagePropertiesAutoUpdateInterval()).isEqualTo(2000);
+    assertThat(capturedConfig.get(1).getUsagePropertiesAutoUpdateMode()).isEqualTo(
         UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
-  }
+  };
+
 
   @Test public void track() {
     integration.track(new TrackPayloadBuilder().event("foo").build());
