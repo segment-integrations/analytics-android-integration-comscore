@@ -10,10 +10,7 @@ import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
 import com.comscore.PartnerConfiguration;
-import com.comscore.streaming.StreamingAnalytics;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 public class ComScoreIntegration extends Integration<Void> {
   public static final Factory FACTORY =
@@ -80,118 +77,9 @@ public class ComScoreIntegration extends Integration<Void> {
   public void track(TrackPayload track) {
     String name = track.event();
     HashMap<String, String> properties = (HashMap<String, String>) track.properties().toStringMap();
-
-  if(name.equals("Video Playback Started")) {
-    StreamingAnalytics streamingAnalytics = new StreamingAnalytics();
-    streamingAnalytics.createPlaybackSession();
-
-    Map<String, String> playbackAsset = new LinkedHashMap<>();
-    playbackAsset.put("ns_st_ci", "asset_id");
-    playbackAsset.put("ns_st_pn", "content_pod_id");
-    playbackAsset.put("ns_st_ad", "ad_type");
-    playbackAsset.put("ns_st_cl", "length");
-    playbackAsset.put("ns_st_st", "video_player");
-
-    Map<String, String> contentAsset = new LinkedHashMap<>();
-    contentAsset.put("ns_st_ci", "asset_id");
-    contentAsset.put("ns_st_pn", "content_pod_id");
-    contentAsset.put("ns_st_pr", "title");
-    contentAsset.put("ns_st_ge", "keywords");
-    contentAsset.put("ns_st_sn", "season");
-    contentAsset.put("ns_st_ep", "episode");
-    contentAsset.put("ns_st_ge", "genre");
-    contentAsset.put("ns_st_pr", "program");
-    contentAsset.put("ns_st_pu", "channel");
-    contentAsset.put("ns_st_ce", "full_episode");
-    contentAsset.put("ns_st_ddt", "airdate");
-
-
-    Map<String, String> adAsset = new LinkedHashMap<>();
-    adAsset.put("ns_st_cl", "asset_id");
-    adAsset.put("ns_st_pn", "pod_id");
-    adAsset.put("ns_st_ad", "type");
-    adAsset.put("ns_st_pu", "publisher");
-    adAsset.put("ns_st_cl", "length");
-
-    switch(name) {
-      case "Video Playback Paused":
-        streamingAnalytics.notifyPause();
-        streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
-        break;
-
-      case "Video Playback Buffer Started":
-        streamingAnalytics.notifyBufferStart();
-        streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
-        break;
-
-      case "Video Playback Buffer Completed ":
-        streamingAnalytics.notifyBufferStop();
-        streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
-        break;
-
-      case "Video Playback Seek Started ":
-        streamingAnalytics.notifySeekStart();
-        streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
-        break;
-
-      case "Video Playback Seek Completed ":
-        streamingAnalytics.notifyEnd();
-        streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
-        break;
-
-      case "Video Playback Resumed ":
-        streamingAnalytics.notifyPlay();
-        streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
-        break;
-
-      case "Video Content Started":
-        streamingAnalytics.notifyPlay();
-        streamingAnalytics.getPlaybackSession().setAsset(contentAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", contentAsset);
-        break;
-
-      //case "Video Content Playing":
-      //  streamingAnalytics.notifyPlay();
-      //  streamingAnalytics.getPlaybackSession().setAsset(contentAsset);
-      //  logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", contentAsset);
-      //  break;
-
-      case "Video Content Completed":
-        streamingAnalytics.notifyEnd();
-        streamingAnalytics.getPlaybackSession().setAsset(contentAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", contentAsset);
-
-        break;
-
-      case "Video Ad Started":
-        streamingAnalytics.notifyPlay();
-        streamingAnalytics.getPlaybackSession().setAsset(adAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", adAsset);
-        break;
-
-      // How to account for position argument
-      //case "Video Ad Playing":
-      //  streamingAnalytics.notifyPlay();
-      //break;
-
-      case "Video Ad Completed":
-        streamingAnalytics.notifyEnd();
-        streamingAnalytics.getPlaybackSession().setAsset(adAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", adAsset);
-        break;
-     }
-
-  } else {
-      properties.put("name", name);
-      Analytics.notifyHiddenEvent(properties);
-      logger.verbose("Analytics.hidden(%s)", properties);
-    }
+    properties.put("name", name);
+    Analytics.notifyHiddenEvent(properties);
+    logger.verbose("Analytics.hidden(%s)", properties);
   }
 
   @Override
