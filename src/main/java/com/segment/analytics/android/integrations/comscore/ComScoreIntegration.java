@@ -19,16 +19,18 @@ import java.util.Map;
 
 public class ComScoreIntegration extends Integration<Void> {
 
-  public static final Factory FACTORY = new Factory() {
-    @Override
-    public Integration<?> create(ValueMap settings, com.segment.analytics.Analytics analytics) {
-      return new ComScoreIntegration(analytics, settings, StreamingAnalyticsFactory.REAL);
-    }
+  public static final Factory FACTORY =
+      new Factory() {
+        @Override
+        public Integration<?> create(ValueMap settings, com.segment.analytics.Analytics analytics) {
+          return new ComScoreIntegration(analytics, settings, StreamingAnalyticsFactory.REAL);
+        }
 
-    @Override public String key() {
-      return COMSCORE_KEY;
-    }
-  };
+        @Override
+        public String key() {
+          return COMSCORE_KEY;
+        }
+      };
 
   private static final String COMSCORE_KEY = "comScore";
   final Logger logger;
@@ -45,14 +47,18 @@ public class ComScoreIntegration extends Integration<Void> {
   interface StreamingAnalyticsFactory {
     StreamingAnalytics create();
 
-    StreamingAnalyticsFactory REAL = new StreamingAnalyticsFactory() {
-      @Override public StreamingAnalytics create() {
-        return new StreamingAnalytics();
-      }
-    };
+    StreamingAnalyticsFactory REAL =
+        new StreamingAnalyticsFactory() {
+          @Override
+          public StreamingAnalytics create() {
+            return new StreamingAnalytics();
+          }
+        };
   }
 
-  ComScoreIntegration(com.segment.analytics.Analytics analytics, ValueMap settings,
+  ComScoreIntegration(
+      com.segment.analytics.Analytics analytics,
+      ValueMap settings,
       StreamingAnalyticsFactory streamingAnalyticsFactory) {
     this.streamingAnalyticsFactory = streamingAnalyticsFactory;
     logger = analytics.logger(COMSCORE_KEY);
@@ -91,7 +97,8 @@ public class ComScoreIntegration extends Integration<Void> {
     Analytics.start(analytics.getApplication());
   }
 
-  @Override public void track(TrackPayload track) {
+  @Override
+  public void track(TrackPayload track) {
     String name = track.event();
     Map<String, String> properties = track.properties().toStringMap();
 
@@ -100,7 +107,6 @@ public class ComScoreIntegration extends Integration<Void> {
     playbackMapper.put("ad_type", "ns_st_ad");
     playbackMapper.put("length", "nst_st_cl");
     playbackMapper.put("video_player", "ns_st_st");
-
 
     Map<String, String> contentMapper = new LinkedHashMap<>();
     contentMapper.put("asset_id", "ns_st_ci");
@@ -116,10 +122,10 @@ public class ComScoreIntegration extends Integration<Void> {
 
     Map<String, String> adMapper = new LinkedHashMap<>();
     adMapper.put("asset_id", "ns_st_ci");
-    adMapper.put("pod_id","ns_st_pn");
+    adMapper.put("pod_id", "ns_st_pn");
     adMapper.put("type", "ns_st_ad");
     adMapper.put("publisher", "ns_st_pu");
-    adMapper.put("length","ns_st_cl");
+    adMapper.put("length", "ns_st_cl");
 
     Map<String, String> playbackAsset = Utils.transform(properties, playbackMapper);
     Map<String, String> contentAsset = Utils.transform(properties, contentMapper);
@@ -200,7 +206,8 @@ public class ComScoreIntegration extends Integration<Void> {
     }
   }
 
-  @Override public void identify(IdentifyPayload identify) {
+  @Override
+  public void identify(IdentifyPayload identify) {
     super.identify(identify);
     String userId = identify.userId();
     HashMap<String, String> traits = (HashMap<String, String>) identify.traits().toStringMap();
@@ -209,11 +216,13 @@ public class ComScoreIntegration extends Integration<Void> {
     logger.verbose("Analytics.setPersistentLabels(%s)", traits);
   }
 
-  @Override public void screen(ScreenPayload screen) {
+  @Override
+  public void screen(ScreenPayload screen) {
     String name = screen.name();
     String category = screen.category();
-    HashMap<String, String> properties = (HashMap<String, String>) //
-        screen.properties().toStringMap();
+    HashMap<String, String> properties =
+        (HashMap<String, String>) //
+            screen.properties().toStringMap();
     properties.put("name", name);
     properties.put("category", category);
     Analytics.notifyViewEvent(properties);
