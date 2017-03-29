@@ -166,6 +166,9 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
 
   void setupWithVideoPlaybackStarted() {
 
+    PlaybackSession playbackSession = mock(PlaybackSession.class);
+    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+
     integration.track(new TrackPayloadBuilder().event("Video Playback Started")
         .properties(new Properties()
             .putValue("asset_id", "1234")
@@ -175,6 +178,15 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
         .build());
 
     verify(streamingAnalytics).createPlaybackSession();
+    verify(streamingAnalytics).getPlaybackSession();
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("ns_st_ci", "1234");
+    expected.put("ns_st_ad", "pre-roll");
+    expected.put("nst_st_cl", "120");
+    expected.put("ns_st_st", "youtube");
+
+    verify(playbackSession).setAsset(expected);
   }
 
   @Test public void videoPlaybackStarted() {
@@ -202,10 +214,11 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
   }
 
   @Test public void videoPlaybackPaused() {
+    setupWithVideoPlaybackStarted();
+    Mockito.reset(streamingAnalytics);
+
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
-    setupWithVideoPlaybackStarted();
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Paused")
         .properties(new Properties()
@@ -222,7 +235,7 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     expected.put("ns_st_st", "vimeo");
 
     verify(streamingAnalytics).notifyPause();
-    verify(streamingAnalytics, times(2)).getPlaybackSession();
+    verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
 
   }
