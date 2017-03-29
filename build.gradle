@@ -56,12 +56,11 @@ dependencies {
     mavenCentral()
   }
 
-  provided 'com.segment.analytics.android:analytics:4.0.0'
-
+  compile 'com.segment.analytics.android:analytics:4.0.0'
   compile 'com.comscore:android-analytics:5.1.0'
 
   testCompile 'junit:junit:4.12'
-  testCompile('org.robolectric:robolectric:3.0') {
+  testCompile('org.robolectric:robolectric:3.3.2') {
     exclude group: 'commons-logging', module: 'commons-logging'
     exclude group: 'org.apache.httpcomponents', module: 'httpclient'
   }
