@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -163,6 +164,19 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     Analytics.notifyHiddenEvent(expected);
   }
 
+  void setupWithVideoPlaybackStarted() {
+
+    integration.track(new TrackPayloadBuilder().event("Video Playback Started")
+        .properties(new Properties()
+            .putValue("asset_id", "1234")
+            .putValue("ad_type", "pre-roll")
+            .putValue("length", "120")
+            .putValue("video_player", "youtube"))
+        .build());
+
+    verify(streamingAnalytics).createPlaybackSession();
+  }
+
   @Test public void videoPlaybackStarted() {
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
@@ -191,7 +205,7 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
-    integration.streamingAnalytics = streamingAnalytics;
+    setupWithVideoPlaybackStarted();
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Paused")
         .properties(new Properties()
@@ -201,16 +215,16 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
             .putValue("video_player", "vimeo"))
         .build());
 
-    verify(streamingAnalytics).notifyPause();
-    verify(streamingAnalytics).getPlaybackSession();
-
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_ci", "1234");
     expected.put("ns_st_ad", "mid-roll");
     expected.put("nst_st_cl", "100");
     expected.put("ns_st_st", "vimeo");
 
+    verify(streamingAnalytics).notifyPause();
+    verify(streamingAnalytics, times(2)).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
+
   }
 
   @Test public void identify() throws JSONException {

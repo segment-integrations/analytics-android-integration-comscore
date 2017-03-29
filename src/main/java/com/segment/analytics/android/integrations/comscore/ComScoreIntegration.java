@@ -40,7 +40,7 @@ public class ComScoreIntegration extends Integration<Void> {
   final int autoUpdateInterval;
   final boolean autoUpdate;
   final boolean foregroundOnly;
-  public StreamingAnalytics streamingAnalytics;
+  private StreamingAnalytics streamingAnalytics;
 
   interface StreamingAnalyticsFactory {
     StreamingAnalytics create();
