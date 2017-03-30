@@ -3,7 +3,6 @@ package com.segment.analytics.android.integrations.comscore;
 import com.comscore.Analytics;
 import com.comscore.PublisherConfiguration;
 import com.comscore.UsagePropertiesAutoUpdateMode;
-import com.comscore.streaming.PlaybackSession;
 import com.comscore.streaming.StreamingAnalytics;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.IdentifyPayload;
