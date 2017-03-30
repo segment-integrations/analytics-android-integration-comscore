@@ -240,6 +240,271 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
 
   }
 
+  @Test public void videoPlaybackBufferStarted() {
+    setupWithVideoPlaybackStarted();
+    Mockito.reset(streamingAnalytics);
+
+    PlaybackSession playbackSession = mock(PlaybackSession.class);
+    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+
+    integration.track(new TrackPayloadBuilder().event("Video Playback Buffer Started")
+    .properties(new Properties()
+        .putValue("asset_id", "7890")
+        .putValue("ad_type", "post-roll")
+        .putValue("length", "700")
+        .putValue("video_player", "youtube"))
+    .build());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("ns_st_ci", "7890");
+    expected.put("ns_st_ad", "post-roll");
+    expected.put("nst_st_cl", "700");
+    expected.put("ns_st_st", "youtube");
+
+    verify(streamingAnalytics).notifyBufferStart();
+    verify(streamingAnalytics).getPlaybackSession();
+    verify(playbackSession).setAsset(expected);
+  }
+
+  @Test public void videoPlaybackBufferCompleted() {
+    setupWithVideoPlaybackStarted();
+    Mockito.reset(streamingAnalytics);
+
+    PlaybackSession playbackSession = mock(PlaybackSession.class);
+    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+
+    integration.track(new TrackPayloadBuilder().event("Video Playback Buffer Completed")
+        .properties(new Properties()
+            .putValue("asset_id", "1029")
+            .putValue("ad_type", "pre-roll")
+            .putValue("length", "800")
+            .putValue("video_player", "vimeo"))
+        .build());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("ns_st_ci", "1029");
+    expected.put("ns_st_ad", "pre-roll");
+    expected.put("nst_st_cl", "800");
+    expected.put("ns_st_st", "vimeo");
+
+    verify(streamingAnalytics).notifyBufferStop();
+    verify(streamingAnalytics).getPlaybackSession();
+    verify(playbackSession).setAsset(expected);
+  }
+
+  @Test public void videoPlaybackSeekStarted() {
+    setupWithVideoPlaybackStarted();
+    Mockito.reset(streamingAnalytics);
+
+    PlaybackSession playbacksession = mock(PlaybackSession.class);
+    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbacksession);
+
+    integration.track(new TrackPayloadBuilder().event("Video Playback Seek Started")
+        .properties(new Properties()
+            .putValue("asset_id", "3948")
+            .putValue("ad_type", "mid-roll")
+            .putValue("length", "900")
+            .putValue("video_player", "youtube"))
+        .build());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("ns_st_ci", "3948");
+    expected.put("ns_st_ad", "mid-roll");
+    expected.put("nst_st_cl", "900");
+    expected.put("ns_st_st", "youtube");
+
+    verify(streamingAnalytics).notifySeekStart();
+    verify(streamingAnalytics).getPlaybackSession();
+    verify(playbacksession).setAsset(expected);
+  }
+
+  @Test public void videoPlaybackSeekCompleted() {
+    setupWithVideoPlaybackStarted();
+    Mockito.reset(streamingAnalytics);
+
+    PlaybackSession playbackSession = mock(PlaybackSession.class);
+    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+
+    integration.track(new TrackPayloadBuilder().event("Video Playback Seek Completed")
+        .properties(new Properties()
+            .putValue("asset_id", "6767")
+            .putValue("ad_type", "post-roll")
+            .putValue("length", "400")
+            .putValue("video_player", "vimeo"))
+        .build());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("ns_st_ci", "6767");
+    expected.put("ns_st_ad", "post-roll");
+    expected.put("nst_st_cl", "400");
+    expected.put("ns_st_st", "vimeo");
+
+    verify(streamingAnalytics).notifyEnd();
+    verify(streamingAnalytics).getPlaybackSession();
+    verify(playbackSession).setAsset(expected);
+  }
+
+  @Test public void videoPlaybackResumed() {
+    setupWithVideoPlaybackStarted();
+    Mockito.reset(streamingAnalytics);
+
+    PlaybackSession playbackSession = mock(PlaybackSession.class);
+    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+
+    integration.track(new TrackPayloadBuilder().event("Video Playback Resumed")
+          .properties(new Properties()
+          .putValue("asset_id", "5332")
+          .putValue("ad_type", "post-roll")
+          .putValue("length", "100")
+          .putValue("video_player", "youtube"))
+        .build());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("ns_st_ci", "5332");
+    expected.put("ns_st_ad", "post-roll");
+    expected.put("nst_st_cl", "100");
+    expected.put("ns_st_st", "youtube");
+
+    verify(streamingAnalytics).notifyPlay();
+    verify(streamingAnalytics).getPlaybackSession();
+    verify(playbackSession).setAsset(expected);
+  }
+
+  @Test public void videoContentStarted(){
+    setupWithVideoPlaybackStarted();
+    Mockito.reset(streamingAnalytics);
+
+    PlaybackSession playbackSession = mock(PlaybackSession.class);
+    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+
+    integration.track(new TrackPayloadBuilder().event("Video Content Started")
+    .properties(new Properties()
+        .putValue("asset_id", "9324")
+        .putValue("title", "Meeseeks and Destroy")
+        .putValue("keywords", "Science Fiction")
+        .putValue("season", "1")
+        .putValue("episode", "5")
+        .putValue("genre", "cartoon")
+        .putValue("program", "Rick and Morty")
+        .putValue("channel", "cartoon network")
+        .putValue("full_episode", "true")
+        .putValue("airdate", "2014-01-20"))
+        .build());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("ns_st_ci","9324");
+    expected.put("ns_st_ep","Meeseeks and Destroy");
+    expected.put("ns_st_ge","Science Fiction");
+    expected.put("ns_st_sn","1");
+    expected.put("ns_st_en","5");
+    expected.put("ns_st_ge","cartoon");
+    expected.put("ns_st_pr","Rick and Morty");
+    expected.put("ns_st_pu","cartoon network");
+    expected.put("ns_st_ce","true");
+    expected.put("ns_st_ddt","2014-01-20");
+
+    verify(streamingAnalytics).notifyPlay();
+    verify(streamingAnalytics).getPlaybackSession();
+    verify(playbackSession).setAsset(expected);
+
+  }
+
+  @Test public void videoContentCompleted() {
+    setupWithVideoPlaybackStarted();
+    Mockito.reset(streamingAnalytics);
+
+    PlaybackSession playbackSession = mock(PlaybackSession.class);
+    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+
+    integration.track(new TrackPayloadBuilder().event("Video Content Completed")
+        .properties(new Properties()
+            .putValue("asset_id", "9324")
+            .putValue("title", "Raising Gazorpazorp")
+            .putValue("keywords", "Science Fiction")
+            .putValue("season", "1")
+            .putValue("episode", "7")
+            .putValue("genre", "cartoon")
+            .putValue("program", "Rick and Morty")
+            .putValue("channel", "cartoon network")
+            .putValue("full_episode", "true")
+            .putValue("airdate", "2014-10-20"))
+        .build());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("ns_st_ci","9324");
+    expected.put("ns_st_ep","Raising Gazorpazorp");
+    expected.put("ns_st_ge","Science Fiction");
+    expected.put("ns_st_sn","1");
+    expected.put("ns_st_en","7");
+    expected.put("ns_st_ge","cartoon");
+    expected.put("ns_st_pr","Rick and Morty");
+    expected.put("ns_st_pu","cartoon network");
+    expected.put("ns_st_ce","true");
+    expected.put("ns_st_ddt","2014-10-20");
+
+    verify(streamingAnalytics).notifyEnd();
+    verify(streamingAnalytics).getPlaybackSession();
+    verify(playbackSession).setAsset(expected);
+  }
+
+  @Test public void videoAdStarted() {
+    setupWithVideoPlaybackStarted();
+    Mockito.reset(streamingAnalytics);
+
+    PlaybackSession playbackSession = mock(PlaybackSession.class);
+    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+
+    integration.track(new TrackPayloadBuilder().event("Video Ad Started")
+        .properties(new Properties()
+            .putValue("asset_id", "4311")
+            .putValue("pod_id", "adSegmentA")
+            .putValue("type", "pre-roll")
+            .putValue("publisher", "Segment")
+            .putValue("length", "120"))
+        .build());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("ns_st_ci","4311");
+    expected.put("ns_st_pn","adSegmentA");
+    expected.put("ns_st_ad","pre-roll");
+    expected.put("ns_st_pu","Segment");
+    expected.put("ns_st_cl","120");
+
+    verify(streamingAnalytics).notifyPlay();
+    verify(streamingAnalytics).getPlaybackSession();
+    verify(playbackSession).setAsset(expected);
+
+  }
+
+  @Test public void videoAdCompleted() {
+    setupWithVideoPlaybackStarted();
+    Mockito.reset(streamingAnalytics);
+
+    PlaybackSession playbackSession = mock(PlaybackSession.class);
+    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+
+    integration.track(new TrackPayloadBuilder().event("Video Ad Completed")
+        .properties(new Properties()
+            .putValue("asset_id", "3425")
+            .putValue("pod_id", "adSegmentb")
+            .putValue("type", "mid-roll")
+            .putValue("publisher", "Adult Swim")
+            .putValue("length", "100"))
+        .build());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("ns_st_ci","3425");
+    expected.put("ns_st_pn","adSegmentb");
+    expected.put("ns_st_ad","mid-roll");
+    expected.put("ns_st_pu","Adult Swim");
+    expected.put("ns_st_cl","100");
+
+    verify(streamingAnalytics).notifyEnd();
+    verify(streamingAnalytics).getPlaybackSession();
+    verify(playbackSession).setAsset(expected);
+  }
+
+
   @Test public void identify() throws JSONException {
     Configuration configuration = mock(Configuration.class);
     when(Analytics.getConfiguration()).thenReturn(configuration);

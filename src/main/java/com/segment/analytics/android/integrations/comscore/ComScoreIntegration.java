@@ -109,10 +109,10 @@ public class ComScoreIntegration extends Integration<Void> {
 
     Map<String, String> contentMapper = new LinkedHashMap<>();
     contentMapper.put("asset_id", "ns_st_ci");
-    contentMapper.put("title", "ns_st_pr");
+    contentMapper.put("title", "ns_st_ep");
     contentMapper.put("keywords", "ns_st_ge");
     contentMapper.put("season", "ns_st_sn");
-    contentMapper.put("episode", "ns_st_ep");
+    contentMapper.put("episode", "ns_st_en");
     contentMapper.put("genre", "ns_st_ge");
     contentMapper.put("program", "ns_st_pr");
     contentMapper.put("channel", "ns_st_pu");
@@ -139,63 +139,83 @@ public class ComScoreIntegration extends Integration<Void> {
         break;
 
       case "Video Playback Paused":
-        streamingAnalytics.notifyPause();
-        streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
+        if (streamingAnalytics != null) {
+          streamingAnalytics.notifyPause();
+          streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
+          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
+        }
         break;
 
       case "Video Playback Buffer Started":
-        streamingAnalytics.notifyBufferStart();
-        streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
+        if (streamingAnalytics != null) {
+          streamingAnalytics.notifyBufferStart();
+          streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
+          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
+        }
         break;
 
       case "Video Playback Buffer Completed":
-        streamingAnalytics.notifyBufferStop();
-        streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
+        if (streamingAnalytics != null) {
+          streamingAnalytics.notifyBufferStop();
+          streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
+          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
+        }
         break;
 
       case "Video Playback Seek Started":
-        streamingAnalytics.notifySeekStart();
-        streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
+        if (streamingAnalytics != null) {
+          streamingAnalytics.notifySeekStart();
+          streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
+          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
+        }
         break;
 
       case "Video Playback Seek Completed":
-        streamingAnalytics.notifyEnd();
-        streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
+        if (streamingAnalytics != null) {
+          streamingAnalytics.notifyEnd();
+          streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
+          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
+        }
         break;
 
       case "Video Playback Resumed":
-        streamingAnalytics.notifyPlay();
-        streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
+        if (streamingAnalytics != null) {
+          streamingAnalytics.notifyPlay();
+          streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
+          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
+        }
         break;
 
       case "Video Content Started":
-        streamingAnalytics.notifyPlay();
-        streamingAnalytics.getPlaybackSession().setAsset(contentAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", contentAsset);
+        if (streamingAnalytics != null) {
+          streamingAnalytics.notifyPlay();
+          streamingAnalytics.getPlaybackSession().setAsset(contentAsset);
+          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", contentAsset);
+        }
         break;
 
       case "Video Content Completed":
-        streamingAnalytics.notifyEnd();
-        streamingAnalytics.getPlaybackSession().setAsset(contentAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", contentAsset);
+        if (streamingAnalytics != null) {
+          streamingAnalytics.notifyEnd();
+          streamingAnalytics.getPlaybackSession().setAsset(contentAsset);
+          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", contentAsset);
+        }
         break;
 
       case "Video Ad Started":
-        streamingAnalytics.notifyPlay();
-        streamingAnalytics.getPlaybackSession().setAsset(adAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", adAsset);
+        if (streamingAnalytics != null) {
+          streamingAnalytics.notifyPlay();
+          streamingAnalytics.getPlaybackSession().setAsset(adAsset);
+          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", adAsset);
+        }
         break;
 
       case "Video Ad Completed":
-        streamingAnalytics.notifyEnd();
-        streamingAnalytics.getPlaybackSession().setAsset(adAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", adAsset);
+        if (streamingAnalytics != null) {
+          streamingAnalytics.notifyEnd();
+          streamingAnalytics.getPlaybackSession().setAsset(adAsset);
+          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", adAsset);
+        }
         break;
 
       default:
