@@ -4,6 +4,7 @@ import com.comscore.Analytics;
 import com.comscore.PublisherConfiguration;
 import com.comscore.UsagePropertiesAutoUpdateMode;
 import com.comscore.streaming.StreamingAnalytics;
+import com.segment.analytics.Properties;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.IdentifyPayload;
 import com.segment.analytics.integrations.Integration;
@@ -98,8 +99,10 @@ public class ComScoreIntegration extends Integration<Void> {
 
   @Override
   public void track(TrackPayload track) {
+
     String name = track.event();
     Map<String, String> properties = track.properties().toStringMap();
+    Properties nonStringProps = track.properties();
 
     Map<String, String> playbackMapper = new LinkedHashMap<>();
     playbackMapper.put("asset_id", "ns_st_ci");
@@ -126,12 +129,16 @@ public class ComScoreIntegration extends Integration<Void> {
     adMapper.put("publisher", "ns_st_pu");
     adMapper.put("length", "ns_st_cl");
 
+    long playbackPosition = nonStringProps.getLong("playbackPosition", 0);
+
     Map<String, String> playbackAsset = Utils.transform(properties, playbackMapper);
     Map<String, String> contentAsset = Utils.transform(properties, contentMapper);
     Map<String, String> adAsset = Utils.transform(properties, adMapper);
 
+
     switch (name) {
       case "Video Playback Started":
+
         streamingAnalytics = streamingAnalyticsFactory.create();
         streamingAnalytics.createPlaybackSession();
         streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
@@ -140,7 +147,7 @@ public class ComScoreIntegration extends Integration<Void> {
 
       case "Video Playback Paused":
         if (streamingAnalytics != null) {
-          streamingAnalytics.notifyPause();
+          streamingAnalytics.notifyPause(playbackPosition);
           streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
           logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
         }

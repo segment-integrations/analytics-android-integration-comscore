@@ -225,7 +225,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
             .putValue("asset_id", "1234")
             .putValue("ad_type", "mid-roll")
             .putValue("length", "100")
-            .putValue("video_player", "vimeo"))
+            .putValue("video_player", "vimeo")
+            .putValue("playbackPosition", "10"))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -234,7 +235,7 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     expected.put("nst_st_cl", "100");
     expected.put("ns_st_st", "vimeo");
 
-    verify(streamingAnalytics).notifyPause();
+    verify(streamingAnalytics).notifyPause(10);
     verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
 
