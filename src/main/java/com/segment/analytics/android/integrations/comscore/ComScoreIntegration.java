@@ -17,6 +17,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static com.segment.analytics.internal.Utils.isNullOrEmpty;
+
 public class ComScoreIntegration extends Integration<Void> {
 
   public static final Factory FACTORY =
@@ -97,6 +99,19 @@ public class ComScoreIntegration extends Integration<Void> {
     Analytics.start(analytics.getApplication());
   }
 
+  public static <T> Map<String, T> filter(Map<String, T> in, Map<String, String> mapper) {
+    Map<String, T> out = new LinkedHashMap<>(mapper.size());
+    for (Map.Entry<String, T> entry : in.entrySet()) {
+      String key = entry.getKey();
+      String mappedKey = mapper.get(key);
+      if (!isNullOrEmpty(mappedKey)) {
+        out.put(mappedKey, entry.getValue());
+      }
+    }
+    return out;
+  }
+
+
   @Override
   public void track(TrackPayload track) {
 
@@ -131,10 +146,9 @@ public class ComScoreIntegration extends Integration<Void> {
 
     long playbackPosition = nonStringProps.getLong("playbackPosition", 0);
 
-    Map<String, String> playbackAsset = Utils.transform(properties, playbackMapper);
-    Map<String, String> contentAsset = Utils.transform(properties, contentMapper);
-    Map<String, String> adAsset = Utils.transform(properties, adMapper);
-
+    Map<String, String> playbackAsset = filter(properties, playbackMapper);
+    Map<String, String> contentAsset = filter(properties, contentMapper);
+    Map<String, String> adAsset = filter(properties, adMapper);
 
     switch (name) {
       case "Video Playback Started":
