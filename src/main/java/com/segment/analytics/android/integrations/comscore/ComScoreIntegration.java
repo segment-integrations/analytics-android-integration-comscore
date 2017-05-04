@@ -152,7 +152,19 @@ public class ComScoreIntegration extends Integration<Void> {
       }
     }
     return defaultValue;
+
   }
+
+
+  ///  public String getString(String key) {
+  //  Object value = get(key);
+  //    if (value instanceof String) {
+  //    return (String) value;
+  //  } else if (value != null) {
+  //    return String.valueOf(value);
+  //  }
+  //    return null;
+  //}
 
   public void trackVideoPlayback(TrackPayload track, Properties properties, Map<String, Object> comScoreOptions) {
     String name = track.event();
@@ -168,6 +180,7 @@ public class ComScoreIntegration extends Integration<Void> {
 
     if (name == "Video Playback Started") {
       streamingAnalytics = streamingAnalyticsFactory.create();
+      streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
       streamingAnalytics.createPlaybackSession();
       return;
     }
@@ -235,6 +248,11 @@ public class ComScoreIntegration extends Integration<Void> {
         logger.verbose("streamingAnalytics.notifyPlay(%s)", playbackPosition);
         break;
 
+      case "Video Content Playing":
+        streamingAnalytics.notifyEnd(playbackPosition);
+        logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
+        break;
+
       case "Video Content Completed":
         streamingAnalytics.notifyEnd(playbackPosition);
         logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
@@ -268,6 +286,11 @@ public class ComScoreIntegration extends Integration<Void> {
         logger.verbose("streamingAnalytics.notifyPlay(%s)", playbackPosition);
         break;
 
+      case "Video Ad Playing":
+        streamingAnalytics.notifyPlay(playbackPosition);
+        logger.verbose("streamingAnalytics.notifyPlay(%s)", playbackPosition);
+        break;
+
       case "Video Ad Completed":
         streamingAnalytics.notifyEnd(playbackPosition);
         logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
@@ -287,13 +310,32 @@ public class ComScoreIntegration extends Integration<Void> {
     if (!isNullOrEmpty(comScoreOptions)) {
       comScoreOptions = Collections.emptyMap();
     }
-    trackVideoPlayback(track, properties, comScoreOptions);
-    trackVideoContent(track, properties, comScoreOptions);
-    trackVideoAd(track, properties, comScoreOptions);
 
-    stringProperties.put("name", name);
-    Analytics.notifyHiddenEvent(stringProperties);
-    logger.verbose("Analytics.hidden(%s)", stringProperties);
+    switch(name) {
+      case "Video Playback Started":
+      case "Video Playback Paused":
+      case "Video Playback Buffer Started":
+      case "Video Playback Buffer Completed":
+      case "Video Playback Seek Started":
+      case "Video Playback Seek Completed":
+      case "Video Playback Resumed":
+        trackVideoPlayback(track, properties, comScoreOptions);
+        break;
+      case "Video Content Started":
+      case "Video Content Playing":
+      case "Video Content Completed":
+        trackVideoContent(track, properties, comScoreOptions);
+        break;
+      case "Video Ad Started":
+      case "Video Ad Playing":
+      case "Video Ad Completed":
+        trackVideoAd(track, properties, comScoreOptions);
+        break;
+      default:
+        stringProperties.put("name", name);
+        Analytics.notifyHiddenEvent(stringProperties);
+        logger.verbose("Analytics.hidden(%s)", stringProperties);
+    }
 
   }
 

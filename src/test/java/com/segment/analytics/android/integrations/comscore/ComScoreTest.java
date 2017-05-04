@@ -186,6 +186,9 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     expected.put("ns_st_ad", "pre-roll");
     expected.put("nst_st_cl", "120");
     expected.put("ns_st_st", "youtube");
+    expected.put("c3", "*null");
+    expected.put("c4", "*null");
+    expected.put("c6", "*null");
 
     verify(playbackSession).setAsset(expected);
   }
@@ -221,6 +224,7 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     Map<String, Object> options = new LinkedHashMap<>();
+    options.put("c3", "abc");
 
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Paused")
@@ -229,7 +233,6 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
             .putValue("length", "100")
             .putValue("video_player", "vimeo")
             .putValue("playbackPosition", "10")
-            .putValue("c3", "abc")
         )
         .options(new Options().setIntegrationOptions("comScore", options))
         .build());
@@ -239,7 +242,9 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     expected.put("ns_st_ad", "mid-roll");
     expected.put("nst_st_cl", "100");
     expected.put("ns_st_st", "vimeo");
-    expected.put("c3", "*null");
+    expected.put("c3", "abc");
+    expected.put("c4", "*null");
+    expected.put("c6", "*null");
 
     verify(streamingAnalytics).notifyPause(10);
     verify(streamingAnalytics).getPlaybackSession();
