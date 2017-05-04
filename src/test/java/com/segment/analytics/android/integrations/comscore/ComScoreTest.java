@@ -1,44 +1,5 @@
 package com.segment.analytics.android.integrations.comscore;
 
-import android.app.Application;
-import com.comscore.ClientConfiguration;
-import com.comscore.Configuration;
-import com.comscore.PartnerConfiguration;
-import com.comscore.PublisherConfiguration;
-import com.comscore.UsagePropertiesAutoUpdateMode;
-import com.comscore.Analytics;
-import com.comscore.streaming.PlaybackSession;
-import com.comscore.streaming.StreamingAnalytics;
-import com.segment.analytics.Options;
-import com.segment.analytics.Properties;
-import com.segment.analytics.Traits;
-import com.segment.analytics.ValueMap;
-import com.segment.analytics.integrations.Logger;
-import com.segment.analytics.integrations.TrackPayload;
-import com.segment.analytics.test.IdentifyPayloadBuilder;
-import com.segment.analytics.test.ScreenPayloadBuilder;
-import com.segment.analytics.test.TrackPayloadBuilder;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import org.apache.maven.artifact.ant.shaded.cli.Arg;
-import org.json.JSONException;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
-
-import static org.mockito.BDDMockito.*;
-
 import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
 import static com.segment.analytics.Utils.createTraits;
 import static org.assertj.core.api.Java6Assertions.assertThat;
@@ -49,23 +10,64 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
-import static org.powermock.api.support.membermodification.MemberModifier.replace;
+
+import android.app.Application;
+import com.comscore.Analytics;
+import com.comscore.ClientConfiguration;
+import com.comscore.Configuration;
+import com.comscore.PartnerConfiguration;
+import com.comscore.PublisherConfiguration;
+import com.comscore.UsagePropertiesAutoUpdateMode;
+import com.comscore.streaming.PlaybackSession;
+import com.comscore.streaming.StreamingAnalytics;
+import com.segment.analytics.Options;
+import com.segment.analytics.Properties;
+import com.segment.analytics.Traits;
+import com.segment.analytics.ValueMap;
+import com.segment.analytics.integrations.Logger;
+import com.segment.analytics.test.IdentifyPayloadBuilder;
+import com.segment.analytics.test.ScreenPayloadBuilder;
+import com.segment.analytics.test.TrackPayloadBuilder;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import org.json.JSONException;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.rule.PowerMockRule;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
-@PowerMockIgnore({ "org.mockito.*", "org.robolectric.*", "android.*" })
-@PrepareForTest(Analytics.class) public class ComScoreTest {
+@PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*"})
+@PrepareForTest(Analytics.class)
+public class ComScoreTest {
 
-  @Rule public PowerMockRule rule = new PowerMockRule();
-  @Mock Application context;
-  @Mock Configuration configuration;
+  @Rule
+  public PowerMockRule rule = new PowerMockRule();
+  @Mock
+  Application context;
+  @Mock
+  Configuration configuration;
   Logger logger;
-  @Mock com.segment.analytics.Analytics analytics;
+  @Mock
+  com.segment.analytics.Analytics analytics;
   ComScoreIntegration integration;
-  @Mock Analytics comScore;
-  @Mock StreamingAnalytics streamingAnalytics;
+  @Mock
+  Analytics comScore;
+  @Mock
+  StreamingAnalytics streamingAnalytics;
 
-  @Before public void setUp() {
+  @Before
+  public void setUp() {
     initMocks(this);
     mockStatic(Analytics.class);
     logger = Logger.with(com.segment.analytics.Analytics.LogLevel.DEBUG);
@@ -76,7 +78,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
         new ValueMap().putValue("customerC2", "foobarbar")
             .putValue("publisherSecret", "illnevertell"),
         new ComScoreIntegration.StreamingAnalyticsFactory() {
-          @Override public StreamingAnalytics create() {
+          @Override
+          public StreamingAnalytics create() {
             return streamingAnalytics;
           }
         });
@@ -85,7 +88,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     mockStatic(Analytics.class);
   }
 
-  @Test public void factory() {
+  @Test
+  public void factory() {
     ValueMap settings =
         new ValueMap().putValue("c2", "foobarbar").putValue("publisherSecret", "illnevertell");
     when(Analytics.getConfiguration()).thenReturn(configuration);
@@ -96,7 +100,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     assertThat(integration.publisherSecret).isEqualTo("illnevertell");
   }
 
-  @Test public void initializeWithDefaultArguments() {
+  @Test
+  public void initializeWithDefaultArguments() {
     ValueMap settings = new ValueMap() //
         .putValue("c2", "foobarbar")
         .putValue("publisherSecret", "illnevertell")
@@ -111,7 +116,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     assertThat(integration.useHTTPS).isTrue();
   }
 
-  @Test public void initializeWithAutoUpdateMode() throws IllegalStateException {
+  @Test
+  public void initializeWithAutoUpdateMode() throws IllegalStateException {
     Configuration configuration = mock(Configuration.class);
     when(Analytics.getConfiguration()).thenReturn(configuration);
 
@@ -141,7 +147,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
         UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
   }
 
-  @Test public void track() {
+  @Test
+  public void track() {
     integration.track(new TrackPayloadBuilder().event("foo").build());
 
     Properties expected = new Properties().putValue("name", "foo");
@@ -151,7 +158,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     Analytics.notifyHiddenEvent(properties);
   }
 
-  @Test public void trackWithProps() {
+  @Test
+  public void trackWithProps() {
     integration.track(new TrackPayloadBuilder() //
         .event("Completed Order")
         .properties(new Properties().putValue(20.0).putValue("product", "Ukelele"))
@@ -193,7 +201,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test public void videoPlaybackStarted() {
+  @Test
+  public void videoPlaybackStarted() {
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
@@ -216,25 +225,27 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test public void videoPlaybackPaused() {
+  @Test
+  public void videoPlaybackPaused() {
     setupWithVideoPlaybackStarted();
     Mockito.reset(streamingAnalytics);
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
-    Map<String, Object> options = new LinkedHashMap<>();
-    options.put("c3", "abc");
+    Map<String, Object> comScoreOptions = new LinkedHashMap<>();
+    comScoreOptions.put("c3", "abc");
 
-
-    integration.track(new TrackPayloadBuilder().event("Video Playback Paused")
-        .properties(new Properties().putValue("asset_id", "1234")
+    integration.track(new TrackPayloadBuilder() //
+        .event("Video Playback Paused")
+        .properties(new Properties() //
+            .putValue("asset_id", "1234")
             .putValue("ad_type", "mid-roll")
             .putValue("length", "100")
             .putValue("video_player", "vimeo")
             .putValue("playbackPosition", "10")
         )
-        .options(new Options().setIntegrationOptions("comScore", options))
+        .options(new Options().setIntegrationOptions("comScore", comScoreOptions))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -251,7 +262,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test public void videoPlaybackBufferStarted() {
+  @Test
+  public void videoPlaybackBufferStarted() {
     setupWithVideoPlaybackStarted();
     Mockito.reset(streamingAnalytics);
 
@@ -276,7 +288,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test public void videoPlaybackBufferCompleted() {
+  @Test
+  public void videoPlaybackBufferCompleted() {
     setupWithVideoPlaybackStarted();
     Mockito.reset(streamingAnalytics);
 
@@ -301,7 +314,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test public void videoPlaybackSeekStarted() {
+  @Test
+  public void videoPlaybackSeekStarted() {
     setupWithVideoPlaybackStarted();
     Mockito.reset(streamingAnalytics);
 
@@ -326,7 +340,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     verify(playbacksession).setAsset(expected);
   }
 
-  @Test public void videoPlaybackSeekCompleted() {
+  @Test
+  public void videoPlaybackSeekCompleted() {
     setupWithVideoPlaybackStarted();
     Mockito.reset(streamingAnalytics);
 
@@ -351,7 +366,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test public void videoPlaybackResumed() {
+  @Test
+  public void videoPlaybackResumed() {
     setupWithVideoPlaybackStarted();
     Mockito.reset(streamingAnalytics);
 
@@ -376,7 +392,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test public void videoContentStarted() {
+  @Test
+  public void videoContentStarted() {
     setupWithVideoPlaybackStarted();
     Mockito.reset(streamingAnalytics);
 
@@ -413,7 +430,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test public void videoContentCompleted() {
+  @Test
+  public void videoContentCompleted() {
     setupWithVideoPlaybackStarted();
     Mockito.reset(streamingAnalytics);
 
@@ -450,7 +468,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test public void videoAdStarted() {
+  @Test
+  public void videoAdStarted() {
     setupWithVideoPlaybackStarted();
     Mockito.reset(streamingAnalytics);
 
@@ -477,7 +496,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test public void videoAdCompleted() {
+  @Test
+  public void videoAdCompleted() {
     setupWithVideoPlaybackStarted();
     Mockito.reset(streamingAnalytics);
 
@@ -504,7 +524,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test public void identify() throws JSONException {
+  @Test
+  public void identify() throws JSONException {
     Configuration configuration = mock(Configuration.class);
     when(Analytics.getConfiguration()).thenReturn(configuration);
     Traits traits = createTraits("foo") //
@@ -523,7 +544,8 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     verify(configuration).setPersistentLabels(expected);
   }
 
-  @Test public void screen() {
+  @Test
+  public void screen() {
     integration.screen(
         new ScreenPayloadBuilder().name("SmartWatches").category("Purchase Screen").build());
 
