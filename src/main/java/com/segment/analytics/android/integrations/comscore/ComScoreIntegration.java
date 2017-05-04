@@ -215,7 +215,7 @@ public class ComScoreIntegration extends Integration<Void> {
         logger.verbose("streamingAnalytics.notifySeekStart(%s)", playbackPosition);
         break;
       case "Video Playback Seek Completed":
-        streamingAnalytics.notifyEnd(playbackPosition);
+        streamingAnalytics.notifyPlay(playbackPosition);
         logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
         break;
       case "Video Playback Resumed":

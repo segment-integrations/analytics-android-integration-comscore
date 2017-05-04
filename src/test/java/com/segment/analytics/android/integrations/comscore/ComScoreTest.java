@@ -380,7 +380,7 @@ public class ComScoreTest {
     expected.put("c4", "*null");
     expected.put("c6", "*null");
 
-    verify(streamingAnalytics).notifyEnd(50);
+    verify(streamingAnalytics).notifyPlay(50);
     verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
   }
