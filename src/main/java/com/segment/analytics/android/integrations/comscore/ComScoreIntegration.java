@@ -12,7 +12,7 @@ import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
 import com.comscore.PartnerConfiguration;
-import com.segment.analytics.internal.Utils;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -21,18 +21,16 @@ import static com.segment.analytics.internal.Utils.isNullOrEmpty;
 
 public class ComScoreIntegration extends Integration<Void> {
 
-  public static final Factory FACTORY =
-      new Factory() {
-        @Override
-        public Integration<?> create(ValueMap settings, com.segment.analytics.Analytics analytics) {
-          return new ComScoreIntegration(analytics, settings, StreamingAnalyticsFactory.REAL);
-        }
+  public static final Factory FACTORY = new Factory() {
+    @Override
+    public Integration<?> create(ValueMap settings, com.segment.analytics.Analytics analytics) {
+      return new ComScoreIntegration(analytics, settings, StreamingAnalyticsFactory.REAL);
+    }
 
-        @Override
-        public String key() {
-          return COMSCORE_KEY;
-        }
-      };
+    @Override public String key() {
+      return COMSCORE_KEY;
+    }
+  };
 
   private static final String COMSCORE_KEY = "comScore";
   final Logger logger;
@@ -49,18 +47,14 @@ public class ComScoreIntegration extends Integration<Void> {
   interface StreamingAnalyticsFactory {
     StreamingAnalytics create();
 
-    StreamingAnalyticsFactory REAL =
-        new StreamingAnalyticsFactory() {
-          @Override
-          public StreamingAnalytics create() {
-            return new StreamingAnalytics();
-          }
-        };
+    StreamingAnalyticsFactory REAL = new StreamingAnalyticsFactory() {
+      @Override public StreamingAnalytics create() {
+        return new StreamingAnalytics();
+      }
+    };
   }
 
-  ComScoreIntegration(
-      com.segment.analytics.Analytics analytics,
-      ValueMap settings,
+  ComScoreIntegration(com.segment.analytics.Analytics analytics, ValueMap settings,
       StreamingAnalyticsFactory streamingAnalyticsFactory) {
     this.streamingAnalyticsFactory = streamingAnalyticsFactory;
     logger = analytics.logger(COMSCORE_KEY);
@@ -99,25 +93,112 @@ public class ComScoreIntegration extends Integration<Void> {
     Analytics.start(analytics.getApplication());
   }
 
-  public static <T> Map<String, T> filter(Map<String, T> in, Map<String, String> mapper) {
-    Map<String, T> out = new LinkedHashMap<>(mapper.size());
-    for (Map.Entry<String, T> entry : in.entrySet()) {
+  /**
+   * Store a value for {@param k} in {@param asset} by checking {@param comScoreOptions} first and
+   * falling back to {@param properties}. Uses {@code "*null"} it not found in either.
+   */
+  void setNullIfNotProvided(Map<String, String> asset, Map<String, ?> comScoreOptions,
+      Map<String, ?> properties, String key) {
+    String option = getString(comScoreOptions, key, null);
+    if (option != null) {
+      asset.put(key, option);
+      return;
+    }
+
+    String property = getString(properties, key, null);
+    if (property != null) {
+      asset.put(key, property);
+      return;
+    }
+
+    asset.put(key, "*null");
+  }
+
+  Map<String, String> buildAsset(Map<String, ?> properties, Map<String, ?> options,
+      Map<String, String> mapper) {
+    Map<String, String> asset = new LinkedHashMap<>(mapper.size());
+
+    // Map special keys and preserve only the special keys.
+    for (Map.Entry<String, ?> entry : properties.entrySet()) {
       String key = entry.getKey();
       String mappedKey = mapper.get(key);
       if (!isNullOrEmpty(mappedKey)) {
-        out.put(mappedKey, entry.getValue());
+        asset.put(mappedKey, String.valueOf(entry.getValue()));
       }
     }
-    return out;
+
+    setNullIfNotProvided(asset, options, properties, "c3");
+    setNullIfNotProvided(asset, options, properties, "c4");
+    setNullIfNotProvided(asset, options, properties, "c6");
+
+    return asset;
   }
 
+  /**
+   * Returns the value mapped by {@code key} if it exists and is a string, or can be coerced to a
+   * string. Returns {@code defaultValue} otherwise.
+   * <p/>
+   * This will return {@code defaultValue} only if the value does not exist, since all types can
+   * have a String representation.
+   */
+  String getString(Map<String, ?> m, String key, String defaultValue) {
+    Object value = m.get(key);
+    if (value instanceof String) {
+      return (String) value;
+    }
+    if (value != null) {
+      return String.valueOf(value);
+    }
+    return defaultValue;
+  }
 
-  @Override
-  public void track(TrackPayload track) {
+  public void trackVideoPlayback(TrackPayload track) {
+    if (track.event() == "Started") {
+      streamingAnalytics = streamingAnalyticsFactory.create();
+      streamingAnalytics.createPlaybackSession();
+      streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
+      logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
+      return;
+    }
+
+    if (streamingAnalytics == null) {
+      return;
+    }
+
+    switch (track.event()) {
+      case "Video Playback Paused":
+        streamingAnalytics.notifyPause(playbackPosition);
+        break;
+      case "Video Playback Buffer Started":
+        streamingAnalytics.notifyBufferStart();
+        break;
+      case "Video Playback Buffer Completed":
+        streamingAnalytics.notifyBufferStop();
+        break;
+      case "Video Playback Seek Started":
+        streamingAnalytics.notifySeekStart();
+        break;
+      case "Video Playback Seek Completed":
+        streamingAnalytics.notifyEnd();
+        break;
+      case "Video Playback Resumed":
+        streamingAnalytics.notifyPlay();
+        break;
+    }
+
+    streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
+    logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
+  }
+
+  @Override public void track(TrackPayload track) {
 
     String name = track.event();
-    Map<String, String> properties = track.properties().toStringMap();
-    Properties nonStringProps = track.properties();
+    Properties properties = track.properties();
+
+    Map<String, Object> comScoreOptions = track.integrations().getValueMap("comScore");
+    if (!isNullOrEmpty(comScoreOptions)) {
+      comScoreOptions = Collections.emptyMap();
+    }
 
     Map<String, String> playbackMapper = new LinkedHashMap<>();
     playbackMapper.put("asset_id", "ns_st_ci");
@@ -144,11 +225,11 @@ public class ComScoreIntegration extends Integration<Void> {
     adMapper.put("publisher", "ns_st_pu");
     adMapper.put("length", "ns_st_cl");
 
-    long playbackPosition = nonStringProps.getLong("playbackPosition", 0);
+    long playbackPosition = properties.getLong("playbackPosition", 0);
 
-    Map<String, String> playbackAsset = filter(properties, playbackMapper);
-    Map<String, String> contentAsset = filter(properties, contentMapper);
-    Map<String, String> adAsset = filter(properties, adMapper);
+    Map<String, String> playbackAsset = buildAsset(properties, comScoreOptions, playbackMapper);
+    Map<String, String> contentAsset = buildAsset(properties, comScoreOptions, contentMapper);
+    Map<String, String> adAsset = buildAsset(properties, comScoreOptions, adMapper);
 
     switch (name) {
       case "Video Playback Started":
@@ -246,8 +327,7 @@ public class ComScoreIntegration extends Integration<Void> {
     }
   }
 
-  @Override
-  public void identify(IdentifyPayload identify) {
+  @Override public void identify(IdentifyPayload identify) {
     super.identify(identify);
     String userId = identify.userId();
     HashMap<String, String> traits = (HashMap<String, String>) identify.traits().toStringMap();
@@ -256,13 +336,11 @@ public class ComScoreIntegration extends Integration<Void> {
     logger.verbose("Analytics.setPersistentLabels(%s)", traits);
   }
 
-  @Override
-  public void screen(ScreenPayload screen) {
+  @Override public void screen(ScreenPayload screen) {
     String name = screen.name();
     String category = screen.category();
-    HashMap<String, String> properties =
-        (HashMap<String, String>) //
-            screen.properties().toStringMap();
+    HashMap<String, String> properties = (HashMap<String, String>) //
+        screen.properties().toStringMap();
     properties.put("name", name);
     properties.put("category", category);
     Analytics.notifyViewEvent(properties);

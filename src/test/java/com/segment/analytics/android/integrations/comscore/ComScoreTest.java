@@ -9,6 +9,7 @@ import com.comscore.UsagePropertiesAutoUpdateMode;
 import com.comscore.Analytics;
 import com.comscore.streaming.PlaybackSession;
 import com.comscore.streaming.StreamingAnalytics;
+import com.segment.analytics.Options;
 import com.segment.analytics.Properties;
 import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
@@ -35,6 +36,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+
 import static org.mockito.BDDMockito.*;
 
 import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
@@ -170,8 +172,7 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Started")
-        .properties(new Properties()
-            .putValue("asset_id", "1234")
+        .properties(new Properties().putValue("asset_id", "1234")
             .putValue("ad_type", "pre-roll")
             .putValue("length", "120")
             .putValue("video_player", "youtube"))
@@ -194,8 +195,7 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Started")
-        .properties(new Properties()
-            .putValue("asset_id", "1234")
+        .properties(new Properties().putValue("asset_id", "1234")
             .putValue("ad_type", "pre-roll")
             .putValue("length", "120")
             .putValue("video_player", "youtube"))
@@ -220,13 +220,18 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
+    Map<String, Object> options = new LinkedHashMap<>();
+
+
     integration.track(new TrackPayloadBuilder().event("Video Playback Paused")
-        .properties(new Properties()
-            .putValue("asset_id", "1234")
+        .properties(new Properties().putValue("asset_id", "1234")
             .putValue("ad_type", "mid-roll")
             .putValue("length", "100")
             .putValue("video_player", "vimeo")
-            .putValue("playbackPosition", "10"))
+            .putValue("playbackPosition", "10")
+            .putValue("c3", "abc")
+        )
+        .options(new Options().setIntegrationOptions("comScore", options))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -234,11 +239,11 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     expected.put("ns_st_ad", "mid-roll");
     expected.put("nst_st_cl", "100");
     expected.put("ns_st_st", "vimeo");
+    expected.put("c3", "*null");
 
     verify(streamingAnalytics).notifyPause(10);
     verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
-
   }
 
   @Test public void videoPlaybackBufferStarted() {
@@ -249,12 +254,11 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Buffer Started")
-    .properties(new Properties()
-        .putValue("asset_id", "7890")
-        .putValue("ad_type", "post-roll")
-        .putValue("length", "700")
-        .putValue("video_player", "youtube"))
-    .build());
+        .properties(new Properties().putValue("asset_id", "7890")
+            .putValue("ad_type", "post-roll")
+            .putValue("length", "700")
+            .putValue("video_player", "youtube"))
+        .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_ci", "7890");
@@ -275,8 +279,7 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Buffer Completed")
-        .properties(new Properties()
-            .putValue("asset_id", "1029")
+        .properties(new Properties().putValue("asset_id", "1029")
             .putValue("ad_type", "pre-roll")
             .putValue("length", "800")
             .putValue("video_player", "vimeo"))
@@ -301,8 +304,7 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbacksession);
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Seek Started")
-        .properties(new Properties()
-            .putValue("asset_id", "3948")
+        .properties(new Properties().putValue("asset_id", "3948")
             .putValue("ad_type", "mid-roll")
             .putValue("length", "900")
             .putValue("video_player", "youtube"))
@@ -327,8 +329,7 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Seek Completed")
-        .properties(new Properties()
-            .putValue("asset_id", "6767")
+        .properties(new Properties().putValue("asset_id", "6767")
             .putValue("ad_type", "post-roll")
             .putValue("length", "400")
             .putValue("video_player", "vimeo"))
@@ -353,11 +354,10 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Resumed")
-          .properties(new Properties()
-          .putValue("asset_id", "5332")
-          .putValue("ad_type", "post-roll")
-          .putValue("length", "100")
-          .putValue("video_player", "youtube"))
+        .properties(new Properties().putValue("asset_id", "5332")
+            .putValue("ad_type", "post-roll")
+            .putValue("length", "100")
+            .putValue("video_player", "youtube"))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -371,7 +371,7 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test public void videoContentStarted(){
+  @Test public void videoContentStarted() {
     setupWithVideoPlaybackStarted();
     Mockito.reset(streamingAnalytics);
 
@@ -379,35 +379,33 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Content Started")
-    .properties(new Properties()
-        .putValue("asset_id", "9324")
-        .putValue("title", "Meeseeks and Destroy")
-        .putValue("keywords", "Science Fiction")
-        .putValue("season", "1")
-        .putValue("episode", "5")
-        .putValue("genre", "cartoon")
-        .putValue("program", "Rick and Morty")
-        .putValue("channel", "cartoon network")
-        .putValue("full_episode", "true")
-        .putValue("airdate", "2014-01-20"))
+        .properties(new Properties().putValue("asset_id", "9324")
+            .putValue("title", "Meeseeks and Destroy")
+            .putValue("keywords", "Science Fiction")
+            .putValue("season", "1")
+            .putValue("episode", "5")
+            .putValue("genre", "cartoon")
+            .putValue("program", "Rick and Morty")
+            .putValue("channel", "cartoon network")
+            .putValue("full_episode", "true")
+            .putValue("airdate", "2014-01-20"))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci","9324");
-    expected.put("ns_st_ep","Meeseeks and Destroy");
-    expected.put("ns_st_ge","Science Fiction");
-    expected.put("ns_st_sn","1");
-    expected.put("ns_st_en","5");
-    expected.put("ns_st_ge","cartoon");
-    expected.put("ns_st_pr","Rick and Morty");
-    expected.put("ns_st_pu","cartoon network");
-    expected.put("ns_st_ce","true");
-    expected.put("ns_st_ddt","2014-01-20");
+    expected.put("ns_st_ci", "9324");
+    expected.put("ns_st_ep", "Meeseeks and Destroy");
+    expected.put("ns_st_ge", "Science Fiction");
+    expected.put("ns_st_sn", "1");
+    expected.put("ns_st_en", "5");
+    expected.put("ns_st_ge", "cartoon");
+    expected.put("ns_st_pr", "Rick and Morty");
+    expected.put("ns_st_pu", "cartoon network");
+    expected.put("ns_st_ce", "true");
+    expected.put("ns_st_ddt", "2014-01-20");
 
     verify(streamingAnalytics).notifyPlay();
     verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
-
   }
 
   @Test public void videoContentCompleted() {
@@ -418,8 +416,7 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Content Completed")
-        .properties(new Properties()
-            .putValue("asset_id", "9324")
+        .properties(new Properties().putValue("asset_id", "9324")
             .putValue("title", "Raising Gazorpazorp")
             .putValue("keywords", "Science Fiction")
             .putValue("season", "1")
@@ -432,16 +429,16 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci","9324");
-    expected.put("ns_st_ep","Raising Gazorpazorp");
-    expected.put("ns_st_ge","Science Fiction");
-    expected.put("ns_st_sn","1");
-    expected.put("ns_st_en","7");
-    expected.put("ns_st_ge","cartoon");
-    expected.put("ns_st_pr","Rick and Morty");
-    expected.put("ns_st_pu","cartoon network");
-    expected.put("ns_st_ce","true");
-    expected.put("ns_st_ddt","2014-10-20");
+    expected.put("ns_st_ci", "9324");
+    expected.put("ns_st_ep", "Raising Gazorpazorp");
+    expected.put("ns_st_ge", "Science Fiction");
+    expected.put("ns_st_sn", "1");
+    expected.put("ns_st_en", "7");
+    expected.put("ns_st_ge", "cartoon");
+    expected.put("ns_st_pr", "Rick and Morty");
+    expected.put("ns_st_pu", "cartoon network");
+    expected.put("ns_st_ce", "true");
+    expected.put("ns_st_ddt", "2014-10-20");
 
     verify(streamingAnalytics).notifyEnd();
     verify(streamingAnalytics).getPlaybackSession();
@@ -456,8 +453,7 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Ad Started")
-        .properties(new Properties()
-            .putValue("asset_id", "4311")
+        .properties(new Properties().putValue("asset_id", "4311")
             .putValue("pod_id", "adSegmentA")
             .putValue("type", "pre-roll")
             .putValue("publisher", "Segment")
@@ -465,16 +461,15 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci","4311");
-    expected.put("ns_st_pn","adSegmentA");
-    expected.put("ns_st_ad","pre-roll");
-    expected.put("ns_st_pu","Segment");
-    expected.put("ns_st_cl","120");
+    expected.put("ns_st_ci", "4311");
+    expected.put("ns_st_pn", "adSegmentA");
+    expected.put("ns_st_ad", "pre-roll");
+    expected.put("ns_st_pu", "Segment");
+    expected.put("ns_st_cl", "120");
 
     verify(streamingAnalytics).notifyPlay();
     verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
-
   }
 
   @Test public void videoAdCompleted() {
@@ -485,8 +480,7 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Ad Completed")
-        .properties(new Properties()
-            .putValue("asset_id", "3425")
+        .properties(new Properties().putValue("asset_id", "3425")
             .putValue("pod_id", "adSegmentb")
             .putValue("type", "mid-roll")
             .putValue("publisher", "Adult Swim")
@@ -494,17 +488,16 @@ import static org.powermock.api.support.membermodification.MemberModifier.replac
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci","3425");
-    expected.put("ns_st_pn","adSegmentb");
-    expected.put("ns_st_ad","mid-roll");
-    expected.put("ns_st_pu","Adult Swim");
-    expected.put("ns_st_cl","100");
+    expected.put("ns_st_ci", "3425");
+    expected.put("ns_st_pn", "adSegmentb");
+    expected.put("ns_st_ad", "mid-roll");
+    expected.put("ns_st_pu", "Adult Swim");
+    expected.put("ns_st_cl", "100");
 
     verify(streamingAnalytics).notifyEnd();
     verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
   }
-
 
   @Test public void identify() throws JSONException {
     Configuration configuration = mock(Configuration.class);
