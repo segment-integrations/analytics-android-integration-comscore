@@ -193,7 +193,7 @@ public class ComScoreTest {
     expected.put("ns_st_ci", "1234");
     expected.put("ns_st_ad", "pre-roll");
     expected.put("nst_st_cl", "120");
-    expected.put("ns_st_st", "youtube");
+    expected.put("ns_st_mp", "youtube");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -220,7 +220,7 @@ public class ComScoreTest {
     expected.put("ns_st_ci", "1234");
     expected.put("ns_st_ad", "pre-roll");
     expected.put("nst_st_cl", "120");
-    expected.put("ns_st_st", "youtube");
+    expected.put("ns_st_mp", "youtube");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -255,7 +255,7 @@ public class ComScoreTest {
     expected.put("ns_st_ci", "1234");
     expected.put("ns_st_ad", "mid-roll");
     expected.put("nst_st_cl", "100");
-    expected.put("ns_st_st", "vimeo");
+    expected.put("ns_st_mp", "vimeo");
     expected.put("c3", "abc");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -285,7 +285,7 @@ public class ComScoreTest {
     expected.put("ns_st_ci", "7890");
     expected.put("ns_st_ad", "post-roll");
     expected.put("nst_st_cl", "700");
-    expected.put("ns_st_st", "youtube");
+    expected.put("ns_st_mp", "youtube");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -315,7 +315,7 @@ public class ComScoreTest {
     expected.put("ns_st_ci", "1029");
     expected.put("ns_st_ad", "pre-roll");
     expected.put("nst_st_cl", "800");
-    expected.put("ns_st_st", "vimeo");
+    expected.put("ns_st_mp", "vimeo");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -345,7 +345,7 @@ public class ComScoreTest {
     expected.put("ns_st_ci", "3948");
     expected.put("ns_st_ad", "mid-roll");
     expected.put("nst_st_cl", "900");
-    expected.put("ns_st_st", "youtube");
+    expected.put("ns_st_mp", "youtube");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -375,7 +375,7 @@ public class ComScoreTest {
     expected.put("ns_st_ci", "6767");
     expected.put("ns_st_ad", "post-roll");
     expected.put("nst_st_cl", "400");
-    expected.put("ns_st_st", "vimeo");
+    expected.put("ns_st_mp", "vimeo");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -405,7 +405,7 @@ public class ComScoreTest {
     expected.put("ns_st_ci", "5332");
     expected.put("ns_st_ad", "post-roll");
     expected.put("nst_st_cl", "100");
-    expected.put("ns_st_st", "youtube");
+    expected.put("ns_st_mp", "youtube");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");

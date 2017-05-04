@@ -182,7 +182,7 @@ public class ComScoreIntegration extends Integration<Void> {
     playbackMapper.put("asset_id", "ns_st_ci");
     playbackMapper.put("ad_type", "ns_st_ad");
     playbackMapper.put("length", "nst_st_cl");
-    playbackMapper.put("video_player", "ns_st_st");
+    playbackMapper.put("video_player", "ns_st_mp");
 
     Map<String, String> playbackAsset = buildAsset(properties, comScoreOptions, playbackMapper);
 
