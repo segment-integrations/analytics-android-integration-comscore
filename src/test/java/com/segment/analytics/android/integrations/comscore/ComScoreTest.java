@@ -221,6 +221,9 @@ public class ComScoreTest {
     expected.put("ns_st_ad", "pre-roll");
     expected.put("nst_st_cl", "120");
     expected.put("ns_st_st", "youtube");
+    expected.put("c3", "*null");
+    expected.put("c4", "*null");
+    expected.put("c6", "*null");
 
     verify(playbackSession).setAsset(expected);
   }
@@ -274,7 +277,8 @@ public class ComScoreTest {
         .properties(new Properties().putValue("asset_id", "7890")
             .putValue("ad_type", "post-roll")
             .putValue("length", "700")
-            .putValue("video_player", "youtube"))
+            .putValue("video_player", "youtube")
+            .putValue("playbackPosition", "20"))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -282,8 +286,11 @@ public class ComScoreTest {
     expected.put("ns_st_ad", "post-roll");
     expected.put("nst_st_cl", "700");
     expected.put("ns_st_st", "youtube");
+    expected.put("c3", "*null");
+    expected.put("c4", "*null");
+    expected.put("c6", "*null");
 
-    verify(streamingAnalytics).notifyBufferStart();
+    verify(streamingAnalytics).notifyBufferStart(20);
     verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
   }
@@ -300,7 +307,8 @@ public class ComScoreTest {
         .properties(new Properties().putValue("asset_id", "1029")
             .putValue("ad_type", "pre-roll")
             .putValue("length", "800")
-            .putValue("video_player", "vimeo"))
+            .putValue("video_player", "vimeo")
+            .putValue("playbackPosition", "30"))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -308,8 +316,11 @@ public class ComScoreTest {
     expected.put("ns_st_ad", "pre-roll");
     expected.put("nst_st_cl", "800");
     expected.put("ns_st_st", "vimeo");
+    expected.put("c3", "*null");
+    expected.put("c4", "*null");
+    expected.put("c6", "*null");
 
-    verify(streamingAnalytics).notifyBufferStop();
+    verify(streamingAnalytics).notifyBufferStop(30);
     verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
   }
@@ -326,7 +337,8 @@ public class ComScoreTest {
         .properties(new Properties().putValue("asset_id", "3948")
             .putValue("ad_type", "mid-roll")
             .putValue("length", "900")
-            .putValue("video_player", "youtube"))
+            .putValue("video_player", "youtube")
+            .putValue("playbackPosition", "40"))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -334,8 +346,11 @@ public class ComScoreTest {
     expected.put("ns_st_ad", "mid-roll");
     expected.put("nst_st_cl", "900");
     expected.put("ns_st_st", "youtube");
+    expected.put("c3", "*null");
+    expected.put("c4", "*null");
+    expected.put("c6", "*null");
 
-    verify(streamingAnalytics).notifySeekStart();
+    verify(streamingAnalytics).notifySeekStart(40);
     verify(streamingAnalytics).getPlaybackSession();
     verify(playbacksession).setAsset(expected);
   }
@@ -352,7 +367,8 @@ public class ComScoreTest {
         .properties(new Properties().putValue("asset_id", "6767")
             .putValue("ad_type", "post-roll")
             .putValue("length", "400")
-            .putValue("video_player", "vimeo"))
+            .putValue("video_player", "vimeo")
+            .putValue("playbackPosition", "50"))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -360,8 +376,11 @@ public class ComScoreTest {
     expected.put("ns_st_ad", "post-roll");
     expected.put("nst_st_cl", "400");
     expected.put("ns_st_st", "vimeo");
+    expected.put("c3", "*null");
+    expected.put("c4", "*null");
+    expected.put("c6", "*null");
 
-    verify(streamingAnalytics).notifyEnd();
+    verify(streamingAnalytics).notifyEnd(50);
     verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
   }
@@ -378,7 +397,8 @@ public class ComScoreTest {
         .properties(new Properties().putValue("asset_id", "5332")
             .putValue("ad_type", "post-roll")
             .putValue("length", "100")
-            .putValue("video_player", "youtube"))
+            .putValue("video_player", "youtube")
+            .putValue("playbackPosition", "60"))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -386,8 +406,11 @@ public class ComScoreTest {
     expected.put("ns_st_ad", "post-roll");
     expected.put("nst_st_cl", "100");
     expected.put("ns_st_st", "youtube");
+    expected.put("c3", "*null");
+    expected.put("c4", "*null");
+    expected.put("c6", "*null");
 
-    verify(streamingAnalytics).notifyPlay();
+    verify(streamingAnalytics).notifyPlay(60);
     verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
   }
@@ -410,7 +433,8 @@ public class ComScoreTest {
             .putValue("program", "Rick and Morty")
             .putValue("channel", "cartoon network")
             .putValue("full_episode", "true")
-            .putValue("airdate", "2014-01-20"))
+            .putValue("airdate", "2014-01-20")
+            .putValue("playbackPosition", "70"))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -424,8 +448,11 @@ public class ComScoreTest {
     expected.put("ns_st_pu", "cartoon network");
     expected.put("ns_st_ce", "true");
     expected.put("ns_st_ddt", "2014-01-20");
+    expected.put("c3", "*null");
+    expected.put("c4", "*null");
+    expected.put("c6", "*null");
 
-    verify(streamingAnalytics).notifyPlay();
+    verify(streamingAnalytics).notifyPlay(70);
     verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
   }
@@ -448,7 +475,8 @@ public class ComScoreTest {
             .putValue("program", "Rick and Morty")
             .putValue("channel", "cartoon network")
             .putValue("full_episode", "true")
-            .putValue("airdate", "2014-10-20"))
+            .putValue("airdate", "2014-10-20")
+            .putValue("playbackPosition", "80"))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -462,8 +490,11 @@ public class ComScoreTest {
     expected.put("ns_st_pu", "cartoon network");
     expected.put("ns_st_ce", "true");
     expected.put("ns_st_ddt", "2014-10-20");
+    expected.put("c3", "*null");
+    expected.put("c4", "*null");
+    expected.put("c6", "*null");
 
-    verify(streamingAnalytics).notifyEnd();
+    verify(streamingAnalytics).notifyEnd(80);
     verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
   }
@@ -481,7 +512,8 @@ public class ComScoreTest {
             .putValue("pod_id", "adSegmentA")
             .putValue("type", "pre-roll")
             .putValue("publisher", "Segment")
-            .putValue("length", "120"))
+            .putValue("length", "120")
+            .putValue("playbackPosition", "90"))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -490,8 +522,11 @@ public class ComScoreTest {
     expected.put("ns_st_ad", "pre-roll");
     expected.put("ns_st_pu", "Segment");
     expected.put("ns_st_cl", "120");
+    expected.put("c3", "*null");
+    expected.put("c4", "*null");
+    expected.put("c6", "*null");
 
-    verify(streamingAnalytics).notifyPlay();
+    verify(streamingAnalytics).notifyPlay(90);
     verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
   }
@@ -509,7 +544,8 @@ public class ComScoreTest {
             .putValue("pod_id", "adSegmentb")
             .putValue("type", "mid-roll")
             .putValue("publisher", "Adult Swim")
-            .putValue("length", "100"))
+            .putValue("length", "100")
+            .putValue("playbackPosition", "100"))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -518,8 +554,11 @@ public class ComScoreTest {
     expected.put("ns_st_ad", "mid-roll");
     expected.put("ns_st_pu", "Adult Swim");
     expected.put("ns_st_cl", "100");
+    expected.put("c3", "*null");
+    expected.put("c4", "*null");
+    expected.put("c6", "*null");
 
-    verify(streamingAnalytics).notifyEnd();
+    verify(streamingAnalytics).notifyEnd(100);
     verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
   }
