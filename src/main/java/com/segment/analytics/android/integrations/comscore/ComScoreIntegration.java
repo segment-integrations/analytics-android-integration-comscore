@@ -99,13 +99,13 @@ public class ComScoreIntegration extends Integration<Void> {
    */
   void setNullIfNotProvided(Map<String, String> asset, Map<String, ?> comScoreOptions,
       Map<String, ?> properties, String key) {
-    String option = getString(comScoreOptions, key, null);
+    String option = getStringOrDefaultValue(comScoreOptions, key, null);
     if (option != null) {
       asset.put(key, option);
       return;
     }
 
-    String property = getString(properties, key, null);
+    String property = getStringOrDefaultValue(properties, key, null);
     if (property != null) {
       asset.put(key, property);
       return;
@@ -141,19 +141,32 @@ public class ComScoreIntegration extends Integration<Void> {
    * This will return {@code defaultValue} only if the value does not exist, since all types can
    * have a String representation.
    */
-  String getString(Map<String, ?> m, String key, String defaultValue) {
-    Object value = m.get(key);
-    if (value instanceof String) {
-      return (String) value;
-    }
-    if (value != null) {
-      return String.valueOf(value);
+  String getStringOrDefaultValue(Map<String, ?> m, String key, String defaultValue) {
+    if( !isNullOrEmpty(m) ){
+      Object value = m.get(key);
+      if (value instanceof String) {
+        return (String) value;
+      }
+      if (value != null) {
+        return String.valueOf(value);
+      }
     }
     return defaultValue;
   }
 
-  public void trackVideoPlayback(TrackPayload track) {
-    if (track.event() == "Started") {
+  public void trackVideoPlayback(TrackPayload track, Properties properties, Map<String, Object> comScoreOptions) {
+    String name = track.event();
+    long playbackPosition = properties.getLong("playbackPosition", 0);
+
+    Map<String, String> playbackMapper = new LinkedHashMap<>();
+    playbackMapper.put("asset_id", "ns_st_ci");
+    playbackMapper.put("ad_type", "ns_st_ad");
+    playbackMapper.put("length", "nst_st_cl");
+    playbackMapper.put("video_player", "ns_st_st");
+
+    Map<String, String> playbackAsset = buildAsset(properties, comScoreOptions, playbackMapper);
+
+    if (name == "Video Playback Started") {
       streamingAnalytics = streamingAnalyticsFactory.create();
       streamingAnalytics.createPlaybackSession();
       streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
@@ -165,46 +178,45 @@ public class ComScoreIntegration extends Integration<Void> {
       return;
     }
 
-    switch (track.event()) {
+    switch (name) {
       case "Video Playback Paused":
         streamingAnalytics.notifyPause(playbackPosition);
+        logger.verbose("streamingAnalytics.notifyPause(%s)", playbackPosition);
         break;
       case "Video Playback Buffer Started":
-        streamingAnalytics.notifyBufferStart();
+        streamingAnalytics.notifyBufferStart(playbackPosition);
+        logger.verbose("streamingAnalytics.notifyBufferStart(%s)", playbackPosition);
         break;
       case "Video Playback Buffer Completed":
-        streamingAnalytics.notifyBufferStop();
+        streamingAnalytics.notifyBufferStop(playbackPosition);
+        logger.verbose("streamingAnalytics.notifyBufferStop(%s)", playbackPosition);
         break;
       case "Video Playback Seek Started":
-        streamingAnalytics.notifySeekStart();
+        streamingAnalytics.notifySeekStart(playbackPosition);
+        logger.verbose("streamingAnalytics.notifySeekStart(%s)", playbackPosition);
         break;
       case "Video Playback Seek Completed":
-        streamingAnalytics.notifyEnd();
+        streamingAnalytics.notifyEnd(playbackPosition);
+        logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
         break;
       case "Video Playback Resumed":
-        streamingAnalytics.notifyPlay();
+        streamingAnalytics.notifyPlay(playbackPosition);
+        logger.verbose("streamingAnalytics.notifyPlay(%s)", playbackPosition);
         break;
+
+      default:
+        properties.put("name", name);
+        Analytics.notifyHiddenEvent(playbackAsset);
+        logger.verbose("Analytics.notifyHiddenEvent(%s)", playbackAsset);
     }
 
     streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
     logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
   }
 
-  @Override public void track(TrackPayload track) {
-
+  public void trackVideoContent(TrackPayload track, Properties properties, Map<String, Object> comScoreOptions) {
     String name = track.event();
-    Properties properties = track.properties();
-
-    Map<String, Object> comScoreOptions = track.integrations().getValueMap("comScore");
-    if (!isNullOrEmpty(comScoreOptions)) {
-      comScoreOptions = Collections.emptyMap();
-    }
-
-    Map<String, String> playbackMapper = new LinkedHashMap<>();
-    playbackMapper.put("asset_id", "ns_st_ci");
-    playbackMapper.put("ad_type", "ns_st_ad");
-    playbackMapper.put("length", "nst_st_cl");
-    playbackMapper.put("video_player", "ns_st_st");
+    long playbackPosition = properties.getLong("playbackPosition", 0);
 
     Map<String, String> contentMapper = new LinkedHashMap<>();
     contentMapper.put("asset_id", "ns_st_ci");
@@ -218,6 +230,37 @@ public class ComScoreIntegration extends Integration<Void> {
     contentMapper.put("full_episode", "ns_st_ce");
     contentMapper.put("airdate", "ns_st_ddt");
 
+    Map<String, String> contentAsset = buildAsset(properties, comScoreOptions, contentMapper);
+
+    if (streamingAnalytics == null){
+      return;
+    }
+
+    switch (name){
+      case "Video Content Started":
+        streamingAnalytics.notifyPlay(playbackPosition);
+        logger.verbose("streamingAnalytics.notifyPlay(%s)", playbackPosition);
+        break;
+
+      case "Video Content Completed":
+        streamingAnalytics.notifyEnd(playbackPosition);
+        logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
+        break;
+
+      default:
+        properties.put("name", name);
+        Analytics.notifyHiddenEvent(contentAsset);
+        logger.verbose("Analytics.notifyHiddenEvent(%s)", contentAsset);
+    }
+
+    streamingAnalytics.getPlaybackSession().setAsset(contentAsset);
+    logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", contentAsset);
+  }
+
+  public void trackVideoAd (TrackPayload track, Properties properties, Map<String, Object> comScoreOptions) {
+    String name = track.event();
+    long playbackPosition = properties.getLong("playbackPosition", 0);
+
     Map<String, String> adMapper = new LinkedHashMap<>();
     adMapper.put("asset_id", "ns_st_ci");
     adMapper.put("pod_id", "ns_st_pn");
@@ -225,106 +268,45 @@ public class ComScoreIntegration extends Integration<Void> {
     adMapper.put("publisher", "ns_st_pu");
     adMapper.put("length", "ns_st_cl");
 
-    long playbackPosition = properties.getLong("playbackPosition", 0);
-
-    Map<String, String> playbackAsset = buildAsset(properties, comScoreOptions, playbackMapper);
-    Map<String, String> contentAsset = buildAsset(properties, comScoreOptions, contentMapper);
     Map<String, String> adAsset = buildAsset(properties, comScoreOptions, adMapper);
 
+    if (streamingAnalytics == null){
+      return;
+    }
+
     switch (name) {
-      case "Video Playback Started":
-
-        streamingAnalytics = streamingAnalyticsFactory.create();
-        streamingAnalytics.createPlaybackSession();
-        streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
-        break;
-
-      case "Video Playback Paused":
-        if (streamingAnalytics != null) {
-          streamingAnalytics.notifyPause(playbackPosition);
-          streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
-        }
-        break;
-
-      case "Video Playback Buffer Started":
-        if (streamingAnalytics != null) {
-          streamingAnalytics.notifyBufferStart();
-          streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
-        }
-        break;
-
-      case "Video Playback Buffer Completed":
-        if (streamingAnalytics != null) {
-          streamingAnalytics.notifyBufferStop();
-          streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
-        }
-        break;
-
-      case "Video Playback Seek Started":
-        if (streamingAnalytics != null) {
-          streamingAnalytics.notifySeekStart();
-          streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
-        }
-        break;
-
-      case "Video Playback Seek Completed":
-        if (streamingAnalytics != null) {
-          streamingAnalytics.notifyEnd();
-          streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
-        }
-        break;
-
-      case "Video Playback Resumed":
-        if (streamingAnalytics != null) {
-          streamingAnalytics.notifyPlay();
-          streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
-        }
-        break;
-
-      case "Video Content Started":
-        if (streamingAnalytics != null) {
-          streamingAnalytics.notifyPlay();
-          streamingAnalytics.getPlaybackSession().setAsset(contentAsset);
-          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", contentAsset);
-        }
-        break;
-
-      case "Video Content Completed":
-        if (streamingAnalytics != null) {
-          streamingAnalytics.notifyEnd();
-          streamingAnalytics.getPlaybackSession().setAsset(contentAsset);
-          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", contentAsset);
-        }
-        break;
-
       case "Video Ad Started":
-        if (streamingAnalytics != null) {
-          streamingAnalytics.notifyPlay();
-          streamingAnalytics.getPlaybackSession().setAsset(adAsset);
-          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", adAsset);
-        }
+        streamingAnalytics.notifyPlay(playbackPosition);
+        logger.verbose("streamingAnalytics.notifyPlay(%s)", playbackPosition);
         break;
 
       case "Video Ad Completed":
-        if (streamingAnalytics != null) {
-          streamingAnalytics.notifyEnd();
-          streamingAnalytics.getPlaybackSession().setAsset(adAsset);
-          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", adAsset);
-        }
+        streamingAnalytics.notifyEnd(playbackPosition);
+        logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
         break;
 
       default:
         properties.put("name", name);
-        Analytics.notifyHiddenEvent(properties);
-        logger.verbose("Analytics.hidden(%s)", properties);
+        Analytics.notifyHiddenEvent(adAsset);
+        logger.verbose("Analytics.hidden(%s)", adAsset);
     }
+
+    streamingAnalytics.getPlaybackSession().setAsset(adAsset);
+    logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", adAsset);
+  }
+
+  @Override public void track(TrackPayload track) {
+    String name = track.event();
+    Properties properties = track.properties();
+
+    Map<String, Object> comScoreOptions = track.integrations().getValueMap("comScore");
+    if (!isNullOrEmpty(comScoreOptions)) {
+      comScoreOptions = Collections.emptyMap();
+    }
+    trackVideoPlayback(track, properties, comScoreOptions);
+    trackVideoContent(track, properties, comScoreOptions);
+    trackVideoAd(track, properties, comScoreOptions);
+
   }
 
   @Override public void identify(IdentifyPayload identify) {
