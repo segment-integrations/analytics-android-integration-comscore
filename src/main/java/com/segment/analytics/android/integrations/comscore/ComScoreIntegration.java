@@ -169,8 +169,6 @@ public class ComScoreIntegration extends Integration<Void> {
     if (name == "Video Playback Started") {
       streamingAnalytics = streamingAnalyticsFactory.create();
       streamingAnalytics.createPlaybackSession();
-      streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-      logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
       return;
     }
 
@@ -203,11 +201,6 @@ public class ComScoreIntegration extends Integration<Void> {
         streamingAnalytics.notifyPlay(playbackPosition);
         logger.verbose("streamingAnalytics.notifyPlay(%s)", playbackPosition);
         break;
-
-      default:
-        properties.put("name", name);
-        Analytics.notifyHiddenEvent(playbackAsset);
-        logger.verbose("Analytics.notifyHiddenEvent(%s)", playbackAsset);
     }
 
     streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
@@ -246,11 +239,6 @@ public class ComScoreIntegration extends Integration<Void> {
         streamingAnalytics.notifyEnd(playbackPosition);
         logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
         break;
-
-      default:
-        properties.put("name", name);
-        Analytics.notifyHiddenEvent(contentAsset);
-        logger.verbose("Analytics.notifyHiddenEvent(%s)", contentAsset);
     }
 
     streamingAnalytics.getPlaybackSession().setAsset(contentAsset);
@@ -284,11 +272,6 @@ public class ComScoreIntegration extends Integration<Void> {
         streamingAnalytics.notifyEnd(playbackPosition);
         logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
         break;
-
-      default:
-        properties.put("name", name);
-        Analytics.notifyHiddenEvent(adAsset);
-        logger.verbose("Analytics.hidden(%s)", adAsset);
     }
 
     streamingAnalytics.getPlaybackSession().setAsset(adAsset);
@@ -297,6 +280,7 @@ public class ComScoreIntegration extends Integration<Void> {
 
   @Override public void track(TrackPayload track) {
     String name = track.event();
+    HashMap<String, String> stringProperties = (HashMap<String, String>) track.properties().toStringMap();
     Properties properties = track.properties();
 
     Map<String, Object> comScoreOptions = track.integrations().getValueMap("comScore");
@@ -306,6 +290,10 @@ public class ComScoreIntegration extends Integration<Void> {
     trackVideoPlayback(track, properties, comScoreOptions);
     trackVideoContent(track, properties, comScoreOptions);
     trackVideoAd(track, properties, comScoreOptions);
+
+    stringProperties.put("name", name);
+    Analytics.notifyHiddenEvent(stringProperties);
+    logger.verbose("Analytics.hidden(%s)", stringProperties);
 
   }
 
