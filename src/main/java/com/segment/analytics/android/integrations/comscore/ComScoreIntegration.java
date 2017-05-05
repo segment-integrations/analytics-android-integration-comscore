@@ -272,7 +272,6 @@ public class ComScoreIntegration extends Integration<Void> {
     adMapper.put("asset_id", "ns_st_ami");
     adMapper.put("pod_id", "ns_st_pn");
     adMapper.put("type", "ns_st_ad");
-    adMapper.put("publisher", "ns_st_pu");
     adMapper.put("length", "ns_st_cl");
     adMapper.put("title", "ns_st_amt");
 

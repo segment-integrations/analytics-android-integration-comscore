@@ -568,7 +568,6 @@ public class ComScoreTest {
         .properties(new Properties().putValue("asset_id", "4311")
             .putValue("pod_id", "adSegmentA")
             .putValue("type", "pre-roll")
-            .putValue("publisher", "Segment")
             .putValue("length", "120")
             .putValue("playbackPosition", "0")
             .putValue("title", "Helmet Ad"))
@@ -578,7 +577,6 @@ public class ComScoreTest {
     expected.put("ns_st_ami", "4311");
     expected.put("ns_st_pn", "adSegmentA");
     expected.put("ns_st_ad", "pre-roll");
-    expected.put("ns_st_pu", "Segment");
     expected.put("ns_st_cl", "120");
     expected.put("ns_st_amt", "Helmet Ad");
     expected.put("c3", "*null");
@@ -602,7 +600,6 @@ public class ComScoreTest {
         .properties(new Properties().putValue("asset_id", "4311")
             .putValue("pod_id", "adSegmentA")
             .putValue("type", "pre-roll")
-            .putValue("publisher", "Segment")
             .putValue("length", "120")
             .putValue("playbackPosition", "20")
             .putValue("title", "Helmet Ad"))
@@ -612,7 +609,6 @@ public class ComScoreTest {
     expected.put("ns_st_ami", "4311");
     expected.put("ns_st_pn", "adSegmentA");
     expected.put("ns_st_ad", "pre-roll");
-    expected.put("ns_st_pu", "Segment");
     expected.put("ns_st_cl", "120");
     expected.put("ns_st_amt", "Helmet Ad");
     expected.put("c3", "*null");
@@ -636,7 +632,6 @@ public class ComScoreTest {
         .properties(new Properties().putValue("asset_id", "3425")
             .putValue("pod_id", "adSegmentb")
             .putValue("type", "mid-roll")
-            .putValue("publisher", "Adult Swim")
             .putValue("length", "100")
             .putValue("playbackPosition", "100")
             .putValue("title", "Helmet Ad"))
@@ -646,7 +641,6 @@ public class ComScoreTest {
     expected.put("ns_st_ami", "3425");
     expected.put("ns_st_pn", "adSegmentb");
     expected.put("ns_st_ad", "mid-roll");
-    expected.put("ns_st_pu", "Adult Swim");
     expected.put("ns_st_cl", "100");
     expected.put("ns_st_amt", "Helmet Ad");
     expected.put("c3", "*null");
