@@ -441,7 +441,6 @@ public class ComScoreTest {
     integration.track(new TrackPayloadBuilder().event("Video Content Started")
         .properties(new Properties().putValue("asset_id", "9324")
             .putValue("title", "Meeseeks and Destroy")
-            .putValue("keywords", "Science Fiction")
             .putValue("season", "1")
             .putValue("episode", "5")
             .putValue("genre", "cartoon")
@@ -455,7 +454,6 @@ public class ComScoreTest {
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_ci", "9324");
     expected.put("ns_st_ep", "Meeseeks and Destroy");
-    expected.put("ns_st_ge", "Science Fiction");
     expected.put("ns_st_sn", "1");
     expected.put("ns_st_en", "5");
     expected.put("ns_st_ge", "cartoon");
@@ -483,7 +481,6 @@ public class ComScoreTest {
     integration.track(new TrackPayloadBuilder().event("Video Content Playing")
         .properties(new Properties().putValue("asset_id", "123214")
             .putValue("title", "Look Who's Purging Now")
-            .putValue("keywords", "Science Fiction")
             .putValue("season", "2")
             .putValue("episode", "9")
             .putValue("genre", "cartoon")
@@ -497,7 +494,6 @@ public class ComScoreTest {
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_ci", "123214");
     expected.put("ns_st_ep", "Look Who's Purging Now");
-    expected.put("ns_st_ge", "Science Fiction");
     expected.put("ns_st_sn", "2");
     expected.put("ns_st_en", "9");
     expected.put("ns_st_ge", "cartoon");
@@ -525,7 +521,6 @@ public class ComScoreTest {
     integration.track(new TrackPayloadBuilder().event("Video Content Completed")
         .properties(new Properties().putValue("asset_id", "9324")
             .putValue("title", "Raising Gazorpazorp")
-            .putValue("keywords", "Science Fiction")
             .putValue("season", "1")
             .putValue("episode", "7")
             .putValue("genre", "cartoon")
@@ -539,7 +534,6 @@ public class ComScoreTest {
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_ci", "9324");
     expected.put("ns_st_ep", "Raising Gazorpazorp");
-    expected.put("ns_st_ge", "Science Fiction");
     expected.put("ns_st_sn", "1");
     expected.put("ns_st_en", "7");
     expected.put("ns_st_ge", "cartoon");

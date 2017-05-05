@@ -227,7 +227,6 @@ public class ComScoreIntegration extends Integration<Void> {
     Map<String, String> contentMapper = new LinkedHashMap<>();
     contentMapper.put("asset_id", "ns_st_ci");
     contentMapper.put("title", "ns_st_ep");
-    contentMapper.put("keywords", "ns_st_ge");
     contentMapper.put("season", "ns_st_sn");
     contentMapper.put("episode", "ns_st_en");
     contentMapper.put("genre", "ns_st_ge");
