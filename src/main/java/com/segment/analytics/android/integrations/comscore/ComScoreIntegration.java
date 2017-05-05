@@ -107,7 +107,7 @@ public class ComScoreIntegration extends Integration<Void> {
   void setNullIfNotProvided(
       Map<String, String> asset,
       Map<String, ?> comScoreOptions,
-      Map<String, ?> properties,
+      Map<String, ?> stringProperties,
       String key) {
     String option = getStringOrDefaultValue(comScoreOptions, key, null);
     if (option != null) {
@@ -115,7 +115,7 @@ public class ComScoreIntegration extends Integration<Void> {
       return;
     }
 
-    String property = getStringOrDefaultValue(properties, key, null);
+    String property = getStringOrDefaultValue(stringProperties, key, null);
     if (property != null) {
       asset.put(key, property);
       return;
@@ -125,21 +125,28 @@ public class ComScoreIntegration extends Integration<Void> {
   }
 
   Map<String, String> buildAsset(
-      Map<String, ?> properties, Map<String, ?> options, Map<String, String> mapper) {
+      Map<String, ?> stringProperties, Map<String, ?> options, Map<String, String> mapper) {
     Map<String, String> asset = new LinkedHashMap<>(mapper.size());
 
     // Map special keys and preserve only the special keys.
-    for (Map.Entry<String, ?> entry : properties.entrySet()) {
+    for (Map.Entry<String, ?> entry : stringProperties.entrySet()) {
       String key = entry.getKey();
       String mappedKey = mapper.get(key);
+      Object value = entry.getValue();
       if (!isNullOrEmpty(mappedKey)) {
         asset.put(mappedKey, String.valueOf(entry.getValue()));
       }
+
+      if(key == "full_screen" && value == "true") {
+        asset.put("ns_st_ws", "full");
+      } else if (key == "full_screen" && value == "false"){
+        asset.put("ns_st_ws", "norm");
+      }
     }
 
-    setNullIfNotProvided(asset, options, properties, "c3");
-    setNullIfNotProvided(asset, options, properties, "c4");
-    setNullIfNotProvided(asset, options, properties, "c6");
+    setNullIfNotProvided(asset, options, stringProperties, "c3");
+    setNullIfNotProvided(asset, options, stringProperties, "c4");
+    setNullIfNotProvided(asset, options, stringProperties, "c6");
 
     return asset;
   }
@@ -164,7 +171,7 @@ public class ComScoreIntegration extends Integration<Void> {
   }
 
   public void trackVideoPlayback(
-      TrackPayload track, Properties properties, Map<String, Object> comScoreOptions) {
+      TrackPayload track, Map<String, String> stringProperties, Properties properties, Map<String, Object> comScoreOptions) {
     String name = track.event();
     long playbackPosition = properties.getLong("playbackPosition", 0);
 
@@ -175,7 +182,7 @@ public class ComScoreIntegration extends Integration<Void> {
     playbackMapper.put("video_player", "ns_st_mp");
     playbackMapper.put("sound", "ns_st_vo");
 
-    Map<String, String> playbackAsset = buildAsset(properties, comScoreOptions, playbackMapper);
+    Map<String, String> playbackAsset = buildAsset(stringProperties, comScoreOptions, playbackMapper);
 
     if (name.equals("Video Playback Started")) {
       streamingAnalytics = streamingAnalyticsFactory.create();
@@ -220,7 +227,7 @@ public class ComScoreIntegration extends Integration<Void> {
   }
 
   private void trackVideoContent(
-      TrackPayload track, Properties properties, Map<String, Object> comScoreOptions) {
+      TrackPayload track,  Map<String, String> stringProperties, Properties properties, Map<String, Object> comScoreOptions) {
     String name = track.event();
     long playbackPosition = properties.getLong("playbackPosition", 0);
 
@@ -236,7 +243,7 @@ public class ComScoreIntegration extends Integration<Void> {
     contentMapper.put("full_episode", "ns_st_ce");
     contentMapper.put("airdate", "ns_st_ddt");
 
-    Map<String, String> contentAsset = buildAsset(properties, comScoreOptions, contentMapper);
+    Map<String, String> contentAsset = buildAsset(stringProperties, comScoreOptions, contentMapper);
 
     if (streamingAnalytics == null) {
       return;
@@ -264,7 +271,7 @@ public class ComScoreIntegration extends Integration<Void> {
   }
 
   public void trackVideoAd(
-      TrackPayload track, Properties properties, Map<String, Object> comScoreOptions) {
+      TrackPayload track, Map<String, String> stringProperties, Properties properties, Map<String, Object> comScoreOptions) {
     String name = track.event();
     long playbackPosition = properties.getLong("playbackPosition", 0);
 
@@ -275,7 +282,7 @@ public class ComScoreIntegration extends Integration<Void> {
     adMapper.put("length", "ns_st_cl");
     adMapper.put("title", "ns_st_amt");
 
-    Map<String, String> adAsset = buildAsset(properties, comScoreOptions, adMapper);
+    Map<String, String> adAsset = buildAsset(stringProperties, comScoreOptions, adMapper);
 
     if (streamingAnalytics == null) {
       return;
@@ -322,17 +329,17 @@ public class ComScoreIntegration extends Integration<Void> {
       case "Video Playback Seek Started":
       case "Video Playback Seek Completed":
       case "Video Playback Resumed":
-        trackVideoPlayback(track, properties, comScoreOptions);
+        trackVideoPlayback(track, stringProperties, properties, comScoreOptions);
         break;
       case "Video Content Started":
       case "Video Content Playing":
       case "Video Content Completed":
-        trackVideoContent(track, properties, comScoreOptions);
+        trackVideoContent(track, stringProperties, properties, comScoreOptions);
         break;
       case "Video Ad Started":
       case "Video Ad Playing":
       case "Video Ad Completed":
-        trackVideoAd(track, properties, comScoreOptions);
+        trackVideoAd(track, stringProperties, properties, comScoreOptions);
         break;
       default:
         stringProperties.put("name", name);
