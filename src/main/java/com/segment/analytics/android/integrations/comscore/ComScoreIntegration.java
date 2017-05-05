@@ -163,16 +163,6 @@ public class ComScoreIntegration extends Integration<Void> {
     return defaultValue;
   }
 
-  ///  public String getString(String key) {
-  //  Object value = get(key);
-  //    if (value instanceof String) {
-  //    return (String) value;
-  //  } else if (value != null) {
-  //    return String.valueOf(value);
-  //  }
-  //    return null;
-  //}
-
   public void trackVideoPlayback(
       TrackPayload track, Properties properties, Map<String, Object> comScoreOptions) {
     String name = track.event();
@@ -183,6 +173,7 @@ public class ComScoreIntegration extends Integration<Void> {
     playbackMapper.put("ad_type", "ns_st_ad");
     playbackMapper.put("length", "nst_st_cl");
     playbackMapper.put("video_player", "ns_st_mp");
+    playbackMapper.put("sound", "ns_st_vo");
 
     Map<String, String> playbackAsset = buildAsset(properties, comScoreOptions, playbackMapper);
 
@@ -258,7 +249,7 @@ public class ComScoreIntegration extends Integration<Void> {
         break;
 
       case "Video Content Playing":
-        streamingAnalytics.notifyEnd(playbackPosition);
+        streamingAnalytics.notifyPlay(playbackPosition);
         logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
         break;
 
