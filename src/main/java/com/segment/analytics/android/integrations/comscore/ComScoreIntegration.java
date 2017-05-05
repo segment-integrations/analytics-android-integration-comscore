@@ -231,7 +231,8 @@ public class ComScoreIntegration extends Integration<Void> {
     contentMapper.put("episode", "ns_st_en");
     contentMapper.put("genre", "ns_st_ge");
     contentMapper.put("program", "ns_st_pr");
-    contentMapper.put("channel", "ns_st_pu");
+    contentMapper.put("channel", "ns_st_st");
+    contentMapper.put("publisher", "ns_st_pu");
     contentMapper.put("full_episode", "ns_st_ce");
     contentMapper.put("airdate", "ns_st_ddt");
 
@@ -268,11 +269,12 @@ public class ComScoreIntegration extends Integration<Void> {
     long playbackPosition = properties.getLong("playbackPosition", 0);
 
     Map<String, String> adMapper = new LinkedHashMap<>();
-    adMapper.put("asset_id", "ns_st_ci");
+    adMapper.put("asset_id", "ns_st_ami");
     adMapper.put("pod_id", "ns_st_pn");
     adMapper.put("type", "ns_st_ad");
     adMapper.put("publisher", "ns_st_pu");
     adMapper.put("length", "ns_st_cl");
+    adMapper.put("title", "ns_st_amt");
 
     Map<String, String> adAsset = buildAsset(properties, comScoreOptions, adMapper);
 

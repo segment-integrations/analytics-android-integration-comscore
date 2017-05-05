@@ -446,6 +446,7 @@ public class ComScoreTest {
             .putValue("genre", "cartoon")
             .putValue("program", "Rick and Morty")
             .putValue("channel", "cartoon network")
+            .putValue("publisher", "Turner Broadcasting System")
             .putValue("full_episode", "true")
             .putValue("airdate", "2014-01-20")
             .putValue("playbackPosition", "70"))
@@ -458,7 +459,8 @@ public class ComScoreTest {
     expected.put("ns_st_en", "5");
     expected.put("ns_st_ge", "cartoon");
     expected.put("ns_st_pr", "Rick and Morty");
-    expected.put("ns_st_pu", "cartoon network");
+    expected.put("ns_st_st", "cartoon network");
+    expected.put("ns_st_pu", "Turner Broadcasting System");
     expected.put("ns_st_ce", "true");
     expected.put("ns_st_ddt", "2014-01-20");
     expected.put("c3", "*null");
@@ -486,6 +488,7 @@ public class ComScoreTest {
             .putValue("genre", "cartoon")
             .putValue("program", "Rick and Morty")
             .putValue("channel", "cartoon network")
+            .putValue("publisher", "Turner Broadcasting System")
             .putValue("full_episode", "true")
             .putValue("airdate", "2015-09-27")
             .putValue("playbackPosition", "70"))
@@ -498,7 +501,8 @@ public class ComScoreTest {
     expected.put("ns_st_en", "9");
     expected.put("ns_st_ge", "cartoon");
     expected.put("ns_st_pr", "Rick and Morty");
-    expected.put("ns_st_pu", "cartoon network");
+    expected.put("ns_st_st", "cartoon network");
+    expected.put("ns_st_pu", "Turner Broadcasting System");
     expected.put("ns_st_ce", "true");
     expected.put("ns_st_ddt", "2015-09-27");
     expected.put("c3", "*null");
@@ -526,6 +530,7 @@ public class ComScoreTest {
             .putValue("genre", "cartoon")
             .putValue("program", "Rick and Morty")
             .putValue("channel", "cartoon network")
+            .putValue("publisher", "Turner Broadcasting System")
             .putValue("full_episode", "true")
             .putValue("airdate", "2014-10-20")
             .putValue("playbackPosition", "80"))
@@ -538,7 +543,8 @@ public class ComScoreTest {
     expected.put("ns_st_en", "7");
     expected.put("ns_st_ge", "cartoon");
     expected.put("ns_st_pr", "Rick and Morty");
-    expected.put("ns_st_pu", "cartoon network");
+    expected.put("ns_st_st", "cartoon network");
+    expected.put("ns_st_pu", "Turner Broadcasting System");
     expected.put("ns_st_ce", "true");
     expected.put("ns_st_ddt", "2014-10-20");
     expected.put("c3", "*null");
@@ -564,15 +570,17 @@ public class ComScoreTest {
             .putValue("type", "pre-roll")
             .putValue("publisher", "Segment")
             .putValue("length", "120")
-            .putValue("playbackPosition", "0"))
+            .putValue("playbackPosition", "0")
+            .putValue("title", "Helmet Ad"))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci", "4311");
+    expected.put("ns_st_ami", "4311");
     expected.put("ns_st_pn", "adSegmentA");
     expected.put("ns_st_ad", "pre-roll");
     expected.put("ns_st_pu", "Segment");
     expected.put("ns_st_cl", "120");
+    expected.put("ns_st_amt", "Helmet Ad");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -596,15 +604,17 @@ public class ComScoreTest {
             .putValue("type", "pre-roll")
             .putValue("publisher", "Segment")
             .putValue("length", "120")
-            .putValue("playbackPosition", "20"))
+            .putValue("playbackPosition", "20")
+            .putValue("title", "Helmet Ad"))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci", "4311");
+    expected.put("ns_st_ami", "4311");
     expected.put("ns_st_pn", "adSegmentA");
     expected.put("ns_st_ad", "pre-roll");
     expected.put("ns_st_pu", "Segment");
     expected.put("ns_st_cl", "120");
+    expected.put("ns_st_amt", "Helmet Ad");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -628,15 +638,17 @@ public class ComScoreTest {
             .putValue("type", "mid-roll")
             .putValue("publisher", "Adult Swim")
             .putValue("length", "100")
-            .putValue("playbackPosition", "100"))
+            .putValue("playbackPosition", "100")
+            .putValue("title", "Helmet Ad"))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci", "3425");
+    expected.put("ns_st_ami", "3425");
     expected.put("ns_st_pn", "adSegmentb");
     expected.put("ns_st_ad", "mid-roll");
     expected.put("ns_st_pu", "Adult Swim");
     expected.put("ns_st_cl", "100");
+    expected.put("ns_st_amt", "Helmet Ad");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
