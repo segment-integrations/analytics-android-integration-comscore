@@ -125,7 +125,7 @@ public class ComScoreIntegration extends Integration<Void> {
   }
 
   Map<String, String> buildAsset(
-      Map<String, ?> stringProperties, Map<String, ?> options, Map<String, String> mapper) {
+      Map<String, ?> stringProperties, Properties properties, Map<String, ?> options, Map<String, String> mapper) {
     Map<String, String> asset = new LinkedHashMap<>(mapper.size());
 
     // Map special keys and preserve only the special keys.
@@ -142,6 +142,13 @@ public class ComScoreIntegration extends Integration<Void> {
       } else if (key == "full_screen" && value == "false"){
         asset.put("ns_st_ws", "norm");
       }
+
+      if(key == "bitrate") {
+        int kbpsValue = properties.getInt("bitrate", 0);
+        int bpsValue = kbpsValue * 1000;
+        asset.put("ns_st_br", Integer.toString(bpsValue));
+      }
+
     }
 
     setNullIfNotProvided(asset, options, stringProperties, "c3");
@@ -182,7 +189,7 @@ public class ComScoreIntegration extends Integration<Void> {
     playbackMapper.put("video_player", "ns_st_mp");
     playbackMapper.put("sound", "ns_st_vo");
 
-    Map<String, String> playbackAsset = buildAsset(stringProperties, comScoreOptions, playbackMapper);
+    Map<String, String> playbackAsset = buildAsset(stringProperties, properties, comScoreOptions, playbackMapper);
 
     if (name.equals("Video Playback Started")) {
       streamingAnalytics = streamingAnalyticsFactory.create();
@@ -243,7 +250,7 @@ public class ComScoreIntegration extends Integration<Void> {
     contentMapper.put("full_episode", "ns_st_ce");
     contentMapper.put("airdate", "ns_st_ddt");
 
-    Map<String, String> contentAsset = buildAsset(stringProperties, comScoreOptions, contentMapper);
+    Map<String, String> contentAsset = buildAsset(stringProperties, properties, comScoreOptions, contentMapper);
 
     if (streamingAnalytics == null) {
       return;
@@ -282,7 +289,7 @@ public class ComScoreIntegration extends Integration<Void> {
     adMapper.put("length", "ns_st_cl");
     adMapper.put("title", "ns_st_amt");
 
-    Map<String, String> adAsset = buildAsset(stringProperties, comScoreOptions, adMapper);
+    Map<String, String> adAsset = buildAsset(stringProperties, properties, comScoreOptions, adMapper);
 
     if (streamingAnalytics == null) {
       return;

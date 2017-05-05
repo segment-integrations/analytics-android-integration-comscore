@@ -214,6 +214,7 @@ public class ComScoreTest {
             .putValue("length", 120)
             .putValue("video_player", "youtube")
             .putValue("sound", 80)
+            .putValue("bitrate", 40)
             .putValue("full_screen", true))
         .build());
 
@@ -227,6 +228,7 @@ public class ComScoreTest {
     expected.put("ns_st_mp", "youtube");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "full");
+    expected.put("ns_st_br", "40000");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -254,6 +256,7 @@ public class ComScoreTest {
             .putValue("video_player", "vimeo")
             .putValue("playbackPosition", 10)
             .putValue("full_screen", true)
+            .putValue("bitrate", 50)
             .putValue("sound", 80))
         .options(new Options().setIntegrationOptions("comScore", comScoreOptions))
         .build());
@@ -265,6 +268,7 @@ public class ComScoreTest {
     expected.put("ns_st_mp", "vimeo");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "full");
+    expected.put("ns_st_br", "50000");
     expected.put("c3", "abc");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -289,6 +293,7 @@ public class ComScoreTest {
             .putValue("video_player", "youtube")
             .putValue("playbackPosition", 20)
             .putValue("full_screen", false)
+            .putValue("bitrate", 500)
             .putValue("sound", 80))
         .build());
 
@@ -299,6 +304,7 @@ public class ComScoreTest {
     expected.put("ns_st_mp", "youtube");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "norm");
+    expected.put("ns_st_br", "500000");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -323,6 +329,7 @@ public class ComScoreTest {
             .putValue("video_player", "vimeo")
             .putValue("playbackPosition", 30)
             .putValue("full_screen", true)
+            .putValue("bitrate", 500)
             .putValue("sound", 80))
         .build());
 
@@ -333,6 +340,7 @@ public class ComScoreTest {
     expected.put("ns_st_mp", "vimeo");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "full");
+    expected.put("ns_st_br", "500000");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -357,6 +365,7 @@ public class ComScoreTest {
             .putValue("video_player", "youtube")
             .putValue("playbackPosition", 40)
             .putValue("full_screen", true)
+            .putValue("bitrate", 500)
             .putValue("sound", 80))
         .build());
 
@@ -367,6 +376,7 @@ public class ComScoreTest {
     expected.put("ns_st_mp", "youtube");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "full");
+    expected.put("ns_st_br", "500000");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -391,6 +401,7 @@ public class ComScoreTest {
             .putValue("video_player", "vimeo")
             .putValue("playbackPosition", 50)
             .putValue("full_screen", true)
+            .putValue("bitrate", 500)
             .putValue("sound", 80))
         .build());
 
@@ -401,6 +412,7 @@ public class ComScoreTest {
     expected.put("ns_st_mp", "vimeo");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "full");
+    expected.put("ns_st_br", "500000");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -425,6 +437,7 @@ public class ComScoreTest {
             .putValue("video_player", "youtube")
             .putValue("playbackPosition", 60)
             .putValue("full_screen", true)
+            .putValue("bitrate", 500)
             .putValue("sound", 80))
         .build());
 
@@ -435,6 +448,7 @@ public class ComScoreTest {
     expected.put("ns_st_mp", "youtube");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "full");
+    expected.put("ns_st_br", "500000");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
