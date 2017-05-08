@@ -6,6 +6,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.verifyStatic;
@@ -28,6 +29,7 @@ import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.test.IdentifyPayloadBuilder;
 import com.segment.analytics.test.ScreenPayloadBuilder;
 import com.segment.analytics.test.TrackPayloadBuilder;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,27 +49,19 @@ import org.robolectric.annotation.Config;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
-@PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*"})
-@PrepareForTest(Analytics.class)
-public class ComScoreTest {
+@PowerMockIgnore({ "org.mockito.*", "org.robolectric.*", "android.*" })
+@PrepareForTest(Analytics.class) public class ComScoreTest {
 
-  @Rule
-  public PowerMockRule rule = new PowerMockRule();
-  @Mock
-  Application context;
-  @Mock
-  Configuration configuration;
-  Logger logger;
-  @Mock
-  com.segment.analytics.Analytics analytics;
-  ComScoreIntegration integration;
-  @Mock
-  Analytics comScore;
-  @Mock
-  StreamingAnalytics streamingAnalytics;
+  @Rule public PowerMockRule rule = new PowerMockRule();
+  @Mock Application context;
+  @Mock Configuration configuration;
+  private Logger logger;
+  @Mock com.segment.analytics.Analytics analytics;
+  private ComScoreIntegration integration;
+  @Mock Analytics comScore;
+  @Mock StreamingAnalytics streamingAnalytics;
 
-  @Before
-  public void setUp() {
+  @Before public void setUp() {
     initMocks(this);
     mockStatic(Analytics.class);
     logger = Logger.with(com.segment.analytics.Analytics.LogLevel.DEBUG);
@@ -78,8 +72,7 @@ public class ComScoreTest {
         new ValueMap().putValue("customerC2", "foobarbar")
             .putValue("publisherSecret", "illnevertell"),
         new ComScoreIntegration.StreamingAnalyticsFactory() {
-          @Override
-          public StreamingAnalytics create() {
+          @Override public StreamingAnalytics create() {
             return streamingAnalytics;
           }
         });
@@ -88,8 +81,7 @@ public class ComScoreTest {
     mockStatic(Analytics.class);
   }
 
-  @Test
-  public void factory() {
+  @Test public void factory() {
     ValueMap settings =
         new ValueMap().putValue("c2", "foobarbar").putValue("publisherSecret", "illnevertell");
     when(Analytics.getConfiguration()).thenReturn(configuration);
@@ -100,8 +92,7 @@ public class ComScoreTest {
     assertThat(integration.publisherSecret).isEqualTo("illnevertell");
   }
 
-  @Test
-  public void initializeWithDefaultArguments() {
+  @Test public void initializeWithDefaultArguments() {
     ValueMap settings = new ValueMap() //
         .putValue("c2", "foobarbar")
         .putValue("publisherSecret", "illnevertell")
@@ -116,8 +107,7 @@ public class ComScoreTest {
     assertThat(integration.useHTTPS).isTrue();
   }
 
-  @Test
-  public void initializeWithAutoUpdateMode() throws IllegalStateException {
+  @Test public void initializeWithAutoUpdateMode() throws IllegalStateException {
     Configuration configuration = mock(Configuration.class);
     when(Analytics.getConfiguration()).thenReturn(configuration);
 
@@ -147,19 +137,17 @@ public class ComScoreTest {
         UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
   }
 
-  @Test
-  public void track() {
+  @Test public void track() {
     integration.track(new TrackPayloadBuilder().event("foo").build());
 
-    Properties expected = new Properties().putValue("name", "foo");
-    Map<String, String> properties = expected.toStringMap();
+    Properties properties = new Properties().putValue("name", "foo");
+    Map<String, String> expected = properties.toStringMap();
 
     verifyStatic();
-    Analytics.notifyHiddenEvent(properties);
+    Analytics.notifyHiddenEvent(expected);
   }
 
-  @Test
-  public void trackWithProps() {
+  @Test public void trackWithProps() {
     integration.track(new TrackPayloadBuilder() //
         .event("Completed Order")
         .properties(new Properties().putValue(20.0).putValue("product", "Ukelele"))
@@ -175,7 +163,6 @@ public class ComScoreTest {
   }
 
   void setupWithVideoPlaybackStarted() {
-
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
@@ -196,15 +183,16 @@ public class ComScoreTest {
     expected.put("nst_st_cl", "120");
     expected.put("ns_st_mp", "youtube");
     expected.put("ns_st_vo", "80");
+    expected.put("ns_st_ws", "norm");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
 
     verify(playbackSession).setAsset(expected);
+    Mockito.reset(streamingAnalytics);
   }
 
-  @Test
-  public void videoPlaybackStarted() {
+  @Test public void videoPlaybackStarted() {
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
@@ -215,7 +203,7 @@ public class ComScoreTest {
             .putValue("video_player", "youtube")
             .putValue("sound", 80)
             .putValue("bitrate", 40)
-            .putValue("full_screen", true))
+            .putValue("fullScreen", true))
         .build());
 
     verify(streamingAnalytics).createPlaybackSession();
@@ -236,10 +224,17 @@ public class ComScoreTest {
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test
-  public void videoPlaybackPaused() {
+  @Test public void videoPlaybackPausedWithoutVideoPlaybackStarted() {
+    integration.track(new TrackPayloadBuilder() //
+        .event("Video Playback Paused")
+        .properties(new Properties().putValue("asset_id", 1234))
+        .build());
+
+    verifyNoMoreInteractions(streamingAnalytics);
+  }
+
+  @Test public void videoPlaybackPaused() {
     setupWithVideoPlaybackStarted();
-    Mockito.reset(streamingAnalytics);
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
@@ -255,7 +250,7 @@ public class ComScoreTest {
             .putValue("length", 100)
             .putValue("video_player", "vimeo")
             .putValue("playbackPosition", 10)
-            .putValue("full_screen", true)
+            .putValue("fullScreen", true)
             .putValue("bitrate", 50)
             .putValue("sound", 80))
         .options(new Options().setIntegrationOptions("comScore", comScoreOptions))
@@ -278,10 +273,8 @@ public class ComScoreTest {
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test
-  public void videoPlaybackBufferStarted() {
+  @Test public void videoPlaybackBufferStarted() {
     setupWithVideoPlaybackStarted();
-    Mockito.reset(streamingAnalytics);
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
@@ -292,7 +285,7 @@ public class ComScoreTest {
             .putValue("length", 700)
             .putValue("video_player", "youtube")
             .putValue("playbackPosition", 20)
-            .putValue("full_screen", false)
+            .putValue("fullScreen", false)
             .putValue("bitrate", 500)
             .putValue("sound", 80))
         .build());
@@ -314,10 +307,8 @@ public class ComScoreTest {
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test
-  public void videoPlaybackBufferCompleted() {
+  @Test public void videoPlaybackBufferCompleted() {
     setupWithVideoPlaybackStarted();
-    Mockito.reset(streamingAnalytics);
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
@@ -328,7 +319,7 @@ public class ComScoreTest {
             .putValue("length", 800)
             .putValue("video_player", "vimeo")
             .putValue("playbackPosition", 30)
-            .putValue("full_screen", true)
+            .putValue("fullScreen", true)
             .putValue("bitrate", 500)
             .putValue("sound", 80))
         .build());
@@ -350,10 +341,8 @@ public class ComScoreTest {
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test
-  public void videoPlaybackSeekStarted() {
+  @Test public void videoPlaybackSeekStarted() {
     setupWithVideoPlaybackStarted();
-    Mockito.reset(streamingAnalytics);
 
     PlaybackSession playbacksession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbacksession);
@@ -364,7 +353,7 @@ public class ComScoreTest {
             .putValue("length", 900)
             .putValue("video_player", "youtube")
             .putValue("playbackPosition", 40)
-            .putValue("full_screen", true)
+            .putValue("fullScreen", true)
             .putValue("bitrate", 500)
             .putValue("sound", 80))
         .build());
@@ -386,10 +375,8 @@ public class ComScoreTest {
     verify(playbacksession).setAsset(expected);
   }
 
-  @Test
-  public void videoPlaybackSeekCompleted() {
+  @Test public void videoPlaybackSeekCompleted() {
     setupWithVideoPlaybackStarted();
-    Mockito.reset(streamingAnalytics);
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
@@ -400,7 +387,7 @@ public class ComScoreTest {
             .putValue("length", 400)
             .putValue("video_player", "vimeo")
             .putValue("playbackPosition", 50)
-            .putValue("full_screen", true)
+            .putValue("fullScreen", true)
             .putValue("bitrate", 500)
             .putValue("sound", 80))
         .build());
@@ -422,10 +409,8 @@ public class ComScoreTest {
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test
-  public void videoPlaybackResumed() {
+  @Test public void videoPlaybackResumed() {
     setupWithVideoPlaybackStarted();
-    Mockito.reset(streamingAnalytics);
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
@@ -436,7 +421,7 @@ public class ComScoreTest {
             .putValue("length", 100)
             .putValue("video_player", "youtube")
             .putValue("playbackPosition", 60)
-            .putValue("full_screen", true)
+            .putValue("fullScreen", true)
             .putValue("bitrate", 500)
             .putValue("sound", 80))
         .build());
@@ -458,10 +443,8 @@ public class ComScoreTest {
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test
-  public void videoContentStarted() {
+  @Test public void videoContentStarted() {
     setupWithVideoPlaybackStarted();
-    Mockito.reset(streamingAnalytics);
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
@@ -491,6 +474,7 @@ public class ComScoreTest {
     expected.put("ns_st_pu", "Turner Broadcasting System");
     expected.put("ns_st_ce", "true");
     expected.put("ns_st_ddt", "2014-01-20");
+    expected.put("ns_st_ws", "norm");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -500,10 +484,8 @@ public class ComScoreTest {
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test
-  public void videoContentPlaying() {
+  @Test public void videoContentPlaying() {
     setupWithVideoPlaybackStarted();
-    Mockito.reset(streamingAnalytics);
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
@@ -533,6 +515,7 @@ public class ComScoreTest {
     expected.put("ns_st_pu", "Turner Broadcasting System");
     expected.put("ns_st_ce", "true");
     expected.put("ns_st_ddt", "2015-09-27");
+    expected.put("ns_st_ws", "norm");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -542,10 +525,8 @@ public class ComScoreTest {
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test
-  public void videoContentCompleted() {
+  @Test public void videoContentCompleted() {
     setupWithVideoPlaybackStarted();
-    Mockito.reset(streamingAnalytics);
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
@@ -575,6 +556,7 @@ public class ComScoreTest {
     expected.put("ns_st_pu", "Turner Broadcasting System");
     expected.put("ns_st_ce", "true");
     expected.put("ns_st_ddt", "2014-10-20");
+    expected.put("ns_st_ws", "norm");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -584,10 +566,8 @@ public class ComScoreTest {
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test
-  public void videoAdStarted() {
+  @Test public void videoAdStarted() {
     setupWithVideoPlaybackStarted();
-    Mockito.reset(streamingAnalytics);
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
@@ -607,6 +587,7 @@ public class ComScoreTest {
     expected.put("ns_st_ad", "pre-roll");
     expected.put("ns_st_cl", "120");
     expected.put("ns_st_amt", "Helmet Ad");
+    expected.put("ns_st_ws", "norm");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -616,10 +597,8 @@ public class ComScoreTest {
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test
-  public void videoAdPlaying() {
+  @Test public void videoAdPlaying() {
     setupWithVideoPlaybackStarted();
-    Mockito.reset(streamingAnalytics);
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
@@ -639,6 +618,7 @@ public class ComScoreTest {
     expected.put("ns_st_ad", "pre-roll");
     expected.put("ns_st_cl", "120");
     expected.put("ns_st_amt", "Helmet Ad");
+    expected.put("ns_st_ws", "norm");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -648,10 +628,8 @@ public class ComScoreTest {
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test
-  public void videoAdCompleted() {
+  @Test public void videoAdCompleted() {
     setupWithVideoPlaybackStarted();
-    Mockito.reset(streamingAnalytics);
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
@@ -671,6 +649,7 @@ public class ComScoreTest {
     expected.put("ns_st_ad", "mid-roll");
     expected.put("ns_st_cl", "100");
     expected.put("ns_st_amt", "Helmet Ad");
+    expected.put("ns_st_ws", "norm");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -680,8 +659,7 @@ public class ComScoreTest {
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test
-  public void identify() throws JSONException {
+  @Test public void identify() throws JSONException {
     Configuration configuration = mock(Configuration.class);
     when(Analytics.getConfiguration()).thenReturn(configuration);
     Traits traits = createTraits("foo") //
@@ -700,8 +678,7 @@ public class ComScoreTest {
     verify(configuration).setPersistentLabels(expected);
   }
 
-  @Test
-  public void screen() {
+  @Test public void screen() {
     integration.screen(
         new ScreenPayloadBuilder().name("SmartWatches").category("Purchase Screen").build());
 
