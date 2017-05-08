@@ -167,10 +167,10 @@ import org.robolectric.annotation.Config;
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Started")
-        .properties(new Properties().putValue("asset_id", 1234)
-            .putValue("ad_type", "pre-roll")
+        .properties(new Properties().putValue("assetId", 1234)
+            .putValue("adType", "pre-roll")
             .putValue("length", 120)
-            .putValue("video_player", "youtube")
+            .putValue("videoPlayer", "youtube")
             .putValue("sound", 80))
         .build());
 
@@ -197,10 +197,10 @@ import org.robolectric.annotation.Config;
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Started")
-        .properties(new Properties().putValue("asset_id", 1234)
-            .putValue("ad_type", "pre-roll")
+        .properties(new Properties().putValue("assetId", 1234)
+            .putValue("adType", "pre-roll")
             .putValue("length", 120)
-            .putValue("video_player", "youtube")
+            .putValue("videoPlayer", "youtube")
             .putValue("sound", 80)
             .putValue("bitrate", 40)
             .putValue("fullScreen", true))
@@ -227,7 +227,7 @@ import org.robolectric.annotation.Config;
   @Test public void videoPlaybackPausedWithoutVideoPlaybackStarted() {
     integration.track(new TrackPayloadBuilder() //
         .event("Video Playback Paused")
-        .properties(new Properties().putValue("asset_id", 1234))
+        .properties(new Properties().putValue("assetId", 1234))
         .build());
 
     verifyNoMoreInteractions(streamingAnalytics);
@@ -245,10 +245,10 @@ import org.robolectric.annotation.Config;
     integration.track(new TrackPayloadBuilder() //
         .event("Video Playback Paused")
         .properties(new Properties() //
-            .putValue("asset_id", 1234)
-            .putValue("ad_type", "mid-roll")
+            .putValue("assetId", 1234)
+            .putValue("adType", "mid-roll")
             .putValue("length", 100)
-            .putValue("video_player", "vimeo")
+            .putValue("videoPlayer", "vimeo")
             .putValue("playbackPosition", 10)
             .putValue("fullScreen", true)
             .putValue("bitrate", 50)
@@ -280,10 +280,10 @@ import org.robolectric.annotation.Config;
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Buffer Started")
-        .properties(new Properties().putValue("asset_id", 7890)
-            .putValue("ad_type", "post-roll")
+        .properties(new Properties().putValue("assetId", 7890)
+            .putValue("adType", "post-roll")
             .putValue("length", 700)
-            .putValue("video_player", "youtube")
+            .putValue("videoPlayer", "youtube")
             .putValue("playbackPosition", 20)
             .putValue("fullScreen", false)
             .putValue("bitrate", 500)
@@ -314,10 +314,10 @@ import org.robolectric.annotation.Config;
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Buffer Completed")
-        .properties(new Properties().putValue("asset_id", 1029)
-            .putValue("ad_type", "pre-roll")
+        .properties(new Properties().putValue("assetId", 1029)
+            .putValue("adType", "pre-roll")
             .putValue("length", 800)
-            .putValue("video_player", "vimeo")
+            .putValue("videoPlayer", "vimeo")
             .putValue("playbackPosition", 30)
             .putValue("fullScreen", true)
             .putValue("bitrate", 500)
@@ -348,10 +348,10 @@ import org.robolectric.annotation.Config;
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbacksession);
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Seek Started")
-        .properties(new Properties().putValue("asset_id", 3948)
-            .putValue("ad_type", "mid-roll")
+        .properties(new Properties().putValue("assetId", 3948)
+            .putValue("adType", "mid-roll")
             .putValue("length", 900)
-            .putValue("video_player", "youtube")
+            .putValue("videoPlayer", "youtube")
             .putValue("playbackPosition", 40)
             .putValue("fullScreen", true)
             .putValue("bitrate", 500)
@@ -382,10 +382,10 @@ import org.robolectric.annotation.Config;
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Seek Completed")
-        .properties(new Properties().putValue("asset_id", 6767)
-            .putValue("ad_type", "post-roll")
+        .properties(new Properties().putValue("assetId", 6767)
+            .putValue("adType", "post-roll")
             .putValue("length", 400)
-            .putValue("video_player", "vimeo")
+            .putValue("videoPlayer", "vimeo")
             .putValue("playbackPosition", 50)
             .putValue("fullScreen", true)
             .putValue("bitrate", 500)
@@ -416,10 +416,10 @@ import org.robolectric.annotation.Config;
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Playback Resumed")
-        .properties(new Properties().putValue("asset_id", 5332)
-            .putValue("ad_type", "post-roll")
+        .properties(new Properties().putValue("assetId", 5332)
+            .putValue("adType", "post-roll")
             .putValue("length", 100)
-            .putValue("video_player", "youtube")
+            .putValue("videoPlayer", "youtube")
             .putValue("playbackPosition", 60)
             .putValue("fullScreen", true)
             .putValue("bitrate", 500)
@@ -450,7 +450,7 @@ import org.robolectric.annotation.Config;
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Content Started")
-        .properties(new Properties().putValue("asset_id", 9324)
+        .properties(new Properties().putValue("assetId", 9324)
             .putValue("title", "Meeseeks and Destroy")
             .putValue("season", 1)
             .putValue("episode", 5)
@@ -458,7 +458,7 @@ import org.robolectric.annotation.Config;
             .putValue("program", "Rick and Morty")
             .putValue("channel", "cartoon network")
             .putValue("publisher", "Turner Broadcasting System")
-            .putValue("full_episode", true)
+            .putValue("fullEpisode", true)
             .putValue("airdate", "2014-01-20")
             .putValue("playbackPosition", 70))
         .build());
@@ -491,7 +491,7 @@ import org.robolectric.annotation.Config;
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Content Playing")
-        .properties(new Properties().putValue("asset_id", 123214)
+        .properties(new Properties().putValue("assetId", 123214)
             .putValue("title", "Look Who's Purging Now")
             .putValue("season", 2)
             .putValue("episode", 9)
@@ -499,7 +499,7 @@ import org.robolectric.annotation.Config;
             .putValue("program", "Rick and Morty")
             .putValue("channel", "cartoon network")
             .putValue("publisher", "Turner Broadcasting System")
-            .putValue("full_episode", true)
+            .putValue("fullEpisode", true)
             .putValue("airdate", "2015-09-27")
             .putValue("playbackPosition", 70))
         .build());
@@ -532,7 +532,7 @@ import org.robolectric.annotation.Config;
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Content Completed")
-        .properties(new Properties().putValue("asset_id", 9324)
+        .properties(new Properties().putValue("assetId", 9324)
             .putValue("title", "Raising Gazorpazorp")
             .putValue("season", 1)
             .putValue("episode", 7)
@@ -540,7 +540,7 @@ import org.robolectric.annotation.Config;
             .putValue("program", "Rick and Morty")
             .putValue("channel", "cartoon network")
             .putValue("publisher", "Turner Broadcasting System")
-            .putValue("full_episode", true)
+            .putValue("fullEpisode", true)
             .putValue("airdate", "2014-10-20")
             .putValue("playbackPosition", 80))
         .build());
@@ -573,8 +573,8 @@ import org.robolectric.annotation.Config;
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Ad Started")
-        .properties(new Properties().putValue("asset_id", 4311)
-            .putValue("pod_id", "adSegmentA")
+        .properties(new Properties().putValue("assetId", 4311)
+            .putValue("podId", "adSegmentA")
             .putValue("type", "pre-roll")
             .putValue("length", 120)
             .putValue("playbackPosition", 0)
@@ -604,8 +604,8 @@ import org.robolectric.annotation.Config;
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Ad Playing")
-        .properties(new Properties().putValue("asset_id", 4311)
-            .putValue("pod_id", "adSegmentA")
+        .properties(new Properties().putValue("assetId", 4311)
+            .putValue("podId", "adSegmentA")
             .putValue("type", "pre-roll")
             .putValue("length", 120)
             .putValue("playbackPosition", 20)
@@ -635,8 +635,8 @@ import org.robolectric.annotation.Config;
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     integration.track(new TrackPayloadBuilder().event("Video Ad Completed")
-        .properties(new Properties().putValue("asset_id", 3425)
-            .putValue("pod_id", "adSegmentb")
+        .properties(new Properties().putValue("assetId", 3425)
+            .putValue("podId", "adSegmentb")
             .putValue("type", "mid-roll")
             .putValue("length", 100)
             .putValue("playbackPosition", 100)

@@ -174,10 +174,10 @@ public class ComScoreIntegration extends Integration<Void> {
     long playbackPosition = properties.getLong("playbackPosition", 0);
 
     Map<String, String> playbackMapper = new LinkedHashMap<>();
-    playbackMapper.put("asset_id", "ns_st_ci");
-    playbackMapper.put("ad_type", "ns_st_ad");
+    playbackMapper.put("assetId", "ns_st_ci");
+    playbackMapper.put("adType", "ns_st_ad");
     playbackMapper.put("length", "nst_st_cl");
-    playbackMapper.put("video_player", "ns_st_mp");
+    playbackMapper.put("videoPlayer", "ns_st_mp");
     playbackMapper.put("sound", "ns_st_vo");
 
     Map<String, String> playbackAsset = buildAsset(properties, comScoreOptions, playbackMapper);
@@ -230,7 +230,7 @@ public class ComScoreIntegration extends Integration<Void> {
     long playbackPosition = properties.getLong("playbackPosition", 0);
 
     Map<String, String> contentMapper = new LinkedHashMap<>();
-    contentMapper.put("asset_id", "ns_st_ci");
+    contentMapper.put("assetId", "ns_st_ci");
     contentMapper.put("title", "ns_st_ep");
     contentMapper.put("season", "ns_st_sn");
     contentMapper.put("episode", "ns_st_en");
@@ -238,7 +238,7 @@ public class ComScoreIntegration extends Integration<Void> {
     contentMapper.put("program", "ns_st_pr");
     contentMapper.put("channel", "ns_st_st");
     contentMapper.put("publisher", "ns_st_pu");
-    contentMapper.put("full_episode", "ns_st_ce");
+    contentMapper.put("fullEpisode", "ns_st_ce");
     contentMapper.put("airdate", "ns_st_ddt");
 
     Map<String, String> contentAsset = buildAsset(properties, comScoreOptions, contentMapper);
@@ -274,8 +274,8 @@ public class ComScoreIntegration extends Integration<Void> {
     long playbackPosition = properties.getLong("playbackPosition", 0);
 
     Map<String, String> adMapper = new LinkedHashMap<>();
-    adMapper.put("asset_id", "ns_st_ami");
-    adMapper.put("pod_id", "ns_st_pn");
+    adMapper.put("assetId", "ns_st_ami");
+    adMapper.put("podId", "ns_st_pn");
     adMapper.put("type", "ns_st_ad");
     adMapper.put("length", "ns_st_cl");
     adMapper.put("title", "ns_st_amt");
