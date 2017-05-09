@@ -137,6 +137,36 @@ import org.robolectric.annotation.Config;
         UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
   }
 
+  @Test public void initializeWithoutAutoUpdateMode() throws IllegalStateException {
+    Configuration configuration = mock(Configuration.class);
+    when(Analytics.getConfiguration()).thenReturn(configuration);
+
+    integration = new ComScoreIntegration(analytics, new ValueMap() //
+        .putValue("partnerId", "24186693")
+        .putValue("c2", "foobarbar")
+        .putValue("publisherSecret", "illnevertell")
+        .putValue("appName", "testApp")
+        .putValue("useHTTPS", true)
+        .putValue("autoUpdateInterval", null)
+        .putValue("autoUpdate", false)
+        .putValue("foregroundOnly", false), null);
+
+    ArgumentCaptor<ClientConfiguration> configurationCaptor =
+        ArgumentCaptor.forClass(ClientConfiguration.class);
+    verify(configuration, times(2)).addClient(configurationCaptor.capture());
+
+    List<ClientConfiguration> capturedConfig = configurationCaptor.getAllValues();
+    assertThat(((PartnerConfiguration) capturedConfig.get(0)).getPartnerId()).isEqualTo("24186693");
+    assertThat(((PublisherConfiguration) capturedConfig.get(1)).getPublisherId()).isEqualTo(
+        "foobarbar");
+    assertThat(((PublisherConfiguration) capturedConfig.get(1)).getPublisherSecret()).isEqualTo(
+        "illnevertell");
+    assertThat(capturedConfig.get(1).getApplicationName()).isEqualTo("testApp");
+    assertThat(capturedConfig.get(1).getUsagePropertiesAutoUpdateInterval()).isEqualTo(60);
+    assertThat(capturedConfig.get(1).getUsagePropertiesAutoUpdateMode()).isEqualTo(
+        UsagePropertiesAutoUpdateMode.DISABLED);
+  }
+
   @Test public void track() {
     integration.track(new TrackPayloadBuilder().event("foo").build());
 
@@ -171,7 +201,10 @@ import org.robolectric.annotation.Config;
             .putValue("adType", "pre-roll")
             .putValue("length", 120)
             .putValue("videoPlayer", "youtube")
-            .putValue("sound", 80))
+            .putValue("sound", 80)
+        .putValue("c3", "some value")
+        .putValue("c4", "another value")
+        .putValue("c6", "and another one"))
         .build());
 
     verify(streamingAnalytics).createPlaybackSession();
@@ -184,9 +217,9 @@ import org.robolectric.annotation.Config;
     expected.put("ns_st_mp", "youtube");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "norm");
-    expected.put("c3", "*null");
-    expected.put("c4", "*null");
-    expected.put("c6", "*null");
+    expected.put("c3", "some value");
+    expected.put("c4", "another value");
+    expected.put("c6", "and another one");
 
     verify(playbackSession).setAsset(expected);
     Mockito.reset(streamingAnalytics);
@@ -484,6 +517,15 @@ import org.robolectric.annotation.Config;
     verify(playbackSession).setAsset(expected);
   }
 
+  @Test public void videoContentStartedWithoutVideoPlaybackStarted() {
+    integration.track(new TrackPayloadBuilder() //
+        .event("Video Content Started")
+        .properties(new Properties().putValue("assetId", 5678))
+        .build());
+
+    verifyNoMoreInteractions(streamingAnalytics);
+  }
+
   @Test public void videoContentPlaying() {
     setupWithVideoPlaybackStarted();
 
@@ -595,6 +637,15 @@ import org.robolectric.annotation.Config;
     verify(streamingAnalytics).notifyPlay(0);
     verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
+  }
+
+  @Test public void videoAdStartedWithoutVideoPlaybackStarted() {
+    integration.track(new TrackPayloadBuilder() //
+        .event("Video Ad Started")
+        .properties(new Properties().putValue("assetId", 4324))
+        .build());
+
+    verifyNoMoreInteractions(streamingAnalytics);
   }
 
   @Test public void videoAdPlaying() {
