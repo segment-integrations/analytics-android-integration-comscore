@@ -174,9 +174,6 @@ public class ComScoreIntegration extends Integration<Void> {
     long playbackPosition = properties.getLong("playbackPosition", 0);
 
     Map<String, String> playbackMapper = new LinkedHashMap<>();
-    playbackMapper.put("assetId", "ns_st_ci");
-    playbackMapper.put("adType", "ns_st_ad");
-    playbackMapper.put("length", "nst_st_cl");
     playbackMapper.put("videoPlayer", "ns_st_mp");
     playbackMapper.put("sound", "ns_st_vo");
 
@@ -184,17 +181,28 @@ public class ComScoreIntegration extends Integration<Void> {
 
     if (name.equals("Video Playback Started")) {
       streamingAnalytics = streamingAnalyticsFactory.create();
-      streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
       streamingAnalytics.createPlaybackSession();
+      streamingAnalytics.setLabels(playbackAsset);
+
+      // The label ns_st_ci must be set through a setAsset call
+      Map<String, String> contentIdMapper = new LinkedHashMap<>();
+      contentIdMapper.put("assetId", "ns_st_ci");
+
+      Map<String, String> contentIdAsset = buildAsset(properties, comScoreOptions, contentIdMapper);
+      streamingAnalytics.getPlaybackSession().setAsset(contentIdAsset);
       return;
     }
 
     if (streamingAnalytics == null) {
+      // TODO: May want to add a log for when this happens
       return;
     }
 
+    streamingAnalytics.setLabels(playbackAsset);
+
     switch (name) {
       case "Video Playback Paused":
+      case "Video Playback Interrupted":
         streamingAnalytics.notifyPause(playbackPosition);
         logger.verbose("streamingAnalytics.notifyPause(%s)", playbackPosition);
         break;
@@ -219,9 +227,6 @@ public class ComScoreIntegration extends Integration<Void> {
         logger.verbose("streamingAnalytics.notifyPlay(%s)", playbackPosition);
         break;
     }
-
-    streamingAnalytics.getPlaybackSession().setAsset(playbackAsset);
-    logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", playbackAsset);
   }
 
   private void trackVideoContent(TrackPayload track, Properties properties,
@@ -244,16 +249,28 @@ public class ComScoreIntegration extends Integration<Void> {
     Map<String, String> contentAsset = buildAsset(properties, comScoreOptions, contentMapper);
 
     if (streamingAnalytics == null) {
+      // TODO: May want to add a log for when this happens
       return;
     }
 
     switch (name) {
       case "Video Content Started":
+        streamingAnalytics.getPlaybackSession().setAsset(contentAsset);
+        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", contentAsset);
         streamingAnalytics.notifyPlay(playbackPosition);
         logger.verbose("streamingAnalytics.notifyPlay(%s)", playbackPosition);
         break;
 
       case "Video Content Playing":
+        // The presence of ns_st_ad on the StreamingAnalytics's asset means that we just exited an ad break, so
+        // we need to call setAsset with the content metadata.  If ns_st_ad is not present, that means the last
+        // observed event was related to content, in which case a setAsset call should not be made (because asset
+        // did not change).
+        if (streamingAnalytics.getPlaybackSession().getAsset().containsLabel("ns_st_ad")) {
+          streamingAnalytics.getPlaybackSession().setAsset(contentAsset);
+          logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", contentAsset);
+        }
+
         streamingAnalytics.notifyPlay(playbackPosition);
         logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
         break;
@@ -263,9 +280,6 @@ public class ComScoreIntegration extends Integration<Void> {
         logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
         break;
     }
-
-    streamingAnalytics.getPlaybackSession().setAsset(contentAsset);
-    logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", contentAsset);
   }
 
   public void trackVideoAd(TrackPayload track, Properties properties,
@@ -275,7 +289,6 @@ public class ComScoreIntegration extends Integration<Void> {
 
     Map<String, String> adMapper = new LinkedHashMap<>();
     adMapper.put("assetId", "ns_st_ami");
-    adMapper.put("podId", "ns_st_pn");
     adMapper.put("type", "ns_st_ad");
     adMapper.put("length", "ns_st_cl");
     adMapper.put("title", "ns_st_amt");
@@ -283,11 +296,23 @@ public class ComScoreIntegration extends Integration<Void> {
     Map<String, String> adAsset = buildAsset(properties, comScoreOptions, adMapper);
 
     if (streamingAnalytics == null) {
+      // TODO: May want to add a log for when this happens
       return;
     }
 
     switch (name) {
       case "Video Ad Started":
+        // The ID for content is not available on Ad Start events, however it will be available on the current
+        // StreamingAnalytics's asset. This is because ns_st_ci will have already been set on Content Started
+        // calls (if this is a mid or post-roll), or on Video Playback Started (if this is a pre-roll).
+        String contentId = streamingAnalytics.getPlaybackSession().getAsset().getLabel("ns_st_ci");
+
+        if (!isNullOrEmpty(contentId)) {
+          adAsset.put("ns_st_ci", contentId);
+        }
+
+        streamingAnalytics.getPlaybackSession().setAsset(adAsset);
+        logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", adAsset);
         streamingAnalytics.notifyPlay(playbackPosition);
         logger.verbose("streamingAnalytics.notifyPlay(%s)", playbackPosition);
         break;
@@ -302,9 +327,6 @@ public class ComScoreIntegration extends Integration<Void> {
         logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
         break;
     }
-
-    streamingAnalytics.getPlaybackSession().setAsset(adAsset);
-    logger.verbose("streamingAnalytics.getPlaybackSession().setAsset(%s)", adAsset);
   }
 
   @Override public void track(TrackPayload track) {
@@ -319,6 +341,7 @@ public class ComScoreIntegration extends Integration<Void> {
     switch (event) {
       case "Video Playback Started":
       case "Video Playback Paused":
+      case "Video Playback Interrupted":
       case "Video Playback Buffer Started":
       case "Video Playback Buffer Completed":
       case "Video Playback Seek Started":
