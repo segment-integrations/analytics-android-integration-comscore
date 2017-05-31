@@ -26,16 +26,19 @@ import java.util.Map;
 
 public class ComScoreIntegration extends Integration<Void> {
 
-  @SuppressWarnings("WeakerAccess") public static final Factory FACTORY = new Factory() {
-    @Override
-    public Integration<?> create(ValueMap settings, com.segment.analytics.Analytics analytics) {
-      return new ComScoreIntegration(analytics, settings, StreamingAnalyticsFactory.REAL);
-    }
+  @SuppressWarnings("WeakerAccess")
+  public static final Factory FACTORY =
+      new Factory() {
+        @Override
+        public Integration<?> create(ValueMap settings, com.segment.analytics.Analytics analytics) {
+          return new ComScoreIntegration(analytics, settings, StreamingAnalyticsFactory.REAL);
+        }
 
-    @Override public String key() {
-      return COMSCORE_KEY;
-    }
-  };
+        @Override
+        public String key() {
+          return COMSCORE_KEY;
+        }
+      };
 
   private static final String COMSCORE_KEY = "comScore";
   final Logger logger;
@@ -53,14 +56,18 @@ public class ComScoreIntegration extends Integration<Void> {
 
     StreamingAnalytics create();
 
-    StreamingAnalyticsFactory REAL = new StreamingAnalyticsFactory() {
-      @Override public StreamingAnalytics create() {
-        return new StreamingAnalytics();
-      }
-    };
+    StreamingAnalyticsFactory REAL =
+        new StreamingAnalyticsFactory() {
+          @Override
+          public StreamingAnalytics create() {
+            return new StreamingAnalytics();
+          }
+        };
   }
 
-  ComScoreIntegration(com.segment.analytics.Analytics analytics, ValueMap settings,
+  ComScoreIntegration(
+      com.segment.analytics.Analytics analytics,
+      ValueMap settings,
       StreamingAnalyticsFactory streamingAnalyticsFactory) {
     this.streamingAnalyticsFactory = streamingAnalyticsFactory;
     logger = analytics.logger(COMSCORE_KEY);
@@ -102,8 +109,10 @@ public class ComScoreIntegration extends Integration<Void> {
    * Store a value for {@param k} in {@param asset} by checking {@param comScoreOptions} first and
    * falling back to {@param properties}. Uses {@code "*null"} it not found in either.
    */
-  private void setNullIfNotProvided(@NonNull Map<String, String> asset,
-      @NonNull Map<String, ?> comScoreOptions, @NonNull Map<String, ?> stringProperties,
+  private void setNullIfNotProvided(
+      @NonNull Map<String, String> asset,
+      @NonNull Map<String, ?> comScoreOptions,
+      @NonNull Map<String, ?> stringProperties,
       @NonNull String key) {
     String option = getStringOrDefaultValue(comScoreOptions, key, null);
     if (option != null) {
@@ -119,8 +128,8 @@ public class ComScoreIntegration extends Integration<Void> {
     asset.put(key, "*null");
   }
 
-  private @NonNull Map<String, String> buildAsset(@NonNull Properties properties,
-      @NonNull Map<String, ?> options, @NonNull Map<String, String> mapper) {
+  private Map<String, String> mapSpecialKeys(
+      @NonNull Properties properties, @NonNull Map<String, String> mapper) {
     Map<String, String> asset = new LinkedHashMap<>(mapper.size());
 
     // Map special keys and preserve only the special keys.
@@ -132,6 +141,15 @@ public class ComScoreIntegration extends Integration<Void> {
         asset.put(mappedKey, String.valueOf(value));
       }
     }
+
+    return asset;
+  }
+
+  private @NonNull Map<String, String> buildAsset(
+      @NonNull Properties properties,
+      @NonNull Map<String, ?> options,
+      @NonNull Map<String, String> mapper) {
+    Map<String, String> asset = mapSpecialKeys(properties, mapper);
 
     boolean fullScreen = properties.getBoolean("fullScreen", false);
     asset.put("ns_st_ws", fullScreen ? "full" : "norm");
@@ -155,8 +173,8 @@ public class ComScoreIntegration extends Integration<Void> {
    * <p>This will return {@code defaultValue} only if the value does not exist, since all types can
    * have a String representation.
    */
-  private @NonNull String getStringOrDefaultValue(@NonNull Map<String, ?> m, @NonNull String key,
-      @NonNull String defaultValue) {
+  private @NonNull String getStringOrDefaultValue(
+      @NonNull Map<String, ?> m, @NonNull String key, @NonNull String defaultValue) {
     Object value = m.get(key);
     if (value instanceof String) {
       return (String) value;
@@ -168,8 +186,8 @@ public class ComScoreIntegration extends Integration<Void> {
     return defaultValue;
   }
 
-  private void trackVideoPlayback(TrackPayload track, Properties properties,
-      Map<String, Object> comScoreOptions) {
+  private void trackVideoPlayback(
+      TrackPayload track, Properties properties, Map<String, Object> comScoreOptions) {
     String name = track.event();
     long playbackPosition = properties.getLong("playbackPosition", 0);
 
@@ -188,13 +206,14 @@ public class ComScoreIntegration extends Integration<Void> {
       Map<String, String> contentIdMapper = new LinkedHashMap<>();
       contentIdMapper.put("assetId", "ns_st_ci");
 
-      Map<String, String> contentIdAsset = buildAsset(properties, comScoreOptions, contentIdMapper);
+      Map<String, String> contentIdAsset = mapSpecialKeys(properties, contentIdMapper);
       streamingAnalytics.getPlaybackSession().setAsset(contentIdAsset);
       return;
     }
 
     if (streamingAnalytics == null) {
-      // TODO: May want to add a log for when this happens
+      logger.verbose(
+          "streamingAnalytics instance not initialized correctly. Please call Video Playback Started to initialize.");
       return;
     }
 
@@ -229,8 +248,8 @@ public class ComScoreIntegration extends Integration<Void> {
     }
   }
 
-  private void trackVideoContent(TrackPayload track, Properties properties,
-      Map<String, Object> comScoreOptions) {
+  private void trackVideoContent(
+      TrackPayload track, Properties properties, Map<String, Object> comScoreOptions) {
     String name = track.event();
     long playbackPosition = properties.getLong("playbackPosition", 0);
 
@@ -249,7 +268,8 @@ public class ComScoreIntegration extends Integration<Void> {
     Map<String, String> contentAsset = buildAsset(properties, comScoreOptions, contentMapper);
 
     if (streamingAnalytics == null) {
-      // TODO: May want to add a log for when this happens
+      logger.verbose(
+          "streamingAnalytics instance not initialized correctly. Please call Video Playback Started to initialize.");
       return;
     }
 
@@ -273,6 +293,7 @@ public class ComScoreIntegration extends Integration<Void> {
 
         streamingAnalytics.notifyPlay(playbackPosition);
         logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
+
         break;
 
       case "Video Content Completed":
@@ -282,8 +303,8 @@ public class ComScoreIntegration extends Integration<Void> {
     }
   }
 
-  public void trackVideoAd(TrackPayload track, Properties properties,
-      Map<String, Object> comScoreOptions) {
+  public void trackVideoAd(
+      TrackPayload track, Properties properties, Map<String, Object> comScoreOptions) {
     String name = track.event();
     long playbackPosition = properties.getLong("playbackPosition", 0);
 
@@ -296,7 +317,8 @@ public class ComScoreIntegration extends Integration<Void> {
     Map<String, String> adAsset = buildAsset(properties, comScoreOptions, adMapper);
 
     if (streamingAnalytics == null) {
-      // TODO: May want to add a log for when this happens
+      logger.verbose(
+          "streamingAnalytics instance not initialized correctly. Please call Video Playback Started to initialize.");
       return;
     }
 
@@ -329,7 +351,8 @@ public class ComScoreIntegration extends Integration<Void> {
     }
   }
 
-  @Override public void track(TrackPayload track) {
+  @Override
+  public void track(TrackPayload track) {
     String event = track.event();
     Properties properties = track.properties();
 
@@ -367,7 +390,8 @@ public class ComScoreIntegration extends Integration<Void> {
     }
   }
 
-  @Override public void identify(IdentifyPayload identify) {
+  @Override
+  public void identify(IdentifyPayload identify) {
     super.identify(identify);
     String userId = identify.userId();
     HashMap<String, String> traits = (HashMap<String, String>) identify.traits().toStringMap();
@@ -376,11 +400,13 @@ public class ComScoreIntegration extends Integration<Void> {
     logger.verbose("Analytics.getConfiguration().setPersistentLabels(%s)", traits);
   }
 
-  @Override public void screen(ScreenPayload screen) {
+  @Override
+  public void screen(ScreenPayload screen) {
     String name = screen.name();
     String category = screen.category();
-    HashMap<String, String> properties = (HashMap<String, String>) //
-        screen.properties().toStringMap();
+    HashMap<String, String> properties =
+        (HashMap<String, String>) //
+            screen.properties().toStringMap();
     properties.put("name", name);
     properties.put("category", category);
     Analytics.notifyViewEvent(properties);

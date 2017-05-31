@@ -19,6 +19,7 @@ import com.comscore.Configuration;
 import com.comscore.PartnerConfiguration;
 import com.comscore.PublisherConfiguration;
 import com.comscore.UsagePropertiesAutoUpdateMode;
+import com.comscore.streaming.Asset;
 import com.comscore.streaming.PlaybackSession;
 import com.comscore.streaming.StreamingAnalytics;
 import com.segment.analytics.Options;
@@ -207,13 +208,12 @@ import org.robolectric.annotation.Config;
         .putValue("c6", "and another one"))
         .build());
 
-    verify(streamingAnalytics).createPlaybackSession();
-    verify(streamingAnalytics).getPlaybackSession();
+
+
+    Map<String, String> contentIdMapper = new LinkedHashMap<>();
+    contentIdMapper.put("ns_st_ci", "1234");
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci", "1234");
-    expected.put("ns_st_ad", "pre-roll");
-    expected.put("nst_st_cl", "120");
     expected.put("ns_st_mp", "youtube");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "norm");
@@ -221,7 +221,11 @@ import org.robolectric.annotation.Config;
     expected.put("c4", "another value");
     expected.put("c6", "and another one");
 
-    verify(playbackSession).setAsset(expected);
+    verify(streamingAnalytics).createPlaybackSession();
+    verify(streamingAnalytics).getPlaybackSession();
+    verify(playbackSession).setAsset(contentIdMapper);
+
+    verify(streamingAnalytics).setLabels(expected);
     Mockito.reset(streamingAnalytics);
   }
 
@@ -239,13 +243,10 @@ import org.robolectric.annotation.Config;
             .putValue("fullScreen", true))
         .build());
 
-    verify(streamingAnalytics).createPlaybackSession();
-    verify(streamingAnalytics).getPlaybackSession();
+    Map<String, String> contentIdMapper = new LinkedHashMap<>();
+    contentIdMapper.put("ns_st_ci", "1234");
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci", "1234");
-    expected.put("ns_st_ad", "pre-roll");
-    expected.put("nst_st_cl", "120");
     expected.put("ns_st_mp", "youtube");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "full");
@@ -254,7 +255,11 @@ import org.robolectric.annotation.Config;
     expected.put("c4", "*null");
     expected.put("c6", "*null");
 
-    verify(playbackSession).setAsset(expected);
+    verify(streamingAnalytics).createPlaybackSession();
+    verify(streamingAnalytics).getPlaybackSession();
+    verify(playbackSession).setAsset(contentIdMapper);
+
+    verify(streamingAnalytics).setLabels(expected);
   }
 
   @Test public void videoPlaybackPausedWithoutVideoPlaybackStarted() {
@@ -290,9 +295,6 @@ import org.robolectric.annotation.Config;
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci", "1234");
-    expected.put("ns_st_ad", "mid-roll");
-    expected.put("nst_st_cl", "100");
     expected.put("ns_st_mp", "vimeo");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "full");
@@ -302,8 +304,7 @@ import org.robolectric.annotation.Config;
     expected.put("c6", "*null");
 
     verify(streamingAnalytics).notifyPause(10);
-    verify(streamingAnalytics).getPlaybackSession();
-    verify(playbackSession).setAsset(expected);
+    verify(streamingAnalytics).setLabels(expected);
   }
 
   @Test public void videoPlaybackBufferStarted() {
@@ -324,9 +325,6 @@ import org.robolectric.annotation.Config;
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci", "7890");
-    expected.put("ns_st_ad", "post-roll");
-    expected.put("nst_st_cl", "700");
     expected.put("ns_st_mp", "youtube");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "norm");
@@ -336,8 +334,7 @@ import org.robolectric.annotation.Config;
     expected.put("c6", "*null");
 
     verify(streamingAnalytics).notifyBufferStart(20);
-    verify(streamingAnalytics).getPlaybackSession();
-    verify(playbackSession).setAsset(expected);
+    verify(streamingAnalytics).setLabels(expected);
   }
 
   @Test public void videoPlaybackBufferCompleted() {
@@ -358,9 +355,6 @@ import org.robolectric.annotation.Config;
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci", "1029");
-    expected.put("ns_st_ad", "pre-roll");
-    expected.put("nst_st_cl", "800");
     expected.put("ns_st_mp", "vimeo");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "full");
@@ -370,8 +364,7 @@ import org.robolectric.annotation.Config;
     expected.put("c6", "*null");
 
     verify(streamingAnalytics).notifyBufferStop(30);
-    verify(streamingAnalytics).getPlaybackSession();
-    verify(playbackSession).setAsset(expected);
+    verify(streamingAnalytics).setLabels(expected);
   }
 
   @Test public void videoPlaybackSeekStarted() {
@@ -392,9 +385,6 @@ import org.robolectric.annotation.Config;
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci", "3948");
-    expected.put("ns_st_ad", "mid-roll");
-    expected.put("nst_st_cl", "900");
     expected.put("ns_st_mp", "youtube");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "full");
@@ -404,8 +394,7 @@ import org.robolectric.annotation.Config;
     expected.put("c6", "*null");
 
     verify(streamingAnalytics).notifySeekStart(40);
-    verify(streamingAnalytics).getPlaybackSession();
-    verify(playbacksession).setAsset(expected);
+    verify(streamingAnalytics).setLabels(expected);
   }
 
   @Test public void videoPlaybackSeekCompleted() {
@@ -426,9 +415,6 @@ import org.robolectric.annotation.Config;
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci", "6767");
-    expected.put("ns_st_ad", "post-roll");
-    expected.put("nst_st_cl", "400");
     expected.put("ns_st_mp", "vimeo");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "full");
@@ -438,8 +424,7 @@ import org.robolectric.annotation.Config;
     expected.put("c6", "*null");
 
     verify(streamingAnalytics).notifyPlay(50);
-    verify(streamingAnalytics).getPlaybackSession();
-    verify(playbackSession).setAsset(expected);
+    verify(streamingAnalytics).setLabels(expected);
   }
 
   @Test public void videoPlaybackResumed() {
@@ -460,9 +445,6 @@ import org.robolectric.annotation.Config;
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci", "5332");
-    expected.put("ns_st_ad", "post-roll");
-    expected.put("nst_st_cl", "100");
     expected.put("ns_st_mp", "youtube");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "full");
@@ -472,8 +454,7 @@ import org.robolectric.annotation.Config;
     expected.put("c6", "*null");
 
     verify(streamingAnalytics).notifyPlay(60);
-    verify(streamingAnalytics).getPlaybackSession();
-    verify(playbackSession).setAsset(expected);
+    verify(streamingAnalytics).setLabels(expected);
   }
 
   @Test public void videoContentStarted() {
@@ -513,7 +494,6 @@ import org.robolectric.annotation.Config;
     expected.put("c6", "*null");
 
     verify(streamingAnalytics).notifyPlay(70);
-    verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
   }
 
@@ -532,6 +512,10 @@ import org.robolectric.annotation.Config;
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
+
+    Asset asset = mock(Asset.class);
+    when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
+
     integration.track(new TrackPayloadBuilder().event("Video Content Playing")
         .properties(new Properties().putValue("assetId", 123214)
             .putValue("title", "Look Who's Purging Now")
@@ -546,25 +530,7 @@ import org.robolectric.annotation.Config;
             .putValue("playbackPosition", 70))
         .build());
 
-    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci", "123214");
-    expected.put("ns_st_ep", "Look Who's Purging Now");
-    expected.put("ns_st_sn", "2");
-    expected.put("ns_st_en", "9");
-    expected.put("ns_st_ge", "cartoon");
-    expected.put("ns_st_pr", "Rick and Morty");
-    expected.put("ns_st_st", "cartoon network");
-    expected.put("ns_st_pu", "Turner Broadcasting System");
-    expected.put("ns_st_ce", "true");
-    expected.put("ns_st_ddt", "2015-09-27");
-    expected.put("ns_st_ws", "norm");
-    expected.put("c3", "*null");
-    expected.put("c4", "*null");
-    expected.put("c6", "*null");
-
     verify(streamingAnalytics).notifyPlay(70);
-    verify(streamingAnalytics).getPlaybackSession();
-    verify(playbackSession).setAsset(expected);
   }
 
   @Test public void videoContentCompleted() {
@@ -587,25 +553,7 @@ import org.robolectric.annotation.Config;
             .putValue("playbackPosition", 80))
         .build());
 
-    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci", "9324");
-    expected.put("ns_st_ep", "Raising Gazorpazorp");
-    expected.put("ns_st_sn", "1");
-    expected.put("ns_st_en", "7");
-    expected.put("ns_st_ge", "cartoon");
-    expected.put("ns_st_pr", "Rick and Morty");
-    expected.put("ns_st_st", "cartoon network");
-    expected.put("ns_st_pu", "Turner Broadcasting System");
-    expected.put("ns_st_ce", "true");
-    expected.put("ns_st_ddt", "2014-10-20");
-    expected.put("ns_st_ws", "norm");
-    expected.put("c3", "*null");
-    expected.put("c4", "*null");
-    expected.put("c6", "*null");
-
     verify(streamingAnalytics).notifyEnd(80);
-    verify(streamingAnalytics).getPlaybackSession();
-    verify(playbackSession).setAsset(expected);
   }
 
   @Test public void videoAdStarted() {
@@ -613,6 +561,9 @@ import org.robolectric.annotation.Config;
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+
+    Asset asset = mock(Asset.class);
+    when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
 
     integration.track(new TrackPayloadBuilder().event("Video Ad Started")
         .properties(new Properties().putValue("assetId", 4311)
@@ -625,7 +576,6 @@ import org.robolectric.annotation.Config;
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_ami", "4311");
-    expected.put("ns_st_pn", "adSegmentA");
     expected.put("ns_st_ad", "pre-roll");
     expected.put("ns_st_cl", "120");
     expected.put("ns_st_amt", "Helmet Ad");
@@ -635,7 +585,6 @@ import org.robolectric.annotation.Config;
     expected.put("c6", "*null");
 
     verify(streamingAnalytics).notifyPlay(0);
-    verify(streamingAnalytics).getPlaybackSession();
     verify(playbackSession).setAsset(expected);
   }
 
@@ -663,20 +612,7 @@ import org.robolectric.annotation.Config;
             .putValue("title", "Helmet Ad"))
         .build());
 
-    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ami", "4311");
-    expected.put("ns_st_pn", "adSegmentA");
-    expected.put("ns_st_ad", "pre-roll");
-    expected.put("ns_st_cl", "120");
-    expected.put("ns_st_amt", "Helmet Ad");
-    expected.put("ns_st_ws", "norm");
-    expected.put("c3", "*null");
-    expected.put("c4", "*null");
-    expected.put("c6", "*null");
-
     verify(streamingAnalytics).notifyPlay(20);
-    verify(streamingAnalytics).getPlaybackSession();
-    verify(playbackSession).setAsset(expected);
   }
 
   @Test public void videoAdCompleted() {
@@ -694,20 +630,7 @@ import org.robolectric.annotation.Config;
             .putValue("title", "Helmet Ad"))
         .build());
 
-    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ami", "3425");
-    expected.put("ns_st_pn", "adSegmentb");
-    expected.put("ns_st_ad", "mid-roll");
-    expected.put("ns_st_cl", "100");
-    expected.put("ns_st_amt", "Helmet Ad");
-    expected.put("ns_st_ws", "norm");
-    expected.put("c3", "*null");
-    expected.put("c4", "*null");
-    expected.put("c6", "*null");
-
     verify(streamingAnalytics).notifyEnd(100);
-    verify(streamingAnalytics).getPlaybackSession();
-    verify(playbackSession).setAsset(expected);
   }
 
   @Test public void identify() throws JSONException {
