@@ -591,6 +591,7 @@ import org.robolectric.annotation.Config;
     expected.put("ns_st_ad", "pre-roll");
     expected.put("ns_st_cl", "120000");
     expected.put("ns_st_amt", "Helmet Ad");
+    expected.put("ns_st_ct", "va00");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");

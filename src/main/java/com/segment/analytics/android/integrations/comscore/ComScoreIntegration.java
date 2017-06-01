@@ -213,6 +213,13 @@ public class ComScoreIntegration extends Integration<Void> {
       asset.put("ns_st_cl", String.valueOf(length));
     }
 
+    if(options.containsKey("adClassificationType")) {
+      String adClassificationType = String.valueOf(options.get("adClassificationType"));
+      asset.put("ns_st_ct", adClassificationType);
+    } else {
+      asset.put("ns_st_ct", "va00");
+    }
+
     String adType = String.valueOf(properties.get("type"));
     switch (adType) {
       case "pre-roll":
