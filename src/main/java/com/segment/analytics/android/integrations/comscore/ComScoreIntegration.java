@@ -145,18 +145,53 @@ public class ComScoreIntegration extends Integration<Void> {
     return asset;
   }
 
-  private @NonNull Map<String, String> buildAsset(
+  private @NonNull Map<String, String> buildPlaybackAsset(
       @NonNull Properties properties,
       @NonNull Map<String, ?> options,
       @NonNull Map<String, String> mapper) {
+
     Map<String, String> asset = mapSpecialKeys(properties, mapper);
 
     boolean fullScreen = properties.getBoolean("fullScreen", false);
     asset.put("ns_st_ws", fullScreen ? "full" : "norm");
 
-    if (properties.containsKey("bitrate")) {
-      int bitrate = properties.getInt("bitrate", 0) * 1000; // comScore expects bps.
-      asset.put("ns_st_br", String.valueOf(bitrate));
+    int bitrate = properties.getInt("bitrate", 0) * 1000; // comScore expects bps.
+    asset.put("ns_st_br", String.valueOf(bitrate));
+
+    setNullIfNotProvided(asset, options, properties, "c3");
+    setNullIfNotProvided(asset, options, properties, "c4");
+    setNullIfNotProvided(asset, options, properties, "c6");
+
+    return asset;
+  }
+
+  private @NonNull Map<String, String> buildContentAsset(
+      @NonNull Properties properties,
+      @NonNull Map<String, ?> options,
+      @NonNull Map<String, String> mapper) {
+
+    Map<String, String> asset = mapSpecialKeys(properties, mapper);
+
+    if (properties.containsKey("totalLength")) {
+      int length = properties.getInt("totalLength", 0) * 1000; // comScore expects milliseconds.
+      asset.put("ns_st_cl", String.valueOf(length));
+    }
+
+    if(options.containsKey("contentClassificationType")) {
+      String contentClassificationType = String.valueOf(options.get("contentClassificationType"));
+      asset.put("ns_st_ct", contentClassificationType);
+    } else {
+      asset.put("ns_st_ct", "vc00");
+    }
+
+    if(options.containsKey("digitalAirdate")) {
+      String digitalAirdate = String.valueOf(options.get("digitalAirdate"));
+      asset.put("ns_st_ddt",  digitalAirdate);
+    }
+
+    if(options.containsKey("tvAirdate")) {
+      String tvAirdate = String.valueOf(options.get("digitalAirdate"));
+      asset.put("ns_st_tdt", tvAirdate);
     }
 
     setNullIfNotProvided(asset, options, properties, "c3");
@@ -165,6 +200,34 @@ public class ComScoreIntegration extends Integration<Void> {
 
     return asset;
   }
+
+  private @NonNull Map<String, String> buildAdAsset(
+      @NonNull Properties properties,
+      @NonNull Map<String, ?> options,
+      @NonNull Map<String, String> mapper) {
+
+    Map<String, String> asset = mapSpecialKeys(properties, mapper);
+
+    if (properties.containsKey("totalLength")) {
+      int length = properties.getInt("totalLength", 0) * 1000; // comScore expects milliseconds.
+      asset.put("ns_st_cl", String.valueOf(length));
+    }
+
+    String adType = String.valueOf(properties.get("type"));
+    switch (adType) {
+      case "pre-roll":
+      case "mid-roll":
+      case "post-roll":
+        asset.put("ns_st_ad", adType);
+        break;
+      default:
+        asset.put("ns_st_ad", "1");
+    }
+    setNullIfNotProvided(asset, options, properties, "c3");
+    setNullIfNotProvided(asset, options, properties, "c4");
+    setNullIfNotProvided(asset, options, properties, "c6");
+    return asset;
+    }
 
   /**
    * Returns the value mapped by {@code key} if it exists and is a string, or can be coerced to a
@@ -195,7 +258,7 @@ public class ComScoreIntegration extends Integration<Void> {
     playbackMapper.put("videoPlayer", "ns_st_mp");
     playbackMapper.put("sound", "ns_st_vo");
 
-    Map<String, String> playbackAsset = buildAsset(properties, comScoreOptions, playbackMapper);
+    Map<String, String> playbackAsset = buildPlaybackAsset(properties, comScoreOptions, playbackMapper);
 
     if (name.equals("Video Playback Started")) {
       streamingAnalytics = streamingAnalyticsFactory.create();
@@ -263,9 +326,10 @@ public class ComScoreIntegration extends Integration<Void> {
     contentMapper.put("channel", "ns_st_st");
     contentMapper.put("publisher", "ns_st_pu");
     contentMapper.put("fullEpisode", "ns_st_ce");
-    contentMapper.put("airdate", "ns_st_ddt");
+    contentMapper.put("pod_id", "ns_st_pn");
 
-    Map<String, String> contentAsset = buildAsset(properties, comScoreOptions, contentMapper);
+
+    Map<String, String> contentAsset = buildContentAsset(properties, comScoreOptions, contentMapper);
 
     if (streamingAnalytics == null) {
       logger.verbose(
@@ -310,11 +374,10 @@ public class ComScoreIntegration extends Integration<Void> {
 
     Map<String, String> adMapper = new LinkedHashMap<>();
     adMapper.put("assetId", "ns_st_ami");
-    adMapper.put("type", "ns_st_ad");
-    adMapper.put("length", "ns_st_cl");
     adMapper.put("title", "ns_st_amt");
+    adMapper.put("publisher", "ns_st_pu");
 
-    Map<String, String> adAsset = buildAsset(properties, comScoreOptions, adMapper);
+    Map<String, String> adAsset = buildAdAsset(properties, comScoreOptions, adMapper);
 
     if (streamingAnalytics == null) {
       logger.verbose(

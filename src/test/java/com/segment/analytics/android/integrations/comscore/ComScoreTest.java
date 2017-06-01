@@ -200,9 +200,10 @@ import org.robolectric.annotation.Config;
     integration.track(new TrackPayloadBuilder().event("Video Playback Started")
         .properties(new Properties().putValue("assetId", 1234)
             .putValue("adType", "pre-roll")
-            .putValue("length", 120)
+            .putValue("totalLength", 120)
             .putValue("videoPlayer", "youtube")
             .putValue("sound", 80)
+            .putValue("fullScreen", false)
         .putValue("c3", "some value")
         .putValue("c4", "another value")
         .putValue("c6", "and another one"))
@@ -217,6 +218,7 @@ import org.robolectric.annotation.Config;
     expected.put("ns_st_mp", "youtube");
     expected.put("ns_st_vo", "80");
     expected.put("ns_st_ws", "norm");
+    expected.put("ns_st_br", "0");
     expected.put("c3", "some value");
     expected.put("c4", "another value");
     expected.put("c6", "and another one");
@@ -236,7 +238,7 @@ import org.robolectric.annotation.Config;
     integration.track(new TrackPayloadBuilder().event("Video Playback Started")
         .properties(new Properties().putValue("assetId", 1234)
             .putValue("adType", "pre-roll")
-            .putValue("length", 120)
+            .putValue("totalLength", 120)
             .putValue("videoPlayer", "youtube")
             .putValue("sound", 80)
             .putValue("bitrate", 40)
@@ -285,7 +287,7 @@ import org.robolectric.annotation.Config;
         .properties(new Properties() //
             .putValue("assetId", 1234)
             .putValue("adType", "mid-roll")
-            .putValue("length", 100)
+            .putValue("totalLength", 100)
             .putValue("videoPlayer", "vimeo")
             .putValue("playbackPosition", 10)
             .putValue("fullScreen", true)
@@ -316,7 +318,7 @@ import org.robolectric.annotation.Config;
     integration.track(new TrackPayloadBuilder().event("Video Playback Buffer Started")
         .properties(new Properties().putValue("assetId", 7890)
             .putValue("adType", "post-roll")
-            .putValue("length", 700)
+            .putValue("totalLength", 700)
             .putValue("videoPlayer", "youtube")
             .putValue("playbackPosition", 20)
             .putValue("fullScreen", false)
@@ -346,7 +348,7 @@ import org.robolectric.annotation.Config;
     integration.track(new TrackPayloadBuilder().event("Video Playback Buffer Completed")
         .properties(new Properties().putValue("assetId", 1029)
             .putValue("adType", "pre-roll")
-            .putValue("length", 800)
+            .putValue("totalLength", 800)
             .putValue("videoPlayer", "vimeo")
             .putValue("playbackPosition", 30)
             .putValue("fullScreen", true)
@@ -376,7 +378,7 @@ import org.robolectric.annotation.Config;
     integration.track(new TrackPayloadBuilder().event("Video Playback Seek Started")
         .properties(new Properties().putValue("assetId", 3948)
             .putValue("adType", "mid-roll")
-            .putValue("length", 900)
+            .putValue("totalLength", 900)
             .putValue("videoPlayer", "youtube")
             .putValue("playbackPosition", 40)
             .putValue("fullScreen", true)
@@ -406,7 +408,7 @@ import org.robolectric.annotation.Config;
     integration.track(new TrackPayloadBuilder().event("Video Playback Seek Completed")
         .properties(new Properties().putValue("assetId", 6767)
             .putValue("adType", "post-roll")
-            .putValue("length", 400)
+            .putValue("totalLength", 400)
             .putValue("videoPlayer", "vimeo")
             .putValue("playbackPosition", 50)
             .putValue("fullScreen", true)
@@ -436,7 +438,7 @@ import org.robolectric.annotation.Config;
     integration.track(new TrackPayloadBuilder().event("Video Playback Resumed")
         .properties(new Properties().putValue("assetId", 5332)
             .putValue("adType", "post-roll")
-            .putValue("length", 100)
+            .putValue("totalLength", 100)
             .putValue("videoPlayer", "youtube")
             .putValue("playbackPosition", 60)
             .putValue("fullScreen", true)
@@ -463,6 +465,10 @@ import org.robolectric.annotation.Config;
     PlaybackSession playbackSession = mock(PlaybackSession.class);
     when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
+    Map<String, Object> comScoreOptions = new LinkedHashMap<>();
+    comScoreOptions.put("digitalAirdate", "2014-01-20");
+    comScoreOptions.put("contentClassificationType", "vc12");
+
     integration.track(new TrackPayloadBuilder().event("Video Content Started")
         .properties(new Properties().putValue("assetId", 9324)
             .putValue("title", "Meeseeks and Destroy")
@@ -473,8 +479,10 @@ import org.robolectric.annotation.Config;
             .putValue("channel", "cartoon network")
             .putValue("publisher", "Turner Broadcasting System")
             .putValue("fullEpisode", true)
-            .putValue("airdate", "2014-01-20")
+            .putValue("pod_id", "segment A")
+            .putValue("totalLength", "120")
             .putValue("playbackPosition", 70))
+        .options(new Options().setIntegrationOptions("comScore", comScoreOptions))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -488,7 +496,9 @@ import org.robolectric.annotation.Config;
     expected.put("ns_st_pu", "Turner Broadcasting System");
     expected.put("ns_st_ce", "true");
     expected.put("ns_st_ddt", "2014-01-20");
-    expected.put("ns_st_ws", "norm");
+    expected.put("ns_st_pn", "segment A");
+    expected.put("ns_st_cl", "120000");
+    expected.put("ns_st_ct", "vc12");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -527,6 +537,7 @@ import org.robolectric.annotation.Config;
             .putValue("publisher", "Turner Broadcasting System")
             .putValue("fullEpisode", true)
             .putValue("airdate", "2015-09-27")
+            .putValue("pod_id", "segment A")
             .putValue("playbackPosition", 70))
         .build());
 
@@ -550,6 +561,7 @@ import org.robolectric.annotation.Config;
             .putValue("publisher", "Turner Broadcasting System")
             .putValue("fullEpisode", true)
             .putValue("airdate", "2014-10-20")
+            .putValue("pod_id", "segment A")
             .putValue("playbackPosition", 80))
         .build());
 
@@ -569,7 +581,7 @@ import org.robolectric.annotation.Config;
         .properties(new Properties().putValue("assetId", 4311)
             .putValue("podId", "adSegmentA")
             .putValue("type", "pre-roll")
-            .putValue("length", 120)
+            .putValue("totalLength", 120)
             .putValue("playbackPosition", 0)
             .putValue("title", "Helmet Ad"))
         .build());
@@ -577,9 +589,8 @@ import org.robolectric.annotation.Config;
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_ami", "4311");
     expected.put("ns_st_ad", "pre-roll");
-    expected.put("ns_st_cl", "120");
+    expected.put("ns_st_cl", "120000");
     expected.put("ns_st_amt", "Helmet Ad");
-    expected.put("ns_st_ws", "norm");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
@@ -607,7 +618,7 @@ import org.robolectric.annotation.Config;
         .properties(new Properties().putValue("assetId", 4311)
             .putValue("podId", "adSegmentA")
             .putValue("type", "pre-roll")
-            .putValue("length", 120)
+            .putValue("totalLength", 120)
             .putValue("playbackPosition", 20)
             .putValue("title", "Helmet Ad"))
         .build());
@@ -625,7 +636,7 @@ import org.robolectric.annotation.Config;
         .properties(new Properties().putValue("assetId", 3425)
             .putValue("podId", "adSegmentb")
             .putValue("type", "mid-roll")
-            .putValue("length", 100)
+            .putValue("totalLength", 100)
             .putValue("playbackPosition", 100)
             .putValue("title", "Helmet Ad"))
         .build());
