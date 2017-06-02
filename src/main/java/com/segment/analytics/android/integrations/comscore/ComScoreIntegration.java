@@ -11,6 +11,7 @@ import com.comscore.PartnerConfiguration;
 import com.comscore.PublisherConfiguration;
 import com.comscore.streaming.StreamingAnalytics;
 import com.segment.analytics.Properties;
+
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.IdentifyPayload;
 import com.segment.analytics.integrations.Integration;
@@ -23,7 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class ComScoreIntegration extends Integration<Void> {
-
   @SuppressWarnings("WeakerAccess")
   public static final Factory FACTORY =
       new Factory() {
@@ -31,7 +31,6 @@ public class ComScoreIntegration extends Integration<Void> {
         public Integration<?> create(ValueMap settings, com.segment.analytics.Analytics analytics) {
           return new ComScoreIntegration(analytics, settings, StreamingAnalyticsFactory.REAL);
         }
-
         @Override
         public String key() {
           return COMSCORE_KEY;
@@ -68,6 +67,7 @@ public class ComScoreIntegration extends Integration<Void> {
       ValueMap settings,
       StreamingAnalyticsFactory streamingAnalyticsFactory) {
     this.streamingAnalyticsFactory = streamingAnalyticsFactory;
+
     logger = analytics.logger(COMSCORE_KEY);
     customerC2 = settings.getString("c2");
     publisherSecret = settings.getString("publisherSecret");
@@ -461,6 +461,7 @@ public class ComScoreIntegration extends Integration<Void> {
   }
 
   @Override
+
   public void identify(IdentifyPayload identify) {
     super.identify(identify);
     String userId = identify.userId();
@@ -468,6 +469,7 @@ public class ComScoreIntegration extends Integration<Void> {
     traits.put("userId", userId);
     Analytics.getConfiguration().setPersistentLabels(traits);
     logger.verbose("Analytics.getConfiguration().setPersistentLabels(%s)", traits);
+
   }
 
   @Override

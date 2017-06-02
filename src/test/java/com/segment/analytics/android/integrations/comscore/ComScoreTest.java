@@ -23,6 +23,7 @@ import com.comscore.streaming.Asset;
 import com.comscore.streaming.PlaybackSession;
 import com.comscore.streaming.StreamingAnalytics;
 import com.segment.analytics.Options;
+
 import com.segment.analytics.Properties;
 import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
@@ -31,6 +32,7 @@ import com.segment.analytics.test.IdentifyPayloadBuilder;
 import com.segment.analytics.test.ScreenPayloadBuilder;
 import com.segment.analytics.test.TrackPayloadBuilder;
 import java.util.Collections;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +44,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
@@ -49,6 +52,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 @RunWith(RobolectricTestRunner.class)
+
 @Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
 @PowerMockIgnore({ "org.mockito.*", "org.robolectric.*", "android.*" })
 @PrepareForTest(Analytics.class) public class ComScoreTest {
@@ -61,6 +65,7 @@ import org.robolectric.annotation.Config;
   private ComScoreIntegration integration;
   @Mock Analytics comScore;
   @Mock StreamingAnalytics streamingAnalytics;
+
 
   @Before public void setUp() {
     initMocks(this);
@@ -77,6 +82,7 @@ import org.robolectric.annotation.Config;
             return streamingAnalytics;
           }
         });
+
 
     // mock it twice so we can initialize it for tests, but reset the mock after initialization.
     mockStatic(Analytics.class);
@@ -176,6 +182,7 @@ import org.robolectric.annotation.Config;
 
     verifyStatic();
     Analytics.notifyHiddenEvent(expected);
+
   }
 
   @Test public void trackWithProps() {
@@ -806,6 +813,7 @@ import org.robolectric.annotation.Config;
         .build());
 
     verify(streamingAnalytics).notifyEnd(100);
+
   }
 
   @Test public void identify() throws JSONException {
