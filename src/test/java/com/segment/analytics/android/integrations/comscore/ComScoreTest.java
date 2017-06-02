@@ -470,7 +470,8 @@ import org.robolectric.annotation.Config;
     comScoreOptions.put("contentClassificationType", "vc12");
 
     integration.track(new TrackPayloadBuilder().event("Video Content Started")
-        .properties(new Properties().putValue("assetId", 9324)
+        .properties(new Properties()
+            .putValue("assetId", 9324)
             .putValue("title", "Meeseeks and Destroy")
             .putValue("season", 1)
             .putValue("episode", 5)
@@ -479,7 +480,7 @@ import org.robolectric.annotation.Config;
             .putValue("channel", "cartoon network")
             .putValue("publisher", "Turner Broadcasting System")
             .putValue("fullEpisode", true)
-            .putValue("pod_id", "segment A")
+            .putValue("podId", "segment A")
             .putValue("totalLength", "120")
             .putValue("playbackPosition", 70))
         .options(new Options().setIntegrationOptions("comScore", comScoreOptions))
@@ -518,7 +519,7 @@ import org.robolectric.annotation.Config;
     comScoreOptions.put("contentClassificationType", "vc12");
 
     integration.track(new TrackPayloadBuilder().event("Video Content Started")
-        .properties(new Properties().putValue("assetId", 9324)
+        .properties(new Properties()
             .putValue("title", "Meeseeks and Destroy")
             .putValue("season", 1)
             .putValue("episode", 5)
@@ -527,14 +528,14 @@ import org.robolectric.annotation.Config;
             .putValue("channel", "cartoon network")
             .putValue("publisher", "Turner Broadcasting System")
             .putValue("fullEpisode", true)
-            .putValue("pod_id", "segment A")
+            .putValue("podId", "segment A")
             .putValue("totalLength", "120")
             .putValue("playbackPosition", 70))
         .options(new Options().setIntegrationOptions("comScore", comScoreOptions))
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
-    expected.put("ns_st_ci", "9324");
+    expected.put("ns_st_ci", "0");
     expected.put("ns_st_ep", "Meeseeks and Destroy");
     expected.put("ns_st_sn", "1");
     expected.put("ns_st_en", "5");
@@ -585,7 +586,7 @@ import org.robolectric.annotation.Config;
             .putValue("publisher", "Turner Broadcasting System")
             .putValue("fullEpisode", true)
             .putValue("airdate", "2015-09-27")
-            .putValue("pod_id", "segment A")
+            .putValue("podId", "segment A")
             .putValue("playbackPosition", 70))
         .build());
 
@@ -612,7 +613,7 @@ import org.robolectric.annotation.Config;
             .putValue("channel", "cartoon network")
             .putValue("publisher", "Turner Broadcasting System")
             .putValue("fullEpisode", true)
-            .putValue("pod_id", "segment A")
+            .putValue("podId", "segment A")
             .putValue("playbackPosition", 70))
         .build());
 
@@ -653,7 +654,7 @@ import org.robolectric.annotation.Config;
             .putValue("publisher", "Turner Broadcasting System")
             .putValue("fullEpisode", true)
             .putValue("airdate", "2014-10-20")
-            .putValue("pod_id", "segment A")
+            .putValue("podId", "segment A")
             .putValue("playbackPosition", 80))
         .build());
 
