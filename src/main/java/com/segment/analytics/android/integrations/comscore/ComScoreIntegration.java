@@ -190,7 +190,7 @@ public class ComScoreIntegration extends Integration<Void> {
     }
 
     if(options.containsKey("tvAirdate")) {
-      String tvAirdate = String.valueOf(options.get("digitalAirdate"));
+      String tvAirdate = String.valueOf(options.get("tvAirdate"));
       asset.put("ns_st_tdt", tvAirdate);
     }
 

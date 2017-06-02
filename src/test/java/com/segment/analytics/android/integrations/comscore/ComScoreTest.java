@@ -459,7 +459,7 @@ import org.robolectric.annotation.Config;
     verify(streamingAnalytics).setLabels(expected);
   }
 
-  @Test public void videoContentStarted() {
+  @Test public void videoContentStartedWithDigitalAirdate() {
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
@@ -507,6 +507,54 @@ import org.robolectric.annotation.Config;
     verify(playbackSession).setAsset(expected);
   }
 
+  @Test public void videoContentStartedWithTVAirdate() {
+    setupWithVideoPlaybackStarted();
+
+    PlaybackSession playbackSession = mock(PlaybackSession.class);
+    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+
+    Map<String, Object> comScoreOptions = new LinkedHashMap<>();
+    comScoreOptions.put("tvAirdate", "2017-05-14");
+    comScoreOptions.put("contentClassificationType", "vc12");
+
+    integration.track(new TrackPayloadBuilder().event("Video Content Started")
+        .properties(new Properties().putValue("assetId", 9324)
+            .putValue("title", "Meeseeks and Destroy")
+            .putValue("season", 1)
+            .putValue("episode", 5)
+            .putValue("genre", "cartoon")
+            .putValue("program", "Rick and Morty")
+            .putValue("channel", "cartoon network")
+            .putValue("publisher", "Turner Broadcasting System")
+            .putValue("fullEpisode", true)
+            .putValue("pod_id", "segment A")
+            .putValue("totalLength", "120")
+            .putValue("playbackPosition", 70))
+        .options(new Options().setIntegrationOptions("comScore", comScoreOptions))
+        .build());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("ns_st_ci", "9324");
+    expected.put("ns_st_ep", "Meeseeks and Destroy");
+    expected.put("ns_st_sn", "1");
+    expected.put("ns_st_en", "5");
+    expected.put("ns_st_ge", "cartoon");
+    expected.put("ns_st_pr", "Rick and Morty");
+    expected.put("ns_st_st", "cartoon network");
+    expected.put("ns_st_pu", "Turner Broadcasting System");
+    expected.put("ns_st_ce", "true");
+    expected.put("ns_st_tdt", "2017-05-14");
+    expected.put("ns_st_pn", "segment A");
+    expected.put("ns_st_cl", "120000");
+    expected.put("ns_st_ct", "vc12");
+    expected.put("c3", "*null");
+    expected.put("c4", "*null");
+    expected.put("c6", "*null");
+
+    verify(streamingAnalytics).notifyPlay(70);
+    verify(playbackSession).setAsset(expected);
+  }
+
   @Test public void videoContentStartedWithoutVideoPlaybackStarted() {
     integration.track(new TrackPayloadBuilder() //
         .event("Video Content Started")
@@ -541,6 +589,50 @@ import org.robolectric.annotation.Config;
             .putValue("playbackPosition", 70))
         .build());
 
+    verify(streamingAnalytics).notifyPlay(70);
+  }
+
+  @Test public void videoContentPlayingWithAdType() {
+    setupWithVideoPlaybackStarted();
+
+    PlaybackSession playbackSession = mock(PlaybackSession.class);
+    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+
+    Asset asset = mock(Asset.class);
+    when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
+    when(asset.containsLabel("ns_st_ad")).thenReturn(true);
+
+    integration.track(new TrackPayloadBuilder().event("Video Content Playing")
+        .properties(new Properties().putValue("assetId", 123214)
+            .putValue("title", "Look Who's Purging Now")
+            .putValue("season", 2)
+            .putValue("episode", 9)
+            .putValue("genre", "cartoon")
+            .putValue("program", "Rick and Morty")
+            .putValue("channel", "cartoon network")
+            .putValue("publisher", "Turner Broadcasting System")
+            .putValue("fullEpisode", true)
+            .putValue("pod_id", "segment A")
+            .putValue("playbackPosition", 70))
+        .build());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+        expected.put("ns_st_ci", "123214");
+        expected.put("ns_st_ep", "Look Who's Purging Now");
+        expected.put("ns_st_sn", "2");
+        expected.put("ns_st_en", "9");
+        expected.put("ns_st_ge", "cartoon");
+        expected.put("ns_st_pr", "Rick and Morty");
+        expected.put("ns_st_st", "cartoon network");
+        expected.put("ns_st_pu", "Turner Broadcasting System");
+        expected.put("ns_st_ce", "true");
+        expected.put("ns_st_pn", "segment A");
+        expected.put("ns_st_ct", "vc00");
+        expected.put("c3", "*null");
+        expected.put("c4", "*null");
+        expected.put("c6", "*null");
+
+    verify(playbackSession).setAsset(expected);
     verify(streamingAnalytics).notifyPlay(70);
   }
 
@@ -592,6 +684,76 @@ import org.robolectric.annotation.Config;
     expected.put("ns_st_cl", "120000");
     expected.put("ns_st_amt", "Helmet Ad");
     expected.put("ns_st_ct", "va00");
+    expected.put("c3", "*null");
+    expected.put("c4", "*null");
+    expected.put("c6", "*null");
+
+    verify(streamingAnalytics).notifyPlay(0);
+    verify(playbackSession).setAsset(expected);
+  }
+
+  @Test public void videoAdStartedWithContentId() {
+    setupWithVideoPlaybackStarted();
+
+    PlaybackSession playbackSession = mock(PlaybackSession.class);
+    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+
+    Asset asset = mock(Asset.class);
+    when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
+    when(asset.getLabel("ns_st_ci")).thenReturn("1234");
+
+    integration.track(new TrackPayloadBuilder().event("Video Ad Started")
+        .properties(new Properties().putValue("assetId", 4311)
+            .putValue("podId", "adSegmentA")
+            .putValue("type", "pre-roll")
+            .putValue("totalLength", 120)
+            .putValue("playbackPosition", 0)
+            .putValue("title", "Helmet Ad"))
+        .build());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("ns_st_ami", "4311");
+    expected.put("ns_st_ad", "pre-roll");
+    expected.put("ns_st_cl", "120000");
+    expected.put("ns_st_amt", "Helmet Ad");
+    expected.put("ns_st_ct", "va00");
+    expected.put("c3", "*null");
+    expected.put("c4", "*null");
+    expected.put("c6", "*null");
+    expected.put("ns_st_ci", "1234");
+
+    verify(streamingAnalytics).notifyPlay(0);
+    verify(playbackSession).setAsset(expected);
+  }
+
+  @Test public void videoAdStartedWithAdClassificationType() {
+    setupWithVideoPlaybackStarted();
+
+    PlaybackSession playbackSession = mock(PlaybackSession.class);
+    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+
+    Asset asset = mock(Asset.class);
+    when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
+
+    Map<String, Object> comScoreOptions = new LinkedHashMap<>();
+    comScoreOptions.put("adClassificationType", "va14");
+
+    integration.track(new TrackPayloadBuilder().event("Video Ad Started")
+        .properties(new Properties().putValue("assetId", 4311)
+            .putValue("podId", "adSegmentA")
+            .putValue("type", "pre-roll")
+            .putValue("totalLength", 120)
+            .putValue("playbackPosition", 0)
+            .putValue("title", "Helmet Ad"))
+        .options(new Options().setIntegrationOptions("comScore", comScoreOptions))
+        .build());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("ns_st_ami", "4311");
+    expected.put("ns_st_ad", "pre-roll");
+    expected.put("ns_st_cl", "120000");
+    expected.put("ns_st_amt", "Helmet Ad");
+    expected.put("ns_st_ct", "va14");
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
