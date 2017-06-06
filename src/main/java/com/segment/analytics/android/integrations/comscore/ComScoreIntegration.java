@@ -31,6 +31,7 @@ public class ComScoreIntegration extends Integration<Void> {
         public Integration<?> create(ValueMap settings, com.segment.analytics.Analytics analytics) {
           return new ComScoreIntegration(analytics, settings, StreamingAnalyticsFactory.REAL);
         }
+
         @Override
         public String key() {
           return COMSCORE_KEY;
@@ -178,19 +179,19 @@ public class ComScoreIntegration extends Integration<Void> {
       asset.put("ns_st_cl", String.valueOf(length));
     }
 
-    if(options.containsKey("contentClassificationType")) {
+    if (options.containsKey("contentClassificationType")) {
       String contentClassificationType = String.valueOf(options.get("contentClassificationType"));
       asset.put("ns_st_ct", contentClassificationType);
     } else {
       asset.put("ns_st_ct", "vc00");
     }
 
-    if(options.containsKey("digitalAirdate")) {
+    if (options.containsKey("digitalAirdate")) {
       String digitalAirdate = String.valueOf(options.get("digitalAirdate"));
-      asset.put("ns_st_ddt",  digitalAirdate);
+      asset.put("ns_st_ddt", digitalAirdate);
     }
 
-    if(options.containsKey("tvAirdate")) {
+    if (options.containsKey("tvAirdate")) {
       String tvAirdate = String.valueOf(options.get("tvAirdate"));
       asset.put("ns_st_tdt", tvAirdate);
     }
@@ -214,7 +215,7 @@ public class ComScoreIntegration extends Integration<Void> {
       asset.put("ns_st_cl", String.valueOf(length));
     }
 
-    if(options.containsKey("adClassificationType")) {
+    if (options.containsKey("adClassificationType")) {
       String adClassificationType = String.valueOf(options.get("adClassificationType"));
       asset.put("ns_st_ct", adClassificationType);
     } else {
@@ -266,7 +267,8 @@ public class ComScoreIntegration extends Integration<Void> {
     playbackMapper.put("videoPlayer", "ns_st_mp");
     playbackMapper.put("sound", "ns_st_vo");
 
-    Map<String, String> playbackAsset = buildPlaybackAsset(properties, comScoreOptions, playbackMapper);
+    Map<String, String> playbackAsset =
+        buildPlaybackAsset(properties, comScoreOptions, playbackMapper);
 
     if (name.equals("Video Playback Started")) {
       streamingAnalytics = streamingAnalyticsFactory.create();
@@ -335,8 +337,8 @@ public class ComScoreIntegration extends Integration<Void> {
     contentMapper.put("fullEpisode", "ns_st_ce");
     contentMapper.put("podId", "ns_st_pn");
 
-
-    Map<String, String> contentAsset = buildContentAsset(properties, comScoreOptions, contentMapper);
+    Map<String, String> contentAsset =
+        buildContentAsset(properties, comScoreOptions, contentMapper);
 
     if (streamingAnalytics == null) {
       logger.verbose(
@@ -461,7 +463,6 @@ public class ComScoreIntegration extends Integration<Void> {
   }
 
   @Override
-
   public void identify(IdentifyPayload identify) {
     super.identify(identify);
     String userId = identify.userId();
@@ -469,7 +470,6 @@ public class ComScoreIntegration extends Integration<Void> {
     traits.put("userId", userId);
     Analytics.getConfiguration().setPersistentLabels(traits);
     logger.verbose("Analytics.getConfiguration().setPersistentLabels(%s)", traits);
-
   }
 
   @Override
