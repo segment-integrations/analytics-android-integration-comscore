@@ -1,3 +1,8 @@
+Version 3.0.0 (6th June, 2017)
+==============================
+*(Supports analytics-android 4.0.0 and Comscore 5.3.1)*
+ * [Adds](https://github.com/segment-integrations/analytics-android-integration-comscore/commit/0a95a27c40371be94ae142c32649e861a513aaa9): Video Tracking functionality. 
+
 Version 2.0.0 (16th May, 2017)
 ==============================
 *(Supports analytics-android 4.0.0 and Comscore 5.1.0)*
