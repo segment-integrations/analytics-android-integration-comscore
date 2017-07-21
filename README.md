@@ -13,7 +13,7 @@ To install the Segment-comScore integration, simply add the following to your gr
 
 
 ```
-compile 'com.segment.analytics.android.integrations:comscore:1.0.2'
+compile 'com.segment.analytics.android.integrations:comscore:+'
 ```
 
 ```
