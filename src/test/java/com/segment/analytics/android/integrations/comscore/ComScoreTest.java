@@ -1,16 +1,13 @@
 package com.segment.analytics.android.integrations.comscore;
 
-import static com.segment.analytics.Analytics.LogLevel.VERBOSE;
-import static com.segment.analytics.Utils.createTraits;
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 import android.app.Application;
 import com.comscore.Analytics;
@@ -22,21 +19,18 @@ import com.comscore.UsagePropertiesAutoUpdateMode;
 import com.comscore.streaming.Asset;
 import com.comscore.streaming.PlaybackSession;
 import com.comscore.streaming.StreamingAnalytics;
-import com.segment.analytics.Options;
 
 import com.segment.analytics.Properties;
 import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
+import com.segment.analytics.integrations.IdentifyPayload;
 import com.segment.analytics.integrations.Logger;
-import com.segment.analytics.test.IdentifyPayloadBuilder;
-import com.segment.analytics.test.ScreenPayloadBuilder;
-import com.segment.analytics.test.TrackPayloadBuilder;
-import java.util.Collections;
+import com.segment.analytics.integrations.ScreenPayload;
+import com.segment.analytics.integrations.TrackPayload;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,6 +39,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
@@ -52,13 +47,14 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 @RunWith(RobolectricTestRunner.class)
-
-@Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
+@Config(sdk = 18, manifest = Config.NONE)
 @PowerMockIgnore({ "org.mockito.*", "org.robolectric.*", "android.*" })
-@PrepareForTest(Analytics.class) public class ComScoreTest {
+@PrepareForTest(Analytics.class)
+public class ComScoreTest {
 
   @Rule public PowerMockRule rule = new PowerMockRule();
-  @Mock Application context;
+  @Mock
+  Application context;
   @Mock Configuration configuration;
   private Logger logger;
   @Mock com.segment.analytics.Analytics analytics;
@@ -67,13 +63,14 @@ import org.robolectric.annotation.Config;
   @Mock StreamingAnalytics streamingAnalytics;
 
 
-  @Before public void setUp() {
+  @Before
+  public void setUp() {
     initMocks(this);
     mockStatic(Analytics.class);
     logger = Logger.with(com.segment.analytics.Analytics.LogLevel.DEBUG);
-    when(analytics.logger("comScore")).thenReturn(Logger.with(VERBOSE));
-    when(Analytics.getConfiguration()).thenReturn(configuration);
-    when(analytics.getApplication()).thenReturn(context);
+    PowerMockito.when(analytics.logger("comScore")).thenReturn(logger);
+    PowerMockito.when(Analytics.getConfiguration()).thenReturn(configuration);
+    PowerMockito.when(analytics.getApplication()).thenReturn(context);
     integration = new ComScoreIntegration(analytics,
         new ValueMap().putValue("customerC2", "foobarbar")
             .putValue("publisherSecret", "illnevertell"),
@@ -83,40 +80,42 @@ import org.robolectric.annotation.Config;
           }
         });
 
-
     // mock it twice so we can initialize it for tests, but reset the mock after initialization.
     mockStatic(Analytics.class);
   }
 
-  @Test public void factory() {
+  @Test
+  public void factory() {
     ValueMap settings =
         new ValueMap().putValue("c2", "foobarbar").putValue("publisherSecret", "illnevertell");
-    when(Analytics.getConfiguration()).thenReturn(configuration);
+    PowerMockito.when(Analytics.getConfiguration()).thenReturn(configuration);
 
     integration = (ComScoreIntegration) ComScoreIntegration.FACTORY.create(settings, analytics);
 
-    assertThat(integration.customerC2).isEqualTo("foobarbar");
-    assertThat(integration.publisherSecret).isEqualTo("illnevertell");
+    assertEquals(integration.customerC2, "foobarbar");
+    assertEquals(integration.publisherSecret, "illnevertell");
   }
 
-  @Test public void initializeWithDefaultArguments() {
+  @Test
+  public void initializeWithDefaultArguments() {
     ValueMap settings = new ValueMap() //
         .putValue("c2", "foobarbar")
         .putValue("publisherSecret", "illnevertell")
         .putValue("setSecure", true);
-    when(Analytics.getConfiguration()).thenReturn(configuration);
+    PowerMockito.when(Analytics.getConfiguration()).thenReturn(configuration);
 
     ComScoreIntegration integration =
         (ComScoreIntegration) ComScoreIntegration.FACTORY.create(settings, analytics);
 
-    assertThat(integration.customerC2).isEqualTo("foobarbar");
-    assertThat(integration.publisherSecret).isEqualTo("illnevertell");
-    assertThat(integration.useHTTPS).isTrue();
+    assertEquals(integration.customerC2, "foobarbar");
+    assertEquals(integration.publisherSecret, "illnevertell");
+    assertTrue(integration.useHTTPS);
   }
 
-  @Test public void initializeWithAutoUpdateMode() throws IllegalStateException {
+  @Test
+  public void initializeWithAutoUpdateMode() throws IllegalStateException {
     Configuration configuration = mock(Configuration.class);
-    when(Analytics.getConfiguration()).thenReturn(configuration);
+    PowerMockito.when(Analytics.getConfiguration()).thenReturn(configuration);
 
     integration = new ComScoreIntegration(analytics, new ValueMap() //
         .putValue("partnerId", "24186693")
@@ -133,20 +132,21 @@ import org.robolectric.annotation.Config;
     verify(configuration, times(2)).addClient(configurationCaptor.capture());
 
     List<ClientConfiguration> capturedConfig = configurationCaptor.getAllValues();
-    assertThat(((PartnerConfiguration) capturedConfig.get(0)).getPartnerId()).isEqualTo("24186693");
-    assertThat(((PublisherConfiguration) capturedConfig.get(1)).getPublisherId()).isEqualTo(
+    assertEquals(((PartnerConfiguration) capturedConfig.get(0)).getPartnerId(), "24186693");
+    assertEquals(((PublisherConfiguration) capturedConfig.get(1)).getPublisherId(),
         "foobarbar");
-    assertThat(((PublisherConfiguration) capturedConfig.get(1)).getPublisherSecret()).isEqualTo(
+    assertEquals(((PublisherConfiguration) capturedConfig.get(1)).getPublisherSecret(),
         "illnevertell");
-    assertThat(capturedConfig.get(1).getApplicationName()).isEqualTo("testApp");
-    assertThat(capturedConfig.get(1).getUsagePropertiesAutoUpdateInterval()).isEqualTo(2000);
-    assertThat(capturedConfig.get(1).getUsagePropertiesAutoUpdateMode()).isEqualTo(
+    assertEquals(capturedConfig.get(1).getApplicationName(), "testApp");
+    assertEquals(capturedConfig.get(1).getUsagePropertiesAutoUpdateInterval(), 2000);
+    assertEquals(capturedConfig.get(1).getUsagePropertiesAutoUpdateMode(),
         UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
   }
 
-  @Test public void initializeWithoutAutoUpdateMode() throws IllegalStateException {
+  @Test
+  public void initializeWithoutAutoUpdateMode() throws IllegalStateException {
     Configuration configuration = mock(Configuration.class);
-    when(Analytics.getConfiguration()).thenReturn(configuration);
+    PowerMockito.when(Analytics.getConfiguration()).thenReturn(configuration);
 
     integration = new ComScoreIntegration(analytics, new ValueMap() //
         .putValue("partnerId", "24186693")
@@ -163,30 +163,31 @@ import org.robolectric.annotation.Config;
     verify(configuration, times(2)).addClient(configurationCaptor.capture());
 
     List<ClientConfiguration> capturedConfig = configurationCaptor.getAllValues();
-    assertThat(((PartnerConfiguration) capturedConfig.get(0)).getPartnerId()).isEqualTo("24186693");
-    assertThat(((PublisherConfiguration) capturedConfig.get(1)).getPublisherId()).isEqualTo(
+    assertEquals(((PartnerConfiguration) capturedConfig.get(0)).getPartnerId(), "24186693");
+    assertEquals(((PublisherConfiguration) capturedConfig.get(1)).getPublisherId(),
         "foobarbar");
-    assertThat(((PublisherConfiguration) capturedConfig.get(1)).getPublisherSecret()).isEqualTo(
+    assertEquals(((PublisherConfiguration) capturedConfig.get(1)).getPublisherSecret(),
         "illnevertell");
-    assertThat(capturedConfig.get(1).getApplicationName()).isEqualTo("testApp");
-    assertThat(capturedConfig.get(1).getUsagePropertiesAutoUpdateInterval()).isEqualTo(60);
-    assertThat(capturedConfig.get(1).getUsagePropertiesAutoUpdateMode()).isEqualTo(
+    assertEquals(capturedConfig.get(1).getApplicationName(), "testApp");
+    assertEquals(capturedConfig.get(1).getUsagePropertiesAutoUpdateInterval(), 60);
+    assertEquals(capturedConfig.get(1).getUsagePropertiesAutoUpdateMode(),
         UsagePropertiesAutoUpdateMode.DISABLED);
   }
 
-  @Test public void track() {
-    integration.track(new TrackPayloadBuilder().event("foo").build());
+  @Test
+  public void track() {
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("foo").build());
 
     Properties properties = new Properties().putValue("name", "foo");
     Map<String, String> expected = properties.toStringMap();
 
-    verifyStatic();
     Analytics.notifyHiddenEvent(expected);
 
   }
 
-  @Test public void trackWithProps() {
-    integration.track(new TrackPayloadBuilder() //
+  @Test
+  public void trackWithProps() {
+    integration.track(new TrackPayload.Builder().anonymousId("foo") //
         .event("Completed Order")
         .properties(new Properties().putValue(20.0).putValue("product", "Ukelele"))
         .build());
@@ -196,15 +197,14 @@ import org.robolectric.annotation.Config;
     expected.put("value", "20.0");
     expected.put("product", "Ukelele");
 
-    verifyStatic();
     Analytics.notifyHiddenEvent(expected);
   }
 
   void setupWithVideoPlaybackStarted() {
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
-    integration.track(new TrackPayloadBuilder().event("Video Playback Started")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Started")
         .properties(new Properties().putValue("assetId", 1234)
             .putValue("adType", "pre-roll")
             .putValue("totalLength", 120)
@@ -238,11 +238,12 @@ import org.robolectric.annotation.Config;
     Mockito.reset(streamingAnalytics);
   }
 
-  @Test public void videoPlaybackStarted() {
+  @Test
+  public void videoPlaybackStarted() {
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
-    integration.track(new TrackPayloadBuilder().event("Video Playback Started")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Started")
         .properties(new Properties().putValue("assetId", 1234)
             .putValue("adType", "pre-roll")
             .putValue("totalLength", 120)
@@ -271,8 +272,9 @@ import org.robolectric.annotation.Config;
     verify(streamingAnalytics).setLabels(expected);
   }
 
-  @Test public void videoPlaybackPausedWithoutVideoPlaybackStarted() {
-    integration.track(new TrackPayloadBuilder() //
+  @Test
+  public void videoPlaybackPausedWithoutVideoPlaybackStarted() {
+    integration.track(new TrackPayload.Builder().anonymousId("foo") //
         .event("Video Playback Paused")
         .properties(new Properties().putValue("assetId", 1234))
         .build());
@@ -280,16 +282,17 @@ import org.robolectric.annotation.Config;
     verifyNoMoreInteractions(streamingAnalytics);
   }
 
-  @Test public void videoPlaybackPaused() {
+  @Test
+  public void videoPlaybackPaused() {
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     Map<String, Object> comScoreOptions = new LinkedHashMap<>();
     comScoreOptions.put("c3", "abc");
 
-    integration.track(new TrackPayloadBuilder() //
+    integration.track(new TrackPayload.Builder().anonymousId("foo") //
         .event("Video Playback Paused")
         .properties(new Properties() //
             .putValue("assetId", 1234)
@@ -300,7 +303,7 @@ import org.robolectric.annotation.Config;
             .putValue("fullScreen", true)
             .putValue("bitrate", 50)
             .putValue("sound", 80))
-        .options(new Options().setIntegrationOptions("comScore", comScoreOptions))
+        .integration("comScore", comScoreOptions)
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -316,13 +319,14 @@ import org.robolectric.annotation.Config;
     verify(streamingAnalytics).setLabels(expected);
   }
 
-  @Test public void videoPlaybackBufferStarted() {
+  @Test
+  public void videoPlaybackBufferStarted() {
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
-    integration.track(new TrackPayloadBuilder().event("Video Playback Buffer Started")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Buffer Started")
         .properties(new Properties().putValue("assetId", 7890)
             .putValue("adType", "post-roll")
             .putValue("totalLength", 700)
@@ -350,9 +354,9 @@ import org.robolectric.annotation.Config;
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
-    integration.track(new TrackPayloadBuilder().event("Video Playback Buffer Completed")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Buffer Completed")
         .properties(new Properties().putValue("assetId", 1029)
             .putValue("adType", "pre-roll")
             .putValue("totalLength", 800)
@@ -380,9 +384,9 @@ import org.robolectric.annotation.Config;
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbacksession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbacksession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbacksession);
 
-    integration.track(new TrackPayloadBuilder().event("Video Playback Seek Started")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Seek Started")
         .properties(new Properties().putValue("assetId", 3948)
             .putValue("adType", "mid-roll")
             .putValue("totalLength", 900)
@@ -410,9 +414,9 @@ import org.robolectric.annotation.Config;
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
-    integration.track(new TrackPayloadBuilder().event("Video Playback Seek Completed")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Seek Completed")
         .properties(new Properties().putValue("assetId", 6767)
             .putValue("adType", "post-roll")
             .putValue("totalLength", 400)
@@ -440,9 +444,9 @@ import org.robolectric.annotation.Config;
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
-    integration.track(new TrackPayloadBuilder().event("Video Playback Resumed")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Resumed")
         .properties(new Properties().putValue("assetId", 5332)
             .putValue("adType", "post-roll")
             .putValue("totalLength", 100)
@@ -470,13 +474,13 @@ import org.robolectric.annotation.Config;
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     Map<String, Object> comScoreOptions = new LinkedHashMap<>();
     comScoreOptions.put("digitalAirdate", "2014-01-20");
     comScoreOptions.put("contentClassificationType", "vc12");
 
-    integration.track(new TrackPayloadBuilder().event("Video Content Started")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Started")
         .properties(new Properties()
             .putValue("assetId", 9324)
             .putValue("title", "Meeseeks and Destroy")
@@ -490,7 +494,7 @@ import org.robolectric.annotation.Config;
             .putValue("podId", "segment A")
             .putValue("totalLength", "120")
             .putValue("playbackPosition", 70))
-        .options(new Options().setIntegrationOptions("comScore", comScoreOptions))
+        .integration("comScore", comScoreOptions)
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -519,13 +523,13 @@ import org.robolectric.annotation.Config;
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     Map<String, Object> comScoreOptions = new LinkedHashMap<>();
     comScoreOptions.put("tvAirdate", "2017-05-14");
     comScoreOptions.put("contentClassificationType", "vc12");
 
-    integration.track(new TrackPayloadBuilder().event("Video Content Started")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Started")
         .properties(new Properties()
             .putValue("title", "Meeseeks and Destroy")
             .putValue("season", 1)
@@ -538,7 +542,7 @@ import org.robolectric.annotation.Config;
             .putValue("podId", "segment A")
             .putValue("totalLength", "120")
             .putValue("playbackPosition", 70))
-        .options(new Options().setIntegrationOptions("comScore", comScoreOptions))
+        .integration("comScore", comScoreOptions)
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -563,8 +567,9 @@ import org.robolectric.annotation.Config;
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test public void videoContentStartedWithoutVideoPlaybackStarted() {
-    integration.track(new TrackPayloadBuilder() //
+  @Test
+  public void videoContentStartedWithoutVideoPlaybackStarted() {
+    integration.track(new TrackPayload.Builder().anonymousId("foo") //
         .event("Video Content Started")
         .properties(new Properties().putValue("assetId", 5678))
         .build());
@@ -572,17 +577,18 @@ import org.robolectric.annotation.Config;
     verifyNoMoreInteractions(streamingAnalytics);
   }
 
-  @Test public void videoContentPlaying() {
+  @Test
+  public void videoContentPlaying() {
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
 
     Asset asset = mock(Asset.class);
-    when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
 
-    integration.track(new TrackPayloadBuilder().event("Video Content Playing")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Playing")
         .properties(new Properties().putValue("assetId", 123214)
             .putValue("title", "Look Who's Purging Now")
             .putValue("season", 2)
@@ -600,17 +606,18 @@ import org.robolectric.annotation.Config;
     verify(streamingAnalytics).notifyPlay(70);
   }
 
-  @Test public void videoContentPlayingWithAdType() {
+  @Test
+  public void videoContentPlayingWithAdType() {
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     Asset asset = mock(Asset.class);
-    when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
-    when(asset.containsLabel("ns_st_ad")).thenReturn(true);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
+    PowerMockito.when(asset.containsLabel("ns_st_ad")).thenReturn(true);
 
-    integration.track(new TrackPayloadBuilder().event("Video Content Playing")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Playing")
         .properties(new Properties().putValue("assetId", 123214)
             .putValue("title", "Look Who's Purging Now")
             .putValue("season", 2)
@@ -648,9 +655,9 @@ import org.robolectric.annotation.Config;
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
-    integration.track(new TrackPayloadBuilder().event("Video Content Completed")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Completed")
         .properties(new Properties().putValue("assetId", 9324)
             .putValue("title", "Raising Gazorpazorp")
             .putValue("season", 1)
@@ -668,16 +675,17 @@ import org.robolectric.annotation.Config;
     verify(streamingAnalytics).notifyEnd(80);
   }
 
-  @Test public void videoAdStarted() {
+  @Test
+  public void videoAdStarted() {
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     Asset asset = mock(Asset.class);
-    when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
 
-    integration.track(new TrackPayloadBuilder().event("Video Ad Started")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Ad Started")
         .properties(new Properties().putValue("assetId", 4311)
             .putValue("podId", "adSegmentA")
             .putValue("type", "pre-roll")
@@ -700,17 +708,18 @@ import org.robolectric.annotation.Config;
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test public void videoAdStartedWithContentId() {
+  @Test
+  public void videoAdStartedWithContentId() {
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     Asset asset = mock(Asset.class);
-    when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
-    when(asset.getLabel("ns_st_ci")).thenReturn("1234");
+    PowerMockito.when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
+    PowerMockito.when(asset.getLabel("ns_st_ci")).thenReturn("1234");
 
-    integration.track(new TrackPayloadBuilder().event("Video Ad Started")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Ad Started")
         .properties(new Properties().putValue("assetId", 4311)
             .putValue("podId", "adSegmentA")
             .putValue("type", "pre-roll")
@@ -734,26 +743,27 @@ import org.robolectric.annotation.Config;
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test public void videoAdStartedWithAdClassificationType() {
+  @Test
+  public void videoAdStartedWithAdClassificationType() {
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
     Asset asset = mock(Asset.class);
-    when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
 
     Map<String, Object> comScoreOptions = new LinkedHashMap<>();
     comScoreOptions.put("adClassificationType", "va14");
 
-    integration.track(new TrackPayloadBuilder().event("Video Ad Started")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Ad Started")
         .properties(new Properties().putValue("assetId", 4311)
             .putValue("podId", "adSegmentA")
             .putValue("type", "pre-roll")
             .putValue("totalLength", 120)
             .putValue("playbackPosition", 0)
             .putValue("title", "Helmet Ad"))
-        .options(new Options().setIntegrationOptions("comScore", comScoreOptions))
+        .integration("comScore", comScoreOptions)
         .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -770,8 +780,9 @@ import org.robolectric.annotation.Config;
     verify(playbackSession).setAsset(expected);
   }
 
-  @Test public void videoAdStartedWithoutVideoPlaybackStarted() {
-    integration.track(new TrackPayloadBuilder() //
+  @Test
+  public void videoAdStartedWithoutVideoPlaybackStarted() {
+    integration.track(new TrackPayload.Builder().anonymousId("foo") //
         .event("Video Ad Started")
         .properties(new Properties().putValue("assetId", 4324))
         .build());
@@ -779,13 +790,14 @@ import org.robolectric.annotation.Config;
     verifyNoMoreInteractions(streamingAnalytics);
   }
 
-  @Test public void videoAdPlaying() {
+  @Test
+  public void videoAdPlaying() {
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
-    integration.track(new TrackPayloadBuilder().event("Video Ad Playing")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Ad Playing")
         .properties(new Properties().putValue("assetId", 4311)
             .putValue("podId", "adSegmentA")
             .putValue("type", "pre-roll")
@@ -797,13 +809,14 @@ import org.robolectric.annotation.Config;
     verify(streamingAnalytics).notifyPlay(20);
   }
 
-  @Test public void videoAdCompleted() {
+  @Test
+  public void videoAdCompleted() {
     setupWithVideoPlaybackStarted();
 
     PlaybackSession playbackSession = mock(PlaybackSession.class);
-    when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
+    PowerMockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 
-    integration.track(new TrackPayloadBuilder().event("Video Ad Completed")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Ad Completed")
         .properties(new Properties().putValue("assetId", 3425)
             .putValue("podId", "adSegmentb")
             .putValue("type", "mid-roll")
@@ -816,15 +829,15 @@ import org.robolectric.annotation.Config;
 
   }
 
-  @Test public void identify() throws JSONException {
+  @Test
+  public void identify() {
     Configuration configuration = mock(Configuration.class);
-    when(Analytics.getConfiguration()).thenReturn(configuration);
-    Traits traits = createTraits("foo") //
-        .putValue("anonymousId", "foobar")
-        .putValue("firstName", "Kylo")
-        .putValue("lastName", "Ren");
+    PowerMockito.when(Analytics.getConfiguration()).thenReturn(configuration);
+    Traits traits = new Traits();
+    traits.putValue("firstName", "Kylo");
+    traits.putValue("lastName", "Ren");
 
-    integration.identify(new IdentifyPayloadBuilder().traits(traits).build());
+    integration.identify(new IdentifyPayload.Builder().userId("foo").anonymousId("foobar").traits(traits).build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("anonymousId", "foobar");
@@ -835,15 +848,15 @@ import org.robolectric.annotation.Config;
     verify(configuration).setPersistentLabels(expected);
   }
 
-  @Test public void screen() {
+  @Test
+  public void screen() {
     integration.screen(
-        new ScreenPayloadBuilder().name("SmartWatches").category("Purchase Screen").build());
+        new ScreenPayload.Builder().anonymousId("foo").name("SmartWatches").category("Purchase Screen").build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("name", "SmartWatches");
     expected.put("category", "Purchase Screen");
 
-    verifyStatic();
     Analytics.notifyViewEvent(expected);
   }
 }

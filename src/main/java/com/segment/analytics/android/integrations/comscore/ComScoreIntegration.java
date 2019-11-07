@@ -5,7 +5,6 @@ import static com.comscore.UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROU
 import static com.comscore.UsagePropertiesAutoUpdateMode.FOREGROUND_ONLY;
 import static com.segment.analytics.internal.Utils.isNullOrEmpty;
 
-import android.support.annotation.NonNull;
 import com.comscore.Analytics;
 import com.comscore.PartnerConfiguration;
 import com.comscore.PublisherConfiguration;
@@ -109,10 +108,10 @@ public class ComScoreIntegration extends Integration<Void> {
    * falling back to {@param properties}. Uses {@code "*null"} it not found in either.
    */
   private void setNullIfNotProvided(
-      @NonNull Map<String, String> asset,
-      @NonNull Map<String, ?> comScoreOptions,
-      @NonNull Map<String, ?> stringProperties,
-      @NonNull String key) {
+      Map<String, String> asset,
+      Map<String, ?> comScoreOptions,
+      Map<String, ?> stringProperties,
+      String key) {
     String option = getStringOrDefaultValue(comScoreOptions, key, null);
     if (option != null) {
       asset.put(key, option);
@@ -128,7 +127,7 @@ public class ComScoreIntegration extends Integration<Void> {
   }
 
   private Map<String, String> mapSpecialKeys(
-      @NonNull Properties properties, @NonNull Map<String, String> mapper) {
+      Properties properties, Map<String, String> mapper) {
     Map<String, String> asset = new LinkedHashMap<>(mapper.size());
 
     // Map special keys and preserve only the special keys.
@@ -144,10 +143,10 @@ public class ComScoreIntegration extends Integration<Void> {
     return asset;
   }
 
-  private @NonNull Map<String, String> buildPlaybackAsset(
-      @NonNull Properties properties,
-      @NonNull Map<String, ?> options,
-      @NonNull Map<String, String> mapper) {
+  private Map<String, String> buildPlaybackAsset(
+      Properties properties,
+      Map<String, ?> options,
+      Map<String, String> mapper) {
 
     Map<String, String> asset = mapSpecialKeys(properties, mapper);
 
@@ -164,10 +163,10 @@ public class ComScoreIntegration extends Integration<Void> {
     return asset;
   }
 
-  private @NonNull Map<String, String> buildContentAsset(
-      @NonNull Properties properties,
-      @NonNull Map<String, ?> options,
-      @NonNull Map<String, String> mapper) {
+  private Map<String, String> buildContentAsset(
+      Properties properties,
+      Map<String, ?> options,
+      Map<String, String> mapper) {
 
     Map<String, String> asset = mapSpecialKeys(properties, mapper);
 
@@ -203,10 +202,10 @@ public class ComScoreIntegration extends Integration<Void> {
     return asset;
   }
 
-  private @NonNull Map<String, String> buildAdAsset(
-      @NonNull Properties properties,
-      @NonNull Map<String, ?> options,
-      @NonNull Map<String, String> mapper) {
+  private Map<String, String> buildAdAsset(
+      Properties properties,
+      Map<String, ?> options,
+      Map<String, String> mapper) {
 
     Map<String, String> asset = mapSpecialKeys(properties, mapper);
 
@@ -245,8 +244,8 @@ public class ComScoreIntegration extends Integration<Void> {
    * <p>This will return {@code defaultValue} only if the value does not exist, since all types can
    * have a String representation.
    */
-  private @NonNull String getStringOrDefaultValue(
-      @NonNull Map<String, ?> m, @NonNull String key, @NonNull String defaultValue) {
+  private String getStringOrDefaultValue(
+      Map<String, ?> m, String key, String defaultValue) {
     Object value = m.get(key);
     if (value instanceof String) {
       return (String) value;
