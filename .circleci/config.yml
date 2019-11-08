@@ -3,7 +3,7 @@ jobs:
   build:
     resource_class: small
     docker:
-      - image: circleci/android:api-25-alpha
+      - image: circleci/android:api-28
         environment:
           ANDROID_HOME: /home/circleci/android
           CIRCLE_JDK_VERSION: oraclejdk8
@@ -48,7 +48,7 @@ jobs:
   publish_snapshot:
     resource_class: small
     docker:
-      - image: circleci/android:api-25-alpha
+      - image: circleci/android:api-28
         environment:
           ANDROID_HOME: /home/circleci/android
           CIRCLE_JDK_VERSION: oraclejdk8
@@ -73,7 +73,7 @@ jobs:
   publish:
       resource_class: small
       docker:
-        - image: circleci/android:api-25-alpha
+        - image: circleci/android:api-28
           environment:
             ANDROID_HOME: /home/circleci/android
             CIRCLE_JDK_VERSION: oraclejdk8
