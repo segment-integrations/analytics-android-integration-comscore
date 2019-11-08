@@ -1,22 +1,20 @@
 package com.segment.analytics.android.integrations.comscore;
 
-import static com.comscore.UsagePropertiesAutoUpdateMode.DISABLED;
-import static com.comscore.UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND;
-import static com.comscore.UsagePropertiesAutoUpdateMode.FOREGROUND_ONLY;
 import static com.segment.analytics.internal.Utils.isNullOrEmpty;
 
-import com.comscore.Analytics;
 import com.comscore.PartnerConfiguration;
 import com.comscore.PublisherConfiguration;
+import com.comscore.UsagePropertiesAutoUpdateMode;
 import com.comscore.streaming.StreamingAnalytics;
-import com.segment.analytics.Properties;
 
+import com.segment.analytics.Properties;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.IdentifyPayload;
 import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -28,7 +26,7 @@ public class ComScoreIntegration extends Integration<Void> {
       new Factory() {
         @Override
         public Integration<?> create(ValueMap settings, com.segment.analytics.Analytics analytics) {
-          return new ComScoreIntegration(analytics, settings, StreamingAnalyticsFactory.REAL);
+          return new ComScoreIntegration(analytics, settings);
         }
 
         @Override
@@ -37,9 +35,9 @@ public class ComScoreIntegration extends Integration<Void> {
         }
       };
 
-  private static final String COMSCORE_KEY = "comScore";
+  private final static String COMSCORE_KEY = "comScore";
+  private final static String PARTNER_ID = "24186693";
   final Logger logger;
-  final StreamingAnalyticsFactory streamingAnalyticsFactory;
   final String customerC2;
   final String publisherSecret;
   final String appName;
@@ -47,26 +45,20 @@ public class ComScoreIntegration extends Integration<Void> {
   final int autoUpdateInterval;
   final boolean autoUpdate;
   final boolean foregroundOnly;
+  private ComScoreAnalytics comScoreAnalytics;
   private StreamingAnalytics streamingAnalytics;
 
-  interface StreamingAnalyticsFactory {
-
-    StreamingAnalytics create();
-
-    StreamingAnalyticsFactory REAL =
-        new StreamingAnalyticsFactory() {
-          @Override
-          public StreamingAnalytics create() {
-            return new StreamingAnalytics();
-          }
-        };
+  ComScoreIntegration(com.segment.analytics.Analytics analytics,
+                      ValueMap settings) {
+    this(analytics, settings, new ComScoreAnalytics.DefaultcomScoreAnalytics(analytics.logger(COMSCORE_KEY)));
   }
 
   ComScoreIntegration(
       com.segment.analytics.Analytics analytics,
       ValueMap settings,
-      StreamingAnalyticsFactory streamingAnalyticsFactory) {
-    this.streamingAnalyticsFactory = streamingAnalyticsFactory;
+      ComScoreAnalytics comScoreAnalytics) {
+
+    this.comScoreAnalytics = comScoreAnalytics;
 
     logger = analytics.logger(COMSCORE_KEY);
     customerC2 = settings.getString("c2");
@@ -77,30 +69,26 @@ public class ComScoreIntegration extends Integration<Void> {
     autoUpdate = settings.getBoolean("autoUpdate", false);
     foregroundOnly = settings.getBoolean("foregroundOnly", true);
 
-    PublisherConfiguration.Builder builder = new PublisherConfiguration.Builder();
-    builder.publisherId(customerC2);
-    builder.publisherSecret(publisherSecret);
+    PartnerConfiguration.Builder partner = new PartnerConfiguration.Builder().partnerId(PARTNER_ID);
+
+    PublisherConfiguration.Builder publisher = new PublisherConfiguration.Builder();
+    publisher.publisherId(customerC2);
+    publisher.publisherSecret(publisherSecret);
     if (appName != null && appName.trim().length() != 0) {
-      builder.applicationName(appName);
+      publisher.applicationName(appName);
     }
-    builder.secureTransmission(useHTTPS);
-    builder.usagePropertiesAutoUpdateInterval(autoUpdateInterval);
+    publisher.secureTransmission(useHTTPS);
+    publisher.usagePropertiesAutoUpdateInterval(autoUpdateInterval);
 
     if (autoUpdate) {
-      builder.usagePropertiesAutoUpdateMode(FOREGROUND_AND_BACKGROUND);
+      publisher.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
     } else if (foregroundOnly) {
-      builder.usagePropertiesAutoUpdateMode(FOREGROUND_ONLY);
+      publisher.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.FOREGROUND_ONLY);
     } else {
-      builder.usagePropertiesAutoUpdateMode(DISABLED);
+      publisher.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.DISABLED);
     }
 
-    PartnerConfiguration partnerConfig =
-        new PartnerConfiguration.Builder().partnerId("24186693").build();
-    PublisherConfiguration myPublisherConfig = builder.build();
-
-    Analytics.getConfiguration().addClient(partnerConfig);
-    Analytics.getConfiguration().addClient(myPublisherConfig);
-    Analytics.start(analytics.getApplication());
+    comScoreAnalytics.start(analytics.getApplication(), partner.build(), publisher.build());
   }
 
   /**
@@ -270,7 +258,7 @@ public class ComScoreIntegration extends Integration<Void> {
         buildPlaybackAsset(properties, comScoreOptions, playbackMapper);
 
     if (name.equals("Video Playback Started")) {
-      streamingAnalytics = streamingAnalyticsFactory.create();
+      streamingAnalytics = comScoreAnalytics.createStreamingAnalytics();
       streamingAnalytics.createPlaybackSession();
       streamingAnalytics.setLabels(playbackAsset);
 
@@ -456,8 +444,7 @@ public class ComScoreIntegration extends Integration<Void> {
       default:
         Map<String, String> props = properties.toStringMap();
         props.put("name", event);
-        Analytics.notifyHiddenEvent(props);
-        logger.verbose("Analytics.notifyHiddenEvent(%s)", props);
+        comScoreAnalytics.notifyHiddenEvent(props);
     }
   }
 
@@ -465,10 +452,11 @@ public class ComScoreIntegration extends Integration<Void> {
   public void identify(IdentifyPayload identify) {
     super.identify(identify);
     String userId = identify.userId();
+    String anonymousId = identify.anonymousId();
     HashMap<String, String> traits = (HashMap<String, String>) identify.traits().toStringMap();
     traits.put("userId", userId);
-    Analytics.getConfiguration().setPersistentLabels(traits);
-    logger.verbose("Analytics.getConfiguration().setPersistentLabels(%s)", traits);
+    traits.put("anonymousId", anonymousId);
+    comScoreAnalytics.setPersistentLabels(traits);
   }
 
   @Override
@@ -480,7 +468,6 @@ public class ComScoreIntegration extends Integration<Void> {
             screen.properties().toStringMap();
     properties.put("name", name);
     properties.put("category", category);
-    Analytics.notifyViewEvent(properties);
-    logger.verbose("Analytics.notifyViewEvent(%s)", properties);
+    comScoreAnalytics.notifyViewEvent(properties);
   }
 }
