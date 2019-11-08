@@ -1,17 +1,19 @@
 package com.segment.analytics.android.integrations.comscore;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.app.Application;
 
-import com.comscore.PartnerConfiguration;
 import com.comscore.PublisherConfiguration;
 import com.comscore.UsagePropertiesAutoUpdateMode;
 import com.comscore.streaming.Asset;
 import com.comscore.streaming.PlaybackSession;
 import com.comscore.streaming.StreamingAnalytics;
 
+import com.segment.analytics.Analytics;
 import com.segment.analytics.Properties;
 import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
@@ -35,12 +37,13 @@ import org.robolectric.RobolectricTestRunner;
 @RunWith(RobolectricTestRunner.class)
 public class ComScoreTest {
 
+  private final static String EXPECTED_PARTNER_ID = "24186693";
+
   @Mock Application context;
   @Mock ComScoreAnalytics comScoreAnalytics;
   @Mock com.segment.analytics.Analytics analytics;
   @Mock StreamingAnalytics streamingAnalytics;
 
-  private Logger logger;
   private ComScoreIntegration integration;
 
   @Before
@@ -52,35 +55,54 @@ public class ComScoreTest {
     settings.putValue("customerC2", "foobarbar");
     settings.putValue("publisherSecret", "illnevertell");
 
-    logger = Logger.with(com.segment.analytics.Analytics.LogLevel.VERBOSE);
-    Mockito.when(analytics.logger("comScore")).thenReturn(logger);
+    Mockito.when(analytics.logger("comScore")).thenReturn(Logger.with(Analytics.LogLevel.VERBOSE));
     Mockito.when(analytics.getApplication()).thenReturn(context);
     integration = new ComScoreIntegration(analytics, settings, comScoreAnalytics);
   }
 
   @Test
   public void initialize() {
-    ValueMap settings =
-        new ValueMap().putValue("c2", "foobarbar").putValue("publisherSecret", "illnevertell");
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
 
-    integration = (ComScoreIntegration) ComScoreIntegration.FACTORY.create(settings, analytics);
+    integration = (ComScoreIntegration) ComScoreIntegration.FACTORY.create(destinationSettings, analytics);
 
-    assertEquals("foobarbar", integration.customerC2);
-    assertEquals("illnevertell", integration.publisherSecret);
+    Settings settings = integration.getSettings();
+
+    assertEquals("foobarbar", settings.getCustomerId());
+    assertEquals("illnevertell", settings.getPublisherSecret());
+
+    // Defaults
+    assertNull(settings.getAppName());
+    assertEquals(60, settings.getAutoUpdateInterval());
+    assertTrue(settings.isUseHTTPS());
+    assertFalse(settings.isAutoUpdate());
+    assertTrue(settings.isForegroundOnly());
   }
 
   @Test
   public void initializeWithSettings() {
-    ValueMap settings = new ValueMap() //
-        .putValue("c2", "foobarbar")
-        .putValue("publisherSecret", "illnevertell")
-        .putValue("setSecure", true);
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("appName", "Agapito");
+    destinationSettings.putValue("useHTTPS", false);
+    destinationSettings.putValue("foregroundOnly", false);
+    destinationSettings.putValue("autoUpdate", true);
+    destinationSettings.putValue("autoUpdateInterval", 12345);
 
-    integration = (ComScoreIntegration) ComScoreIntegration.FACTORY.create(settings, analytics);
+    integration = (ComScoreIntegration) ComScoreIntegration.FACTORY.create(destinationSettings, analytics);
 
-    assertEquals("foobarbar", integration.customerC2);
-    assertEquals("illnevertell", integration.publisherSecret);
-    assertTrue(integration.useHTTPS);
+    Settings settings = integration.getSettings();
+
+    assertEquals("foobarbar", settings.getCustomerId());
+    assertEquals("illnevertell", settings.getPublisherSecret());
+    assertEquals("Agapito", settings.getAppName());
+    assertEquals(12345, settings.getAutoUpdateInterval());
+    assertFalse(settings.isUseHTTPS());
+    assertTrue(settings.isAutoUpdate());
+    assertFalse(settings.isForegroundOnly());
   }
 
   @Test
@@ -98,23 +120,12 @@ public class ComScoreTest {
     Mockito.reset(comScoreAnalytics);
     integration = new ComScoreIntegration(analytics, settings, comScoreAnalytics);
 
-    ArgumentCaptor<PartnerConfiguration> partnerCaptor =
-        ArgumentCaptor.forClass(PartnerConfiguration.class);
-
     ArgumentCaptor<PublisherConfiguration> publisherCaptor =
             ArgumentCaptor.forClass(PublisherConfiguration.class);
 
-    Mockito.verify(comScoreAnalytics, Mockito.times(1)).start(Mockito.eq(context), partnerCaptor.capture(), publisherCaptor.capture());
-
-    System.out.println(partnerCaptor.getValue());
-
-    // Can't get some Ids because they are not exposed in the current SDK.
-    //PartnerConfiguration partner = (PartnerConfiguration) partnerCaptor.getValue();
-    //assertEquals("24186693", partner.getPartnerId());
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).start(Mockito.eq(context), Mockito.eq(EXPECTED_PARTNER_ID), publisherCaptor.capture());
 
     PublisherConfiguration publisher = publisherCaptor.getValue();
-    //assertEquals("foobarbar", publisher.getPublisherId());
-    //assertEquals("illnevertell", publisher.getPublisherSecret());
     assertEquals("testApp", publisher.getApplicationName());
     assertEquals(2000, publisher.getUsagePropertiesAutoUpdateInterval());
     assertEquals(UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND, publisher.getUsagePropertiesAutoUpdateMode());
@@ -137,21 +148,12 @@ public class ComScoreTest {
     Mockito.reset(comScoreAnalytics);
     integration = new ComScoreIntegration(analytics, settings, comScoreAnalytics);
 
-    ArgumentCaptor<PartnerConfiguration> partnerCaptor =
-            ArgumentCaptor.forClass(PartnerConfiguration.class);
-
     ArgumentCaptor<PublisherConfiguration> publisherCaptor =
             ArgumentCaptor.forClass(PublisherConfiguration.class);
 
-    Mockito.verify(comScoreAnalytics, Mockito.times(1)).start(Mockito.eq(context), partnerCaptor.capture(), publisherCaptor.capture());
-
-    // Can't get some Ids because they are not exposed in the current SDK.
-    //PartnerConfiguration partner = (PartnerConfiguration) partnerCaptor.getValue();
-    //assertEquals("24186693", partner.getPartnerId());
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).start(Mockito.eq(context), Mockito.eq(EXPECTED_PARTNER_ID), publisherCaptor.capture());
 
     PublisherConfiguration publisher = publisherCaptor.getValue();
-    //assertEquals("foobarbar", publisher.getPublisherId());
-    //assertEquals("illnevertell", publisher.getPublisherSecret());
     assertEquals("testApp", publisher.getApplicationName());
     assertEquals(60, publisher.getUsagePropertiesAutoUpdateInterval());
     assertEquals(UsagePropertiesAutoUpdateMode.DISABLED, publisher.getUsagePropertiesAutoUpdateMode());
@@ -182,7 +184,8 @@ public class ComScoreTest {
     Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expected);
   }
 
-  void setupWithVideoPlaybackStarted() {
+  @Test
+  public void setupWithVideoPlaybackStarted() {
     PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
     Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
 

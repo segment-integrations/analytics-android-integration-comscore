@@ -2,9 +2,6 @@ package com.segment.analytics.android.integrations.comscore;
 
 import static com.segment.analytics.internal.Utils.isNullOrEmpty;
 
-import com.comscore.PartnerConfiguration;
-import com.comscore.PublisherConfiguration;
-import com.comscore.UsagePropertiesAutoUpdateMode;
 import com.comscore.streaming.StreamingAnalytics;
 
 import com.segment.analytics.Properties;
@@ -37,58 +34,27 @@ public class ComScoreIntegration extends Integration<Void> {
 
   private final static String COMSCORE_KEY = "comScore";
   private final static String PARTNER_ID = "24186693";
-  final Logger logger;
-  final String customerC2;
-  final String publisherSecret;
-  final String appName;
-  final boolean useHTTPS;
-  final int autoUpdateInterval;
-  final boolean autoUpdate;
-  final boolean foregroundOnly;
+
+  private Settings settings;
   private ComScoreAnalytics comScoreAnalytics;
   private StreamingAnalytics streamingAnalytics;
+  private Logger logger;
 
   ComScoreIntegration(com.segment.analytics.Analytics analytics,
-                      ValueMap settings) {
-    this(analytics, settings, new ComScoreAnalytics.DefaultcomScoreAnalytics(analytics.logger(COMSCORE_KEY)));
+                      ValueMap destinationSettings) {
+    this(analytics, destinationSettings, new ComScoreAnalytics.DefaultcomScoreAnalytics(analytics.logger(COMSCORE_KEY)));
   }
 
   ComScoreIntegration(
       com.segment.analytics.Analytics analytics,
-      ValueMap settings,
+      ValueMap destinationSettings,
       ComScoreAnalytics comScoreAnalytics) {
 
     this.comScoreAnalytics = comScoreAnalytics;
+    this.settings = new Settings(destinationSettings);
+    this.logger = analytics.logger(COMSCORE_KEY);
 
-    logger = analytics.logger(COMSCORE_KEY);
-    customerC2 = settings.getString("c2");
-    publisherSecret = settings.getString("publisherSecret");
-    appName = settings.getString("appName");
-    useHTTPS = settings.getBoolean("useHTTPS", true);
-    autoUpdateInterval = settings.getInt("autoUpdateInterval", 60);
-    autoUpdate = settings.getBoolean("autoUpdate", false);
-    foregroundOnly = settings.getBoolean("foregroundOnly", true);
-
-    PartnerConfiguration.Builder partner = new PartnerConfiguration.Builder().partnerId(PARTNER_ID);
-
-    PublisherConfiguration.Builder publisher = new PublisherConfiguration.Builder();
-    publisher.publisherId(customerC2);
-    publisher.publisherSecret(publisherSecret);
-    if (appName != null && appName.trim().length() != 0) {
-      publisher.applicationName(appName);
-    }
-    publisher.secureTransmission(useHTTPS);
-    publisher.usagePropertiesAutoUpdateInterval(autoUpdateInterval);
-
-    if (autoUpdate) {
-      publisher.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
-    } else if (foregroundOnly) {
-      publisher.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.FOREGROUND_ONLY);
-    } else {
-      publisher.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.DISABLED);
-    }
-
-    comScoreAnalytics.start(analytics.getApplication(), partner.build(), publisher.build());
+    comScoreAnalytics.start(analytics.getApplication(), PARTNER_ID, settings.toPublisherConfiguration());
   }
 
   /**
@@ -469,5 +435,13 @@ public class ComScoreIntegration extends Integration<Void> {
     properties.put("name", name);
     properties.put("category", category);
     comScoreAnalytics.notifyViewEvent(properties);
+  }
+
+  /**
+   * Retrieves the settings.
+   * @return Settings.
+   */
+  Settings getSettings() {
+    return settings;
   }
 }

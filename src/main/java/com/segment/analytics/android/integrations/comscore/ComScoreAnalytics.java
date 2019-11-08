@@ -3,7 +3,6 @@ package com.segment.analytics.android.integrations.comscore;
 import android.content.Context;
 
 import com.comscore.Analytics;
-import com.comscore.ClientConfiguration;
 import com.comscore.PartnerConfiguration;
 import com.comscore.PublisherConfiguration;
 import com.comscore.streaming.StreamingAnalytics;
@@ -27,10 +26,10 @@ public interface ComScoreAnalytics {
     /**
      * Starts collecting analytics with the provided client configuration
      * @param context Application context
-     * @param partner Partner configuration
+     * @param partnerId Partner ID
      * @param publisher Publisher configuration
      */
-    public void start(Context context, PartnerConfiguration partner, PublisherConfiguration publisher);
+    public void start(Context context, String partnerId, PublisherConfiguration publisher);
 
     /**
      * Sets global labels
@@ -73,7 +72,10 @@ public interface ComScoreAnalytics {
         }
 
         @Override
-        public void start(Context context, PartnerConfiguration partner, PublisherConfiguration publisher) {
+        public void start(Context context, String partnerId, PublisherConfiguration publisher) {
+
+            PartnerConfiguration partner = new PartnerConfiguration.Builder().partnerId(partnerId).build();
+
             logger.verbose("Adding partner (%s)", partner);
             Analytics.getConfiguration().addClient(partner);
 
