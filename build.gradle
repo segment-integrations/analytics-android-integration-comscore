@@ -1,26 +1,30 @@
 buildscript {
   repositories {
     mavenCentral()
+    jcenter()
+    google()
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:2.3.0'
+    classpath 'com.android.tools.build:gradle:3.4.2'
     classpath 'com.f2prateek.javafmt:javafmt:0.1.6'
-    classpath 'com.vanniktech:gradle-android-junit-jacoco-plugin:0.6.0'
+    classpath 'io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.11.0'
   }
 }
 
+// Use -Prelease or $ORG_GRADLE_PROJECT_RELEASE="true" to mark the project as a release
+ext.isRelease = hasProperty('release')
+
 apply plugin: 'com.android.library'
 apply plugin: 'com.f2prateek.javafmt'
-apply plugin: 'com.vanniktech.android.junit.jacoco'
 
 android {
-  compileSdkVersion 25
-  buildToolsVersion '25.0.2'
+  compileSdkVersion 28
+  buildToolsVersion '28.0.3'
 
   defaultConfig {
     minSdkVersion 14
-    targetSdkVersion 25
+    targetSdkVersion 28
   }
 
   compileOptions {
@@ -39,6 +43,10 @@ android {
     textReport true
     textOutput 'stdout'
     abortOnError false
+  }
+
+  testOptions {
+    unitTests.returnDefaultValues = true
   }
 }
 
@@ -61,30 +69,25 @@ allprojects {
 dependencies {
   repositories {
     mavenCentral()
+    jcenter()
+    google()
   }
 
-  compile 'com.segment.analytics.android:analytics:4.0.0'
-  compile 'com.comscore:android-analytics:5.3.1'
-  compile 'com.android.support:support-annotations:25.3.1'
+  api 'com.segment.analytics.android:analytics:4.3.1'
+  api 'com.comscore:android-analytics:5.7.2'
 
+  testImplementation 'com.segment.analytics.android:analytics-tests:4.3.1'
+  testImplementation 'junit:junit:4.12'
+  testImplementation 'com.android.support.test:runner:1.0.2'
+  testImplementation 'org.robolectric:robolectric:4.3'
+  testImplementation 'org.mockito:mockito-core:2.28.2'
 
-  testCompile 'junit:junit:4.12'
-  testCompile('org.robolectric:robolectric:3.3.2') {
-    exclude group: 'commons-logging', module: 'commons-logging'
-    exclude group: 'org.apache.httpcomponents', module: 'httpclient'
-  }
+  // Required for local (non-android) testing
+  testImplementation 'org.json:json:20180813'
 
-  testCompile 'com.segment.analytics.android:analytics-tests:4.0.0'
-
-  testCompile 'org.assertj:assertj-core:1.7.1'
-
-  testCompile 'org.mockito:mockito-core:1.10.19'
-
-  testCompile 'org.powermock:powermock:1.6.2'
-  testCompile 'org.powermock:powermock-module-junit4:1.6.2'
-  testCompile 'org.powermock:powermock-module-junit4-rule:1.6.2'
-  testCompile 'org.powermock:powermock-api-mockito:1.6.2'
-  testCompile 'org.powermock:powermock-classloading-xstream:1.6.2'
 }
 
-apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
+apply from: rootProject.file('gradle/attach-jar.gradle')
+apply from: rootProject.file('gradle/upload.gradle')
+apply from: rootProject.file('gradle/sign.gradle')
+apply from: rootProject.file('gradle/promote.gradle')
