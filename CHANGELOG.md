@@ -1,3 +1,14 @@
+
+Version 3.1.0 (11th Oct, 2019)
+==============================
+*(Supports analytics-android 4.3.1 and Comscore 5.7.2)*
+ * Bump ComScore SDK version to 5.7.2
+ * Bump Analytics Android SDK version to 4.3.1
+ * Update tests
+ * Wrapped ComScore SDK for better testing
+ * Removed Powermockito dependencies
+
+
 Version 3.0.0 (6th June, 2017)
 ==============================
 *(Supports analytics-android 4.0.0 and Comscore 5.3.1)*
