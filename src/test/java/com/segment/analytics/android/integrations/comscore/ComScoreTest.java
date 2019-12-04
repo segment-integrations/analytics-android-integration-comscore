@@ -596,7 +596,7 @@ public class ComScoreTest {
     expected.put("c4", "*null");
     expected.put("c6", "*null");
 
-    Mockito.verify(streamingAnalytics).setMetadata(refEq(getAdvertisementMetadata(expected)));
+    Mockito.verify(streamingAnalytics, atLeast(1)).setMetadata(refEq(getContentMetadata(expected)));
     Mockito.verify(streamingAnalytics).startFromPosition(70);
     Mockito.verify(streamingAnalytics).notifyPlay();
   }
