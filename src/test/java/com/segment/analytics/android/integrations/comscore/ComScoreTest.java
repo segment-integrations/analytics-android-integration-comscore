@@ -4,15 +4,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-
+import static org.mockito.ArgumentMatchers.refEq;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.when;
 import android.app.Application;
-
 import com.comscore.PublisherConfiguration;
-import com.comscore.UsagePropertiesAutoUpdateMode;
-import com.comscore.streaming.Asset;
-import com.comscore.streaming.PlaybackSession;
+import com.comscore.streaming.AdvertisementMetadata;
+import com.comscore.streaming.ContentMetadata;
 import com.comscore.streaming.StreamingAnalytics;
-
+import com.comscore.streaming.StreamingConfiguration;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.Properties;
 import com.segment.analytics.Traits;
@@ -43,20 +43,22 @@ public class ComScoreTest {
   @Mock ComScoreAnalytics comScoreAnalytics;
   @Mock com.segment.analytics.Analytics analytics;
   @Mock StreamingAnalytics streamingAnalytics;
+  @Mock StreamingConfiguration streamingConfiguration;
 
   private ComScoreIntegration integration;
 
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    Mockito.when(comScoreAnalytics.createStreamingAnalytics()).thenReturn(streamingAnalytics);
+    when(comScoreAnalytics.createStreamingAnalytics()).thenReturn(streamingAnalytics);
 
     ValueMap settings = new ValueMap();
     settings.putValue("customerC2", "foobarbar");
     settings.putValue("publisherSecret", "illnevertell");
 
-    Mockito.when(analytics.logger("comScore")).thenReturn(Logger.with(Analytics.LogLevel.VERBOSE));
-    Mockito.when(analytics.getApplication()).thenReturn(context);
+    when(analytics.logger("comScore")).thenReturn(Logger.with(Analytics.LogLevel.VERBOSE));
+    when(analytics.getApplication()).thenReturn(context);
+    when(streamingAnalytics.getConfiguration()).thenReturn(streamingConfiguration);
     integration = new ComScoreIntegration(analytics, settings, comScoreAnalytics);
   }
 
@@ -123,12 +125,13 @@ public class ComScoreTest {
     ArgumentCaptor<PublisherConfiguration> publisherCaptor =
             ArgumentCaptor.forClass(PublisherConfiguration.class);
 
-    Mockito.verify(comScoreAnalytics, Mockito.times(1)).start(Mockito.eq(context), Mockito.eq(EXPECTED_PARTNER_ID), publisherCaptor.capture());
+    Mockito.verify(comScoreAnalytics, Mockito.times(1))
+            .start(Mockito.eq(context), Mockito.eq(EXPECTED_PARTNER_ID), publisherCaptor.capture());
 
-    PublisherConfiguration publisher = publisherCaptor.getValue();
-    assertEquals("testApp", publisher.getApplicationName());
-    assertEquals(2000, publisher.getUsagePropertiesAutoUpdateInterval());
-    assertEquals(UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND, publisher.getUsagePropertiesAutoUpdateMode());
+    Settings integrationSettings = integration.getSettings();
+    assertEquals("testApp", integrationSettings.getAppName());
+    assertEquals(2000, integrationSettings.getAutoUpdateInterval());
+    assertTrue( integrationSettings.isForegroundOnly());
   }
 
   @Test
@@ -151,18 +154,19 @@ public class ComScoreTest {
     ArgumentCaptor<PublisherConfiguration> publisherCaptor =
             ArgumentCaptor.forClass(PublisherConfiguration.class);
 
-    Mockito.verify(comScoreAnalytics, Mockito.times(1)).start(Mockito.eq(context), Mockito.eq(EXPECTED_PARTNER_ID), publisherCaptor.capture());
+    Mockito.verify(comScoreAnalytics, Mockito.times(1))
+            .start(Mockito.eq(context), Mockito.eq(EXPECTED_PARTNER_ID), publisherCaptor.capture());
 
-    PublisherConfiguration publisher = publisherCaptor.getValue();
-    assertEquals("testApp", publisher.getApplicationName());
-    assertEquals(60, publisher.getUsagePropertiesAutoUpdateInterval());
-    assertEquals(UsagePropertiesAutoUpdateMode.DISABLED, publisher.getUsagePropertiesAutoUpdateMode());
+    Settings integrationSettings = integration.getSettings();
+
+    assertEquals("testApp", integrationSettings.getAppName());
+    assertEquals(60, integrationSettings.getAutoUpdateInterval());
+//    assertEquals(UsagePropertiesAutoUpdateMode.DISABLED, publisher.getUsagePropertiesAutoUpdateMode());
   }
 
   @Test
   public void track() {
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("foo").build());
-
     Properties properties = new Properties().putValue("name", "foo");
     Map<String, String> expected = properties.toStringMap();
 
@@ -172,9 +176,9 @@ public class ComScoreTest {
   @Test
   public void trackWithProps() {
     integration.track(new TrackPayload.Builder().anonymousId("foo") //
-        .event("Completed Order")
-        .properties(new Properties().putValue(20.0).putValue("product", "Ukelele"))
-        .build());
+            .event("Completed Order")
+            .properties(new Properties().putValue(20.0).putValue("product", "Ukelele"))
+            .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("name", "Completed Order");
@@ -186,26 +190,6 @@ public class ComScoreTest {
 
   @Test
   public void setupWithVideoPlaybackStarted() {
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
-    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Started")
-        .properties(new Properties().putValue("assetId", 1234)
-            .putValue("adType", "pre-roll")
-            .putValue("totalLength", 120)
-            .putValue("videoPlayer", "youtube")
-            .putValue("sound", 80)
-            .putValue("fullScreen", false)
-            .putValue("c3", "some value")
-            .putValue("c4", "another value")
-            .putValue("c6", "and another one"))
-        .build());
-
-
-
-    Map<String, String> contentIdMapper = new LinkedHashMap<>();
-    contentIdMapper.put("ns_st_ci", "1234");
-
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_mp", "youtube");
     expected.put("ns_st_vo", "80");
@@ -215,27 +199,39 @@ public class ComScoreTest {
     expected.put("c4", "another value");
     expected.put("c6", "and another one");
 
-    Mockito.verify(streamingAnalytics).createPlaybackSession();
-    Mockito.verify(streamingAnalytics).getPlaybackSession();
-    Mockito.verify(playbackSession).setAsset(contentIdMapper);
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Started")
+            .properties(new Properties().putValue("assetId", 1234)
+                    .putValue("adType", "pre-roll")
+                    .putValue("totalLength", 120)
+                    .putValue("videoPlayer", "youtube")
+                    .putValue("sound", 80)
+                    .putValue("fullScreen", false)
+                    .putValue("c3", "some value")
+                    .putValue("c4", "another value")
+                    .putValue("c6", "and another one"))
+            .build());
 
-    Mockito.verify(streamingAnalytics).setLabels(expected);
+    Map<String, String> contentIdMapper = new LinkedHashMap<>();
+    contentIdMapper.put("ns_st_ci", "1234");
+
+    Mockito.verify(streamingAnalytics).createPlaybackSession();
+    Mockito.verify(streamingAnalytics, atLeast(1))
+            .setMetadata(refEq(getContentMetadata(contentIdMapper)));
+
+    Mockito.verify(streamingAnalytics.getConfiguration()).addLabels(expected);
   }
 
   @Test
   public void videoPlaybackStarted() {
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Started")
-        .properties(new Properties().putValue("assetId", 1234)
-            .putValue("adType", "pre-roll")
-            .putValue("totalLength", 120)
-            .putValue("videoPlayer", "youtube")
-            .putValue("sound", 80)
-            .putValue("bitrate", 40)
-            .putValue("fullScreen", true))
-        .build());
+            .properties(new Properties().putValue("assetId", 1234)
+                    .putValue("adType", "pre-roll")
+                    .putValue("totalLength", 120)
+                    .putValue("videoPlayer", "youtube")
+                    .putValue("sound", 80)
+                    .putValue("bitrate", 40)
+                    .putValue("fullScreen", true))
+            .build());
 
     Map<String, String> contentIdMapper = new LinkedHashMap<>();
     contentIdMapper.put("ns_st_ci", "1234");
@@ -250,18 +246,17 @@ public class ComScoreTest {
     expected.put("c6", "*null");
 
     Mockito.verify(streamingAnalytics).createPlaybackSession();
-    Mockito.verify(streamingAnalytics).getPlaybackSession();
-    Mockito.verify(playbackSession).setAsset(contentIdMapper);
-
-    Mockito.verify(streamingAnalytics).setLabels(expected);
+    Mockito.verify(streamingAnalytics,atLeast(1))
+            .setMetadata(refEq(getContentMetadata(contentIdMapper)));
+    Mockito.verify(streamingAnalytics.getConfiguration()).addLabels(expected);
   }
 
   @Test
   public void videoPlaybackPausedWithoutVideoPlaybackStarted() {
     integration.track(new TrackPayload.Builder().anonymousId("foo") //
-        .event("Video Playback Paused")
-        .properties(new Properties().putValue("assetId", 1234))
-        .build());
+            .event("Video Playback Paused")
+            .properties(new Properties().putValue("assetId", 1234))
+            .build());
 
     Mockito.verifyNoMoreInteractions(streamingAnalytics);
   }
@@ -269,26 +264,22 @@ public class ComScoreTest {
   @Test
   public void videoPlaybackPaused() {
     setupWithVideoPlaybackStarted();
-
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
     Map<String, Object> comScoreOptions = new LinkedHashMap<>();
     comScoreOptions.put("c3", "abc");
 
     integration.track(new TrackPayload.Builder().anonymousId("foo") //
-        .event("Video Playback Paused")
-        .properties(new Properties() //
-            .putValue("assetId", 1234)
-            .putValue("adType", "mid-roll")
-            .putValue("totalLength", 100)
-            .putValue("videoPlayer", "vimeo")
-            .putValue("playbackPosition", 10)
-            .putValue("fullScreen", true)
-            .putValue("bitrate", 50)
-            .putValue("sound", 80))
-        .integration("comScore", comScoreOptions)
-        .build());
+            .event("Video Playback Paused")
+            .properties(new Properties() //
+                    .putValue("assetId", 1234)
+                    .putValue("adType", "mid-roll")
+                    .putValue("totalLength", 100)
+                    .putValue("videoPlayer", "vimeo")
+                    .putValue("playbackPosition", 10)
+                    .putValue("fullScreen", true)
+                    .putValue("bitrate", 50)
+                    .putValue("sound", 80))
+            .integration("comScore", comScoreOptions)
+            .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_mp", "vimeo");
@@ -299,27 +290,23 @@ public class ComScoreTest {
     expected.put("c4", "*null");
     expected.put("c6", "*null");
 
-    Mockito.verify(streamingAnalytics).notifyPause(10);
-    Mockito.verify(streamingAnalytics).setLabels(expected);
+    Mockito.verify(streamingAnalytics).notifyPause();
+    Mockito.verify(streamingAnalytics.getConfiguration()).addLabels(expected);
   }
 
   @Test
   public void videoPlaybackBufferStarted() {
     setupWithVideoPlaybackStarted();
-
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Buffer Started")
-        .properties(new Properties().putValue("assetId", 7890)
-            .putValue("adType", "post-roll")
-            .putValue("totalLength", 700)
-            .putValue("videoPlayer", "youtube")
-            .putValue("playbackPosition", 20)
-            .putValue("fullScreen", false)
-            .putValue("bitrate", 500)
-            .putValue("sound", 80))
-        .build());
+            .properties(new Properties().putValue("assetId", 7890)
+                    .putValue("adType", "post-roll")
+                    .putValue("totalLength", 700)
+                    .putValue("videoPlayer", "youtube")
+                    .putValue("playbackPosition", 20)
+                    .putValue("fullScreen", false)
+                    .putValue("bitrate", 500)
+                    .putValue("sound", 80))
+            .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_mp", "youtube");
@@ -329,28 +316,25 @@ public class ComScoreTest {
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
-
-    Mockito.verify(streamingAnalytics).notifyBufferStart(20);
-    Mockito.verify(streamingAnalytics).setLabels(expected);
+    Mockito.verify(streamingAnalytics).startFromPosition(20);
+    Mockito.verify(streamingAnalytics).notifyBufferStart();
+    Mockito.verify(streamingAnalytics.getConfiguration()).addLabels(expected);
   }
 
   @Test
   public void videoPlaybackBufferCompleted() {
     setupWithVideoPlaybackStarted();
 
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Buffer Completed")
-        .properties(new Properties().putValue("assetId", 1029)
-            .putValue("adType", "pre-roll")
-            .putValue("totalLength", 800)
-            .putValue("videoPlayer", "vimeo")
-            .putValue("playbackPosition", 30)
-            .putValue("fullScreen", true)
-            .putValue("bitrate", 500)
-            .putValue("sound", 80))
-        .build());
+            .properties(new Properties().putValue("assetId", 1029)
+                    .putValue("adType", "pre-roll")
+                    .putValue("totalLength", 800)
+                    .putValue("videoPlayer", "vimeo")
+                    .putValue("playbackPosition", 30)
+                    .putValue("fullScreen", true)
+                    .putValue("bitrate", 500)
+                    .putValue("sound", 80))
+            .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_mp", "vimeo");
@@ -361,27 +345,24 @@ public class ComScoreTest {
     expected.put("c4", "*null");
     expected.put("c6", "*null");
 
-    Mockito.verify(streamingAnalytics).notifyBufferStop(30);
-    Mockito.verify(streamingAnalytics).setLabels(expected);
+    Mockito.verify(streamingAnalytics).startFromPosition(30);
+    Mockito.verify(streamingAnalytics).notifyBufferStop();
+    Mockito.verify(streamingAnalytics.getConfiguration()).addLabels(expected);
   }
 
   @Test
   public void videoPlaybackSeekStarted() {
     setupWithVideoPlaybackStarted();
-
-    PlaybackSession playbacksession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbacksession);
-
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Seek Started")
-        .properties(new Properties().putValue("assetId", 3948)
-            .putValue("adType", "mid-roll")
-            .putValue("totalLength", 900)
-            .putValue("videoPlayer", "youtube")
-            .putValue("playbackPosition", 40)
-            .putValue("fullScreen", true)
-            .putValue("bitrate", 500)
-            .putValue("sound", 80))
-        .build());
+            .properties(new Properties().putValue("assetId", 3948)
+                    .putValue("adType", "mid-roll")
+                    .putValue("totalLength", 900)
+                    .putValue("videoPlayer", "youtube")
+                    .putValue("playbackPosition", 40)
+                    .putValue("fullScreen", true)
+                    .putValue("bitrate", 500)
+                    .putValue("sound", 80))
+            .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_mp", "youtube");
@@ -391,28 +372,23 @@ public class ComScoreTest {
     expected.put("c3", "*null");
     expected.put("c4", "*null");
     expected.put("c6", "*null");
-
-    Mockito.verify(streamingAnalytics).notifySeekStart(40);
-    Mockito.verify(streamingAnalytics).setLabels(expected);
+    Mockito.verify(streamingAnalytics).notifySeekStart();
+    Mockito.verify(streamingAnalytics.getConfiguration()).addLabels(expected);
   }
 
   @Test
   public void videoPlaybackSeekCompleted() {
     setupWithVideoPlaybackStarted();
-
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Seek Completed")
-        .properties(new Properties().putValue("assetId", 6767)
-            .putValue("adType", "post-roll")
-            .putValue("totalLength", 400)
-            .putValue("videoPlayer", "vimeo")
-            .putValue("playbackPosition", 50)
-            .putValue("fullScreen", true)
-            .putValue("bitrate", 500)
-            .putValue("sound", 80))
-        .build());
+            .properties(new Properties().putValue("assetId", 6767)
+                    .putValue("adType", "post-roll")
+                    .putValue("totalLength", 400)
+                    .putValue("videoPlayer", "vimeo")
+                    .putValue("playbackPosition", 50)
+                    .putValue("fullScreen", true)
+                    .putValue("bitrate", 500)
+                    .putValue("sound", 80))
+            .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_mp", "vimeo");
@@ -423,27 +399,24 @@ public class ComScoreTest {
     expected.put("c4", "*null");
     expected.put("c6", "*null");
 
-    Mockito.verify(streamingAnalytics).notifyPlay(50);
-    Mockito.verify(streamingAnalytics).setLabels(expected);
+    Mockito.verify(streamingAnalytics).startFromPosition(50);
+    Mockito.verify(streamingAnalytics).notifyPlay();
+    Mockito.verify(streamingAnalytics.getConfiguration()).addLabels(expected);
   }
 
   @Test
   public void videoPlaybackResumed() {
     setupWithVideoPlaybackStarted();
-
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Resumed")
-        .properties(new Properties().putValue("assetId", 5332)
-            .putValue("adType", "post-roll")
-            .putValue("totalLength", 100)
-            .putValue("videoPlayer", "youtube")
-            .putValue("playbackPosition", 60)
-            .putValue("fullScreen", true)
-            .putValue("bitrate", 500)
-            .putValue("sound", 80))
-        .build());
+            .properties(new Properties().putValue("assetId", 5332)
+                    .putValue("adType", "post-roll")
+                    .putValue("totalLength", 100)
+                    .putValue("videoPlayer", "youtube")
+                    .putValue("playbackPosition", 60)
+                    .putValue("fullScreen", true)
+                    .putValue("bitrate", 500)
+                    .putValue("sound", 80))
+            .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_mp", "youtube");
@@ -454,37 +427,34 @@ public class ComScoreTest {
     expected.put("c4", "*null");
     expected.put("c6", "*null");
 
-    Mockito.verify(streamingAnalytics).notifyPlay(60);
-    Mockito.verify(streamingAnalytics).setLabels(expected);
+    Mockito.verify(streamingAnalytics).startFromPosition(60);
+    Mockito.verify(streamingAnalytics).notifyPlay();
+    Mockito.verify(streamingAnalytics.getConfiguration()).addLabels(expected);
   }
 
   @Test
   public void videoContentStartedWithDigitalAirdate() {
     setupWithVideoPlaybackStarted();
-
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
     Map<String, Object> comScoreOptions = new LinkedHashMap<>();
     comScoreOptions.put("digitalAirdate", "2014-01-20");
     comScoreOptions.put("contentClassificationType", "vc12");
 
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Started")
-        .properties(new Properties()
-            .putValue("assetId", 9324)
-            .putValue("title", "Meeseeks and Destroy")
-            .putValue("season", 1)
-            .putValue("episode", 5)
-            .putValue("genre", "cartoon")
-            .putValue("program", "Rick and Morty")
-            .putValue("channel", "cartoon network")
-            .putValue("publisher", "Turner Broadcasting System")
-            .putValue("fullEpisode", true)
-            .putValue("podId", "segment A")
-            .putValue("totalLength", "120")
-            .putValue("playbackPosition", 70))
-        .integration("comScore", comScoreOptions)
-        .build());
+            .properties(new Properties()
+                    .putValue("assetId", 9324)
+                    .putValue("title", "Meeseeks and Destroy")
+                    .putValue("season", 1)
+                    .putValue("episode", 5)
+                    .putValue("genre", "cartoon")
+                    .putValue("program", "Rick and Morty")
+                    .putValue("channel", "cartoon network")
+                    .putValue("publisher", "Turner Broadcasting System")
+                    .putValue("fullEpisode", true)
+                    .putValue("podId", "segment A")
+                    .putValue("totalLength", "120")
+                    .putValue("playbackPosition", 70))
+            .integration("comScore", comScoreOptions)
+            .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_ci", "9324");
@@ -504,36 +474,35 @@ public class ComScoreTest {
     expected.put("c4", "*null");
     expected.put("c6", "*null");
 
-    Mockito.verify(streamingAnalytics).notifyPlay(70);
-    Mockito.verify(playbackSession).setAsset(expected);
+
+    Mockito.verify(streamingAnalytics).startFromPosition(70);
+    Mockito.verify(streamingAnalytics).notifyPlay();
+    Mockito.verify(streamingAnalytics,atLeast(2))
+            .setMetadata(refEq(getContentMetadata(expected)));
   }
 
   @Test
   public void videoContentStartedWithTVAirdate() {
     setupWithVideoPlaybackStarted();
-
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
     Map<String, Object> comScoreOptions = new LinkedHashMap<>();
     comScoreOptions.put("tvAirdate", "2017-05-14");
     comScoreOptions.put("contentClassificationType", "vc12");
 
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Started")
-        .properties(new Properties()
-            .putValue("title", "Meeseeks and Destroy")
-            .putValue("season", 1)
-            .putValue("episode", 5)
-            .putValue("genre", "cartoon")
-            .putValue("program", "Rick and Morty")
-            .putValue("channel", "cartoon network")
-            .putValue("publisher", "Turner Broadcasting System")
-            .putValue("fullEpisode", true)
-            .putValue("podId", "segment A")
-            .putValue("totalLength", "120")
-            .putValue("playbackPosition", 70))
-        .integration("comScore", comScoreOptions)
-        .build());
+            .properties(new Properties()
+                    .putValue("title", "Meeseeks and Destroy")
+                    .putValue("season", 1)
+                    .putValue("episode", 5)
+                    .putValue("genre", "cartoon")
+                    .putValue("program", "Rick and Morty")
+                    .putValue("channel", "cartoon network")
+                    .putValue("publisher", "Turner Broadcasting System")
+                    .putValue("fullEpisode", true)
+                    .putValue("podId", "segment A")
+                    .putValue("totalLength", "120")
+                    .putValue("playbackPosition", 70))
+            .integration("comScore", comScoreOptions)
+            .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_ci", "0");
@@ -553,73 +522,63 @@ public class ComScoreTest {
     expected.put("c4", "*null");
     expected.put("c6", "*null");
 
-    Mockito.verify(streamingAnalytics).notifyPlay(70);
-    Mockito.verify(playbackSession).setAsset(expected);
+    Mockito.verify(streamingAnalytics).startFromPosition(70);
+    Mockito.verify(streamingAnalytics).notifyPlay();
+    Mockito.verify(streamingAnalytics,atLeast(2))
+            .setMetadata(refEq(getContentMetadata(expected)));
   }
 
   @Test
   public void videoContentStartedWithoutVideoPlaybackStarted() {
     integration.track(new TrackPayload.Builder().anonymousId("foo") //
-        .event("Video Content Started")
-        .properties(new Properties().putValue("assetId", 5678))
-        .build());
-
+            .event("Video Content Started")
+            .properties(new Properties().putValue("assetId", 5678))
+            .build());
     Mockito.verifyNoMoreInteractions(streamingAnalytics);
   }
 
   @Test
   public void videoContentPlaying() {
     setupWithVideoPlaybackStarted();
-
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
-
-    Asset asset = Mockito.mock(Asset.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
-
+    Mockito.when(streamingAnalytics.getConfiguration().containsLabel("ns_st_ad")).thenReturn(true);
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Playing")
-        .properties(new Properties().putValue("assetId", 123214)
-            .putValue("title", "Look Who's Purging Now")
-            .putValue("season", 2)
-            .putValue("episode", 9)
-            .putValue("genre", "cartoon")
-            .putValue("program", "Rick and Morty")
-            .putValue("channel", "cartoon network")
-            .putValue("publisher", "Turner Broadcasting System")
-            .putValue("fullEpisode", true)
-            .putValue("airdate", "2015-09-27")
-            .putValue("podId", "segment A")
-            .putValue("playbackPosition", 70))
-        .build());
+            .properties(new Properties().putValue("assetId", 123214)
+                    .putValue("title", "Look Who's Purging Now")
+                    .putValue("season", 2)
+                    .putValue("episode", 9)
+                    .putValue("genre", "cartoon")
+                    .putValue("program", "Rick and Morty")
+                    .putValue("channel", "cartoon network")
+                    .putValue("publisher", "Turner Broadcasting System")
+                    .putValue("fullEpisode", true)
+                    .putValue("airdate", "2015-09-27")
+                    .putValue("podId", "segment A")
+                    .putValue("playbackPosition", 70))
+            .build());
 
-    Mockito.verify(streamingAnalytics).notifyPlay(70);
+    Mockito.verify(streamingAnalytics).startFromPosition(70);
+    Mockito.verify(streamingAnalytics).notifyPlay();
   }
 
   @Test
   public void videoContentPlayingWithAdType() {
     setupWithVideoPlaybackStarted();
 
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
-    Asset asset = Mockito.mock(Asset.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
-    Mockito.when(asset.containsLabel("ns_st_ad")).thenReturn(true);
-
+    Mockito.when(streamingAnalytics.getConfiguration().containsLabel("ns_st_ad")).thenReturn(true);
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Playing")
-        .properties(new Properties().putValue("assetId", 123214)
-            .putValue("title", "Look Who's Purging Now")
-            .putValue("season", 2)
-            .putValue("episode", 9)
-            .putValue("genre", "cartoon")
-            .putValue("program", "Rick and Morty")
-            .putValue("channel", "cartoon network")
-            .putValue("publisher", "Turner Broadcasting System")
-            .putValue("fullEpisode", true)
-            .putValue("podId", "segment A")
-            .putValue("playbackPosition", 70))
-        .build());
+            .properties(new Properties().putValue("assetId", 123214)
+                    .putValue("title", "Look Who's Purging Now")
+                    .putValue("season", 2)
+                    .putValue("episode", 9)
+                    .putValue("genre", "cartoon")
+                    .putValue("program", "Rick and Morty")
+                    .putValue("channel", "cartoon network")
+                    .putValue("publisher", "Turner Broadcasting System")
+                    .putValue("fullEpisode", true)
+                    .putValue("podId", "segment A")
+                    .putValue("playbackPosition", 70))
+            .build());
+
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_ci", "123214");
@@ -637,53 +596,43 @@ public class ComScoreTest {
     expected.put("c4", "*null");
     expected.put("c6", "*null");
 
-    Mockito.verify(playbackSession).setAsset(expected);
-    Mockito.verify(streamingAnalytics).notifyPlay(70);
+    Mockito.verify(streamingAnalytics).setMetadata(refEq(getAdvertisementMetadata(expected)));
+    Mockito.verify(streamingAnalytics).startFromPosition(70);
+    Mockito.verify(streamingAnalytics).notifyPlay();
   }
 
   @Test
   public void videoContentCompleted() {
     setupWithVideoPlaybackStarted();
-
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Completed")
-        .properties(new Properties().putValue("assetId", 9324)
-            .putValue("title", "Raising Gazorpazorp")
-            .putValue("season", 1)
-            .putValue("episode", 7)
-            .putValue("genre", "cartoon")
-            .putValue("program", "Rick and Morty")
-            .putValue("channel", "cartoon network")
-            .putValue("publisher", "Turner Broadcasting System")
-            .putValue("fullEpisode", true)
-            .putValue("airdate", "2014-10-20")
-            .putValue("podId", "segment A")
-            .putValue("playbackPosition", 80))
-        .build());
-
-    Mockito.verify(streamingAnalytics).notifyEnd(80);
+            .properties(new Properties().putValue("assetId", 9324)
+                    .putValue("title", "Raising Gazorpazorp")
+                    .putValue("season", 1)
+                    .putValue("episode", 7)
+                    .putValue("genre", "cartoon")
+                    .putValue("program", "Rick and Morty")
+                    .putValue("channel", "cartoon network")
+                    .putValue("publisher", "Turner Broadcasting System")
+                    .putValue("fullEpisode", true)
+                    .putValue("airdate", "2014-10-20")
+                    .putValue("podId", "segment A")
+                    .putValue("playbackPosition", 80))
+            .build());
+    Mockito.verify(streamingAnalytics).notifyEnd();
   }
 
   @Test
   public void videoAdStarted() {
     setupWithVideoPlaybackStarted();
 
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
-    Asset asset = Mockito.mock(Asset.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
-
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Ad Started")
-        .properties(new Properties().putValue("assetId", 4311)
-            .putValue("podId", "adSegmentA")
-            .putValue("type", "pre-roll")
-            .putValue("totalLength", 120)
-            .putValue("playbackPosition", 0)
-            .putValue("title", "Helmet Ad"))
-        .build());
+            .properties(new Properties().putValue("assetId", 4311)
+                    .putValue("podId", "adSegmentA")
+                    .putValue("type", "pre-roll")
+                    .putValue("totalLength", 120)
+                    .putValue("playbackPosition", 0)
+                    .putValue("title", "Helmet Ad"))
+            .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_ami", "4311");
@@ -695,30 +644,23 @@ public class ComScoreTest {
     expected.put("c4", "*null");
     expected.put("c6", "*null");
 
-    Mockito.verify(streamingAnalytics).notifyPlay(0);
-    Mockito.verify(playbackSession).setAsset(expected);
+    Mockito.verify(streamingAnalytics).startFromPosition(0);
+    Mockito.verify(streamingAnalytics).notifyPlay();
+    Mockito.verify(streamingAnalytics).setMetadata(refEq(getAdvertisementMetadata(expected)));
+
   }
 
   @Test
   public void videoAdStartedWithContentId() {
     setupWithVideoPlaybackStarted();
-
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
-    Asset asset = Mockito.mock(Asset.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
-    Mockito.when(asset.getLabel("ns_st_ci")).thenReturn("1234");
-
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Ad Started")
-        .properties(new Properties().putValue("assetId", 4311)
-            .putValue("podId", "adSegmentA")
-            .putValue("type", "pre-roll")
-            .putValue("totalLength", 120)
-            .putValue("playbackPosition", 0)
-            .putValue("title", "Helmet Ad"))
-        .build());
-
+            .properties(new Properties().putValue("assetId", 4311)
+                    .putValue("podId", "adSegmentA")
+                    .putValue("type", "pre-roll")
+                    .putValue("totalLength", 120)
+                    .putValue("playbackPosition", 0)
+                    .putValue("title", "Helmet Ad"))
+            .build());
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_ami", "4311");
     expected.put("ns_st_ad", "pre-roll");
@@ -730,32 +672,26 @@ public class ComScoreTest {
     expected.put("c6", "*null");
     expected.put("ns_st_ci", "1234");
 
-    Mockito.verify(streamingAnalytics).notifyPlay(0);
-    Mockito.verify(playbackSession).setAsset(expected);
+    Mockito.verify(streamingAnalytics).startFromPosition(0);
+    Mockito.verify(streamingAnalytics).notifyPlay();
+    Mockito.verify(streamingAnalytics).setMetadata(refEq(getAdvertisementMetadata(expected)));
   }
 
   @Test
   public void videoAdStartedWithAdClassificationType() {
     setupWithVideoPlaybackStarted();
-
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
-    Asset asset = Mockito.mock(Asset.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession().getAsset()).thenReturn(asset);
-
     Map<String, Object> comScoreOptions = new LinkedHashMap<>();
     comScoreOptions.put("adClassificationType", "va14");
 
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Ad Started")
-        .properties(new Properties().putValue("assetId", 4311)
-            .putValue("podId", "adSegmentA")
-            .putValue("type", "pre-roll")
-            .putValue("totalLength", 120)
-            .putValue("playbackPosition", 0)
-            .putValue("title", "Helmet Ad"))
-        .integration("comScore", comScoreOptions)
-        .build());
+            .properties(new Properties().putValue("assetId", 4311)
+                    .putValue("podId", "adSegmentA")
+                    .putValue("type", "pre-roll")
+                    .putValue("totalLength", 120)
+                    .putValue("playbackPosition", 0)
+                    .putValue("title", "Helmet Ad"))
+            .integration("comScore", comScoreOptions)
+            .build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_ami", "4311");
@@ -767,16 +703,17 @@ public class ComScoreTest {
     expected.put("c4", "*null");
     expected.put("c6", "*null");
 
-    Mockito.verify(streamingAnalytics).notifyPlay(0);
-    Mockito.verify(playbackSession).setAsset(expected);
+    streamingAnalytics.startFromPosition(0);
+    Mockito.verify(streamingAnalytics).notifyPlay();
+    Mockito.verify(streamingAnalytics).setMetadata(refEq(getAdvertisementMetadata(expected)));
   }
 
   @Test
   public void videoAdStartedWithoutVideoPlaybackStarted() {
     integration.track(new TrackPayload.Builder().anonymousId("foo") //
-        .event("Video Ad Started")
-        .properties(new Properties().putValue("assetId", 4324))
-        .build());
+            .event("Video Ad Started")
+            .properties(new Properties().putValue("assetId", 4324))
+            .build());
 
     Mockito.verifyNoMoreInteractions(streamingAnalytics);
   }
@@ -785,39 +722,31 @@ public class ComScoreTest {
   public void videoAdPlaying() {
     setupWithVideoPlaybackStarted();
 
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Ad Playing")
-        .properties(new Properties().putValue("assetId", 4311)
-            .putValue("podId", "adSegmentA")
-            .putValue("type", "pre-roll")
-            .putValue("totalLength", 120)
-            .putValue("playbackPosition", 20)
-            .putValue("title", "Helmet Ad"))
-        .build());
-
-    Mockito.verify(streamingAnalytics).notifyPlay(20);
+            .properties(new Properties().putValue("assetId", 4311)
+                    .putValue("podId", "adSegmentA")
+                    .putValue("type", "pre-roll")
+                    .putValue("totalLength", 120)
+                    .putValue("playbackPosition", 20)
+                    .putValue("title", "Helmet Ad"))
+            .build());
+    streamingAnalytics.startFromPosition(20);
+    Mockito.verify(streamingAnalytics).notifyPlay();
   }
 
   @Test
   public void videoAdCompleted() {
     setupWithVideoPlaybackStarted();
-
-    PlaybackSession playbackSession = Mockito.mock(PlaybackSession.class);
-    Mockito.when(streamingAnalytics.getPlaybackSession()).thenReturn(playbackSession);
-
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Ad Completed")
-        .properties(new Properties().putValue("assetId", 3425)
-            .putValue("podId", "adSegmentb")
-            .putValue("type", "mid-roll")
-            .putValue("totalLength", 100)
-            .putValue("playbackPosition", 100)
-            .putValue("title", "Helmet Ad"))
-        .build());
+            .properties(new Properties().putValue("assetId", 3425)
+                    .putValue("podId", "adSegmentb")
+                    .putValue("type", "mid-roll")
+                    .putValue("totalLength", 100)
+                    .putValue("playbackPosition", 100)
+                    .putValue("title", "Helmet Ad"))
+            .build());
 
-    Mockito.verify(streamingAnalytics).notifyEnd(100);
-
+    Mockito.verify(streamingAnalytics).notifyEnd();
   }
 
   @Test
@@ -840,12 +769,22 @@ public class ComScoreTest {
   @Test
   public void screen() {
     integration.screen(
-        new ScreenPayload.Builder().anonymousId("foo").name("SmartWatches").category("Purchase Screen").build());
+            new ScreenPayload.Builder().anonymousId("foo").name("SmartWatches").category("Purchase Screen").build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("name", "SmartWatches");
     expected.put("category", "Purchase Screen");
 
     Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyViewEvent(expected);
+  }
+  private ContentMetadata getContentMetadata(Map<String, String> asset){
+    return new ContentMetadata.Builder()
+            .customLabels(asset)
+            .build();
+  }
+  private AdvertisementMetadata getAdvertisementMetadata(Map<String, String> adAsset){
+    return new AdvertisementMetadata.Builder()
+            .customLabels(adAsset)
+            .build();
   }
 }
