@@ -1,5 +1,6 @@
 package com.segment.analytics.android.integrations.comscore;
 
+import com.comscore.Analytics;
 import com.comscore.PublisherConfiguration;
 import com.comscore.UsagePropertiesAutoUpdateMode;
 import com.segment.analytics.ValueMap;
@@ -90,7 +91,7 @@ public class Settings {
     }
 
     /**
-     * Retrieves if usage tracking is enabled when the application is in foreground.
+     * Retrieves if usage tracking is enabled when the appli    c ation is in foreground.
      * @return <code>true</code> if foreground only tracking is enabled. <code>false</code> otherwise.
      */
     public boolean isForegroundOnly() {
@@ -104,21 +105,27 @@ public class Settings {
     public PublisherConfiguration toPublisherConfiguration() {
         PublisherConfiguration.Builder publisher = new PublisherConfiguration.Builder();
         publisher.publisherId(c2);
-        publisher.publisherSecret(publisherSecret);
-        if (appName != null) {
-            publisher.applicationName(appName);
-        }
         publisher.secureTransmission(useHTTPS);
-        publisher.usagePropertiesAutoUpdateInterval(autoUpdateInterval);
-
-        if (autoUpdate) {
-            publisher.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
-        } else if (foregroundOnly) {
-            publisher.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.FOREGROUND_ONLY);
-        } else {
-            publisher.usagePropertiesAutoUpdateMode(UsagePropertiesAutoUpdateMode.DISABLED);
-        }
-
         return publisher.build();
+    }
+
+    public void analyticsConfig(){
+        Analytics.getConfiguration().setUsagePropertiesAutoUpdateInterval(autoUpdateInterval);
+
+        if (appName != null) {
+            Analytics.getConfiguration().setApplicationName(appName);
+        }
+        if (autoUpdate) {
+            Analytics.getConfiguration().setUsagePropertiesAutoUpdateMode(
+                    UsagePropertiesAutoUpdateMode.FOREGROUND_AND_BACKGROUND);
+        } else if (foregroundOnly) {
+            Analytics.getConfiguration().setUsagePropertiesAutoUpdateMode(
+                    UsagePropertiesAutoUpdateMode.FOREGROUND_ONLY);
+        } else {
+            Analytics.getConfiguration().setUsagePropertiesAutoUpdateMode(
+                    UsagePropertiesAutoUpdateMode.DISABLED);
+            Analytics.getConfiguration().setUsagePropertiesAutoUpdateMode(
+                    UsagePropertiesAutoUpdateMode.DISABLED);
+        }
     }
 }
