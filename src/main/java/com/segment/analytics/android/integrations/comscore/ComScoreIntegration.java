@@ -98,7 +98,7 @@ public class ComScoreIntegration extends Integration<Void> {
     return asset;
   }
 
-  private Map<String, String> buildPlaybackAsset(
+  private Map<String, String> mapPlaybackProperties(
           Properties properties,
           Map<String, ?> options,
           Map<String, String> mapper) {
@@ -118,7 +118,7 @@ public class ComScoreIntegration extends Integration<Void> {
     return asset;
   }
 
-  private Map<String, String> buildContentAsset(
+  private Map<String, String> mapContentProperties(
           Properties properties,
           Map<String, ?> options,
           Map<String, String> mapper) {
@@ -157,7 +157,7 @@ public class ComScoreIntegration extends Integration<Void> {
     return asset;
   }
 
-  private Map<String, String> buildAdAsset(
+  private Map<String, String> mapAdProperties(
           Properties properties,
           Map<String, ?> options,
           Map<String, String> mapper) {
@@ -222,21 +222,21 @@ public class ComScoreIntegration extends Integration<Void> {
     playbackMapper.put("videoPlayer", "ns_st_mp");
     playbackMapper.put("sound", "ns_st_vo");
 
-    Map<String, String> playbackAsset =
-            buildPlaybackAsset(properties, comScoreOptions, playbackMapper);
+    Map<String, String> mappedPlaybackProperties =
+            mapPlaybackProperties(properties, comScoreOptions, playbackMapper);
 
     if (name.equals("Video Playback Started")) {
       streamingAnalytics = comScoreAnalytics.createStreamingAnalytics();
       streamingAnalytics.createPlaybackSession();
-      streamingAnalytics.getConfiguration().addLabels(playbackAsset);
+      streamingAnalytics.getConfiguration().addLabels(mappedPlaybackProperties);
 
       // The label ns_st_ci must be set through a setAsset call
       Map<String, String> contentIdMapper = new LinkedHashMap<>();
       contentIdMapper.put("assetId", "ns_st_ci");
 
-      Map<String, String> contentIdAsset = mapSpecialKeys(properties, contentIdMapper);
+      Map<String, String> mappedContentProperties = mapSpecialKeys(properties, contentIdMapper);
 
-      streamingAnalytics.setMetadata(getContentMetadata(contentIdAsset));
+      streamingAnalytics.setMetadata(getContentMetadata(mappedContentProperties));
       return;
     }
 
@@ -245,7 +245,7 @@ public class ComScoreIntegration extends Integration<Void> {
               "streamingAnalytics instance not initialized correctly. Please call Video Playback Started to initialize.");
       return;
     }
-    streamingAnalytics.getConfiguration().addLabels(playbackAsset);
+    streamingAnalytics.getConfiguration().addLabels(mappedPlaybackProperties);
 
     switch (name) {
       case "Video Playback Paused":
@@ -298,7 +298,7 @@ public class ComScoreIntegration extends Integration<Void> {
     contentMapper.put("podId", "ns_st_pn");
 
     Map<String, String> contentAsset =
-            buildContentAsset(properties, comScoreOptions, contentMapper);
+            mapContentProperties(properties, comScoreOptions, contentMapper);
 
     if (streamingAnalytics == null) {
       logger.verbose(
@@ -347,7 +347,7 @@ public class ComScoreIntegration extends Integration<Void> {
     adMapper.put("title", "ns_st_amt");
     adMapper.put("publisher", "ns_st_pu");
 
-    Map<String, String> adAsset = buildAdAsset(properties, comScoreOptions, adMapper);
+    Map<String, String> adAsset = mapAdProperties(properties, comScoreOptions, adMapper);
 
     if (streamingAnalytics == null) {
       logger.verbose(

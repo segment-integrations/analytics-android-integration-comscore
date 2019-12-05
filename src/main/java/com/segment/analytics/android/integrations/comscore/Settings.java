@@ -91,7 +91,7 @@ public class Settings {
     }
 
     /**
-     * Retrieves if usage tracking is enabled when the appli    c ation is in foreground.
+     * Retrieves if usage tracking is enabled when the application is in foreground.
      * @return <code>true</code> if foreground only tracking is enabled. <code>false</code> otherwise.
      */
     public boolean isForegroundOnly() {
