@@ -477,7 +477,7 @@ public class ComScoreTest {
 
     Mockito.verify(streamingAnalytics).startFromPosition(70);
     Mockito.verify(streamingAnalytics).notifyPlay();
-    Mockito.verify(streamingAnalytics,atLeast(2))
+    Mockito.verify(streamingAnalytics,atLeast(1))
             .setMetadata(refEq(getContentMetadata(expected)));
   }
 
@@ -524,7 +524,7 @@ public class ComScoreTest {
 
     Mockito.verify(streamingAnalytics).startFromPosition(70);
     Mockito.verify(streamingAnalytics).notifyPlay();
-    Mockito.verify(streamingAnalytics,atLeast(2))
+    Mockito.verify(streamingAnalytics,atLeast(1))
             .setMetadata(refEq(getContentMetadata(expected)));
   }
 
@@ -596,7 +596,8 @@ public class ComScoreTest {
     expected.put("c4", "*null");
     expected.put("c6", "*null");
 
-    Mockito.verify(streamingAnalytics, atLeast(1)).setMetadata(refEq(getContentMetadata(expected)));
+    Mockito.verify(streamingAnalytics, atLeast(1))
+            .setMetadata(refEq(getContentMetadata(expected)));
     Mockito.verify(streamingAnalytics).startFromPosition(70);
     Mockito.verify(streamingAnalytics).notifyPlay();
   }
@@ -755,7 +756,8 @@ public class ComScoreTest {
     traits.putValue("firstName", "Kylo");
     traits.putValue("lastName", "Ren");
 
-    integration.identify(new IdentifyPayload.Builder().userId("foo").anonymousId("foobar").traits(traits).build());
+    integration.identify(new IdentifyPayload.Builder().userId("foo")
+            .anonymousId("foobar").traits(traits).build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("anonymousId", "foobar");
@@ -763,19 +765,22 @@ public class ComScoreTest {
     expected.put("lastName", "Ren");
     expected.put("userId", "foo");
 
-    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expected);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1))
+            .setPersistentLabels(expected);
   }
 
   @Test
   public void screen() {
     integration.screen(
-            new ScreenPayload.Builder().anonymousId("foo").name("SmartWatches").category("Purchase Screen").build());
+            new ScreenPayload.Builder().anonymousId("foo").name("SmartWatches")
+                    .category("Purchase Screen").build());
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("name", "SmartWatches");
     expected.put("category", "Purchase Screen");
 
-    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyViewEvent(expected);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1))
+            .notifyViewEvent(expected);
   }
   private ContentMetadata getContentMetadata(Map<String, String> asset){
     return new ContentMetadata.Builder()

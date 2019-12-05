@@ -297,7 +297,7 @@ public class ComScoreIntegration extends Integration<Void> {
     contentMapper.put("fullEpisode", "ns_st_ce");
     contentMapper.put("podId", "ns_st_pn");
 
-    Map<String, String> contentAsset =
+    Map<String, String> mappedContentProperties =
             mapContentProperties(properties, comScoreOptions, contentMapper);
 
     if (streamingAnalytics == null) {
@@ -308,8 +308,8 @@ public class ComScoreIntegration extends Integration<Void> {
 
     switch (name) {
       case "Video Content Started":
-        streamingAnalytics.setMetadata(getContentMetadata(contentAsset));
-        logger.verbose("streamingAnalytics.setMetadata(%s)", contentAsset);
+        streamingAnalytics.setMetadata(getContentMetadata(mappedContentProperties));
+        logger.verbose("streamingAnalytics.setMetadata(%s)", mappedContentProperties);
         streamingAnalytics.startFromPosition(playbackPosition);
         streamingAnalytics.notifyPlay();
         logger.verbose("streamingAnalytics.notifyPlay(%s)", playbackPosition);
@@ -321,8 +321,8 @@ public class ComScoreIntegration extends Integration<Void> {
         // observed event was related to content, in which case a setAsset call should not be made (because asset
         // did not change).
         if(streamingAnalytics.getConfiguration().containsLabel("ns_st_ad")) {
-          streamingAnalytics.setMetadata(getContentMetadata(contentAsset));
-          logger.verbose("streamingAnalytics.setMetadata(%s)", contentAsset);
+          streamingAnalytics.setMetadata(getContentMetadata(mappedContentProperties));
+          logger.verbose("streamingAnalytics.setMetadata(%s)", mappedContentProperties);
         }
 
         streamingAnalytics.startFromPosition(playbackPosition);
@@ -347,7 +347,7 @@ public class ComScoreIntegration extends Integration<Void> {
     adMapper.put("title", "ns_st_amt");
     adMapper.put("publisher", "ns_st_pu");
 
-    Map<String, String> adAsset = mapAdProperties(properties, comScoreOptions, adMapper);
+    Map<String, String> mappedAdProperties = mapAdProperties(properties, comScoreOptions, adMapper);
 
     if (streamingAnalytics == null) {
       logger.verbose(
@@ -362,11 +362,11 @@ public class ComScoreIntegration extends Integration<Void> {
         // calls (if this is a mid or post-roll), or on Video Playback Started (if this is a pre-roll).
         String contentId = streamingAnalytics.getConfiguration().getLabel("ns_st_ci");
         if (!isNullOrEmpty(contentId)) {
-          adAsset.put("ns_st_ci", contentId);
+          mappedAdProperties.put("ns_st_ci", contentId);
         }
 
-        streamingAnalytics.setMetadata(getAdvertisementMetadata(adAsset));
-        logger.verbose("streamingAnalytics.setMetadata(%s)", adAsset);
+        streamingAnalytics.setMetadata(getAdvertisementMetadata(mappedAdProperties));
+        logger.verbose("streamingAnalytics.setMetadata(%s)", mappedAdProperties);
         streamingAnalytics.startFromPosition(playbackPosition);
         streamingAnalytics.notifyPlay();
         logger.verbose("streamingAnalytics.notifyPlay(%s)", playbackPosition);
@@ -384,15 +384,15 @@ public class ComScoreIntegration extends Integration<Void> {
         break;
     }
   }
-  private ContentMetadata getContentMetadata(Map<String, String> asset){
+  private ContentMetadata getContentMetadata(Map<String, String> mappedContentProperties){
     return new ContentMetadata.Builder()
-            .customLabels(asset)
+            .customLabels(mappedContentProperties)
             .build();
   }
 
-  private AdvertisementMetadata getAdvertisementMetadata(Map<String, String> adAsset){
+  private AdvertisementMetadata getAdvertisementMetadata(Map<String, String> mappedAdProperties){
     return new AdvertisementMetadata.Builder()
-            .customLabels(adAsset)
+            .customLabels(mappedAdProperties)
             .build();
   }
 
