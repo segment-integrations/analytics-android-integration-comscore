@@ -88,8 +88,8 @@ public interface ComScoreAnalytics {
 
         @Override
         public void setPersistentLabels(Map<String, String> labels) {
-            logger.verbose("Analytics.getConfiguration().setPersistentLabels(%s)", labels);
-            Analytics.getConfiguration().setPersistentLabels(labels);
+            logger.verbose("Analytics.getConfiguration().addPersistentLabels(%s)", labels);
+            Analytics.getConfiguration().addPersistentLabels(labels);
         }
 
         @Override
