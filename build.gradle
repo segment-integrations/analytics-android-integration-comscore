@@ -73,10 +73,10 @@ dependencies {
     google()
   }
 
-  api 'com.segment.analytics.android:analytics:4.5.0-beta.0'
+  api 'com.segment.analytics.android:analytics:4.3.1'
   api 'com.comscore:android-analytics:6.0.0'
 
-  testImplementation 'com.segment.analytics.android:analytics-tests:4.5.0-beta.0'
+  testImplementation 'com.segment.analytics.android:analytics-tests:4.3.1'
   testImplementation 'junit:junit:4.12'
   testImplementation 'com.android.support.test:runner:1.0.2'
   testImplementation 'org.robolectric:robolectric:4.3.1'
