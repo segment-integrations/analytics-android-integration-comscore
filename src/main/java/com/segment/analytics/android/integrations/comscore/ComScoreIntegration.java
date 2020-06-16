@@ -134,7 +134,7 @@ public class ComScoreIntegration extends Integration<Void> {
     }
     asset.put("ns_st_ci", String.valueOf(contentAssetId));
 
-    if (properties.containsKey("totalLength" || properties.containsKey("total_length")) {
+    if (properties.containsKey("totalLength") || properties.containsKey("total_length")) {
       int length = properties.getInt("totalLength", 0) * 1000; // comScore expects milliseconds.
       if (length == 0) {
         length = properties.getInt("total_length", 0) * 1000;
