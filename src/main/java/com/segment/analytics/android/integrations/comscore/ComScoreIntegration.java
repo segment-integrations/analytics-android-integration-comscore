@@ -106,6 +106,9 @@ public class ComScoreIntegration extends Integration<Void> {
     Map<String, String> asset = mapSpecialKeys(properties, mapper);
 
     boolean fullScreen = properties.getBoolean("fullScreen", false);
+    if (fullScreen == false) {
+      fullScreen =  properties.getBoolean("full_screen", false);
+    }
     asset.put("ns_st_ws", fullScreen ? "full" : "norm");
 
     int bitrate = properties.getInt("bitrate", 0) * 1000; // comScore expects bps.
@@ -126,10 +129,16 @@ public class ComScoreIntegration extends Integration<Void> {
     Map<String, String> asset = mapSpecialKeys(properties, mapper);
 
     int contentAssetId = properties.getInt("assetId", 0);
+    if (contentAssetId == 0) {
+      contentAssetId = properties.getInt("asset_id", 0);
+    }
     asset.put("ns_st_ci", String.valueOf(contentAssetId));
 
-    if (properties.containsKey("totalLength")) {
+    if (properties.containsKey("totalLength" || properties.containsKey("total_length")) {
       int length = properties.getInt("totalLength", 0) * 1000; // comScore expects milliseconds.
+      if (length == 0) {
+        length = properties.getInt("total_length", 0) * 1000;
+      }
       asset.put("ns_st_cl", String.valueOf(length));
     }
 
@@ -164,8 +173,11 @@ public class ComScoreIntegration extends Integration<Void> {
 
     Map<String, String> asset = mapSpecialKeys(properties, mapper);
 
-    if (properties.containsKey("totalLength")) {
+    if (properties.containsKey("totalLength") || properties.containsKey("total_length")) {
       int length = properties.getInt("totalLength", 0) * 1000; // comScore expects milliseconds.
+      if (length == 0) {
+        length = properties.getInt("total_length", 0) * 1000;
+      }
       asset.put("ns_st_cl", String.valueOf(length));
     }
 
@@ -217,9 +229,13 @@ public class ComScoreIntegration extends Integration<Void> {
           TrackPayload track, Properties properties, Map<String, Object> comScoreOptions) {
     String name = track.event();
     long playbackPosition = properties.getLong("playbackPosition", 0);
+    if (playbackPosition == 0) {
+      playbackPosition = properties.getLong("position", 0);
+    }
 
     Map<String, String> playbackMapper = new LinkedHashMap<>();
     playbackMapper.put("videoPlayer", "ns_st_mp");
+    playbackMapper.put("video_player", "ns_st_mp");
     playbackMapper.put("sound", "ns_st_vo");
 
     Map<String, String> mappedPlaybackProperties =
@@ -233,6 +249,7 @@ public class ComScoreIntegration extends Integration<Void> {
       // The label ns_st_ci must be set through a setAsset call
       Map<String, String> contentIdMapper = new LinkedHashMap<>();
       contentIdMapper.put("assetId", "ns_st_ci");
+      contentIdMapper.put("asset_id", "ns_st_ci");
 
       Map<String, String> mappedContentProperties = mapSpecialKeys(properties, contentIdMapper);
 
@@ -285,6 +302,9 @@ public class ComScoreIntegration extends Integration<Void> {
           TrackPayload track, Properties properties, Map<String, Object> comScoreOptions) {
     String name = track.event();
     long playbackPosition = properties.getLong("playbackPosition", 0);
+    if (playbackPosition == 0) {
+      playbackPosition = properties.getLong("position", 0);
+    }
 
     Map<String, String> contentMapper = new LinkedHashMap<>();
     contentMapper.put("title", "ns_st_ep");
@@ -295,7 +315,9 @@ public class ComScoreIntegration extends Integration<Void> {
     contentMapper.put("channel", "ns_st_st");
     contentMapper.put("publisher", "ns_st_pu");
     contentMapper.put("fullEpisode", "ns_st_ce");
+    contentMapper.put("full_episode", "ns_st_ce");
     contentMapper.put("podId", "ns_st_pn");
+    contentMapper.put("pod_id", "ns_st_pn");
 
     Map<String, String> mappedContentProperties =
             mapContentProperties(properties, comScoreOptions, contentMapper);
@@ -341,9 +363,13 @@ public class ComScoreIntegration extends Integration<Void> {
           TrackPayload track, Properties properties, Map<String, Object> comScoreOptions) {
     String name = track.event();
     long playbackPosition = properties.getLong("playbackPosition", 0);
+    if (playbackPosition == 0) {
+      playbackPosition = properties.getLong("position", 0);
+    }
 
     Map<String, String> adMapper = new LinkedHashMap<>();
     adMapper.put("assetId", "ns_st_ami");
+    adMapper.put("asset_id", "ns_st_ami");
     adMapper.put("title", "ns_st_amt");
     adMapper.put("publisher", "ns_st_pu");
 
