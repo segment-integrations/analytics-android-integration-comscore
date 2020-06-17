@@ -200,12 +200,12 @@ public class ComScoreTest {
     expected.put("c6", "and another one");
 
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Started")
-            .properties(new Properties().putValue("assetId", 1234)
-                    .putValue("adType", "pre-roll")
-                    .putValue("totalLength", 120)
-                    .putValue("videoPlayer", "youtube")
+            .properties(new Properties().putValue("asset_id", 1234)
+                    .putValue("ad_type", "pre-roll")
+                    .putValue("total_length", 120)
+                    .putValue("video_player", "youtube")
                     .putValue("sound", 80)
-                    .putValue("fullScreen", false)
+                    .putValue("full_screen", false)
                     .putValue("c3", "some value")
                     .putValue("c4", "another value")
                     .putValue("c6", "and another one"))
@@ -224,13 +224,13 @@ public class ComScoreTest {
   @Test
   public void videoPlaybackStarted() {
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Started")
-            .properties(new Properties().putValue("assetId", 1234)
-                    .putValue("adType", "pre-roll")
-                    .putValue("totalLength", 120)
-                    .putValue("videoPlayer", "youtube")
+            .properties(new Properties().putValue("asset_id", 1234)
+                    .putValue("ad_type", "pre-roll")
+                    .putValue("total_length", 120)
+                    .putValue("video_player", "youtube")
                     .putValue("sound", 80)
                     .putValue("bitrate", 40)
-                    .putValue("fullScreen", true))
+                    .putValue("full_screen", true))
             .build());
 
     Map<String, String> contentIdMapper = new LinkedHashMap<>();
@@ -326,12 +326,12 @@ public class ComScoreTest {
     setupWithVideoPlaybackStarted();
 
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Buffer Completed")
-            .properties(new Properties().putValue("assetId", 1029)
-                    .putValue("adType", "pre-roll")
-                    .putValue("totalLength", 800)
-                    .putValue("videoPlayer", "vimeo")
-                    .putValue("playbackPosition", 30)
-                    .putValue("fullScreen", true)
+            .properties(new Properties().putValue("asset_id", 1029)
+                    .putValue("ad_type", "pre-roll")
+                    .putValue("total_length", 800)
+                    .putValue("video_player", "vimeo")
+                    .putValue("position", 30)
+                    .putValue("full_screen", true)
                     .putValue("bitrate", 500)
                     .putValue("sound", 80))
             .build());
@@ -354,12 +354,12 @@ public class ComScoreTest {
   public void videoPlaybackSeekStarted() {
     setupWithVideoPlaybackStarted();
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Seek Started")
-            .properties(new Properties().putValue("assetId", 3948)
-                    .putValue("adType", "mid-roll")
-                    .putValue("totalLength", 900)
-                    .putValue("videoPlayer", "youtube")
-                    .putValue("playbackPosition", 40)
-                    .putValue("fullScreen", true)
+            .properties(new Properties().putValue("asset_id", 3948)
+                    .putValue("ad_type", "mid-roll")
+                    .putValue("total_length", 900)
+                    .putValue("video_player", "youtube")
+                    .putValue("position", 40)
+                    .putValue("full_screen", true)
                     .putValue("bitrate", 500)
                     .putValue("sound", 80))
             .build());
@@ -497,10 +497,10 @@ public class ComScoreTest {
                     .putValue("program", "Rick and Morty")
                     .putValue("channel", "cartoon network")
                     .putValue("publisher", "Turner Broadcasting System")
-                    .putValue("fullEpisode", true)
-                    .putValue("podId", "segment A")
-                    .putValue("totalLength", "120")
-                    .putValue("playbackPosition", 70))
+                    .putValue("full_episode", true)
+                    .putValue("pod_id", "segment A")
+                    .putValue("total_length", "120")
+                    .putValue("position", 70))
             .integration("comScore", comScoreOptions)
             .build());
 
@@ -627,11 +627,11 @@ public class ComScoreTest {
     setupWithVideoPlaybackStarted();
 
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Ad Started")
-            .properties(new Properties().putValue("assetId", 4311)
-                    .putValue("podId", "adSegmentA")
+            .properties(new Properties().putValue("asset_id", 4311)
+                    .putValue("pod_id", "adSegmentA")
                     .putValue("type", "pre-roll")
-                    .putValue("totalLength", 120)
-                    .putValue("playbackPosition", 0)
+                    .putValue("total_length", 120)
+                    .putValue("position", 0)
                     .putValue("title", "Helmet Ad"))
             .build());
 
@@ -685,11 +685,11 @@ public class ComScoreTest {
     comScoreOptions.put("adClassificationType", "va14");
 
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Ad Started")
-            .properties(new Properties().putValue("assetId", 4311)
-                    .putValue("podId", "adSegmentA")
+            .properties(new Properties().putValue("asset_id", 4311)
+                    .putValue("pod_id", "adSegmentA")
                     .putValue("type", "pre-roll")
-                    .putValue("totalLength", 120)
-                    .putValue("playbackPosition", 0)
+                    .putValue("total_length", 120)
+                    .putValue("position", 0)
                     .putValue("title", "Helmet Ad"))
             .integration("comScore", comScoreOptions)
             .build());
