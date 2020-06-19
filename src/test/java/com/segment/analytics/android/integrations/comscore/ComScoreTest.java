@@ -190,6 +190,16 @@ public class ComScoreTest {
 
   @Test
   public void setupWithVideoPlaybackStarted() {
+    setupWithVideoPlaybackStarted(false);
+  }
+
+  @Test
+  public void setupWithVideoPlaybackStartedCamelCase() {
+    setupWithVideoPlaybackStarted(true);
+  }
+
+  @Test
+  public void setupWithVideoPlaybackStarted(boolean useCamelCaseProperties) {
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_mp", "youtube");
     expected.put("ns_st_vo", "80");
@@ -199,17 +209,33 @@ public class ComScoreTest {
     expected.put("c4", "another value");
     expected.put("c6", "and another one");
 
-    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Started")
-            .properties(new Properties().putValue("asset_id", 1234)
-                    .putValue("ad_type", "pre-roll")
-                    .putValue("total_length", 120)
-                    .putValue("video_player", "youtube")
-                    .putValue("sound", 80)
-                    .putValue("full_screen", false)
-                    .putValue("c3", "some value")
-                    .putValue("c4", "another value")
-                    .putValue("c6", "and another one"))
-            .build());
+    // Both camel case and snake case properties should be supported.
+    if (useCamelCaseProperties) {
+      integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Started")
+              .properties(new Properties().putValue("assetId", 1234)
+                      .putValue("adType", "pre-roll")
+                      .putValue("totalLength", 120)
+                      .putValue("videoPlayer", "youtube")
+                      .putValue("sound", 80)
+                      .putValue("fullScreen", false)
+                      .putValue("c3", "some value")
+                      .putValue("c4", "another value")
+                      .putValue("c6", "and another one"))
+              .build());
+    } else {
+      integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Started")
+              .properties(new Properties().putValue("asset_id", 1234)
+                      .putValue("ad_type", "pre-roll")
+                      .putValue("total_length", 120)
+                      .putValue("video_player", "youtube")
+                      .putValue("sound", 80)
+                      .putValue("full_screen", false)
+                      .putValue("c3", "some value")
+                      .putValue("c4", "another value")
+                      .putValue("c6", "and another one"))
+              .build());
+    }
+
 
     Map<String, String> contentIdMapper = new LinkedHashMap<>();
     contentIdMapper.put("ns_st_ci", "1234");
@@ -323,7 +349,20 @@ public class ComScoreTest {
 
   @Test
   public void videoPlaybackBufferCompleted() {
-    setupWithVideoPlaybackStarted();
+    videoPlaybackBufferCompleted(false);
+  }
+
+  @Test
+  public void videoPlaybackBufferCompletedCamelCase() {
+    videoPlaybackBufferCompleted(true);
+  }
+
+  /*
+   * One test that verifies camel case and snake case are handled in properties.
+   */
+  @Test
+  public void videoPlaybackBufferCompleted(boolean camelCase) {
+    setupWithVideoPlaybackStarted(camelCase);
 
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Buffer Completed")
             .properties(new Properties().putValue("asset_id", 1029)
