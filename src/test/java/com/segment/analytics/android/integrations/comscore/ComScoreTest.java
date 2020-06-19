@@ -198,7 +198,7 @@ public class ComScoreTest {
     setupWithVideoPlaybackStarted(true);
   }
 
-  public void setupWithVideoPlaybackStarted(boolean useCamelCaseProperties) {
+  private void setupWithVideoPlaybackStarted(boolean useCamelCaseProperties) {
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_mp", "youtube");
     expected.put("ns_st_vo", "80");
@@ -359,8 +359,8 @@ public class ComScoreTest {
   /*
    * One test that verifies camel case and snake case are handled in properties.
    */
-  public void videoPlaybackBufferCompleted(boolean camelCase) {
-    setupWithVideoPlaybackStarted(camelCase);
+  private void videoPlaybackBufferCompleted(boolean useCamelCaseProperties) {
+    setupWithVideoPlaybackStarted(useCamelCaseProperties);
 
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Playback Buffer Completed")
             .properties(new Properties().putValue("asset_id", 1029)
