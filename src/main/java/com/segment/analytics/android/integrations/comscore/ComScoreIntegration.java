@@ -129,12 +129,12 @@ public class ComScoreIntegration extends Integration<Void> {
     Map<String, String> asset = mapSpecialKeys(properties, mapper);
 
     String contentAssetId = properties.getString("assetId");
+    if (contentAssetId == null || contentAssetId.trim().isEmpty()) {
+      contentAssetId = properties.getString("asset_id");
       if (contentAssetId == null || contentAssetId.trim().isEmpty()) {
-        contentAssetId = properties.getString("asset_id");
-        if (contentAssetId == null || contentAssetId.trim().isEmpty()) {
-          contentAssetId = "0";
-        }
+        contentAssetId = "0";
       }
+    }
     asset.put("ns_st_ci", String.valueOf(contentAssetId));
 
     if (properties.containsKey("totalLength") || properties.containsKey("total_length")) {
