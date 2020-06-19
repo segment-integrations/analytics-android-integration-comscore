@@ -198,7 +198,6 @@ public class ComScoreTest {
     setupWithVideoPlaybackStarted(true);
   }
 
-  @Test
   public void setupWithVideoPlaybackStarted(boolean useCamelCaseProperties) {
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
     expected.put("ns_st_mp", "youtube");
@@ -360,7 +359,6 @@ public class ComScoreTest {
   /*
    * One test that verifies camel case and snake case are handled in properties.
    */
-  @Test
   public void videoPlaybackBufferCompleted(boolean camelCase) {
     setupWithVideoPlaybackStarted(camelCase);
 
