@@ -1,3 +1,10 @@
+Version 4.1.0 (22nd June, 2020)
+==============================
+*(Supports analytics-android 4.3.1 and Comscore 6.0.0)*
+
+ * Add snake case property support
+
+
 Version 4.0.0 (5th Dec, 2019)
 ==============================
 *(Supports analytics-android 4.3.1 and Comscore 6.0.0)*
