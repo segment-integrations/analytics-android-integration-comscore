@@ -1,4 +1,4 @@
-Version 4.1.0 (22nd June, 2020)
+Version 4.1.1 (22nd June, 2020)
 ==============================
 *(Supports analytics-android 4.3.1 and Comscore 6.0.0)*
 
