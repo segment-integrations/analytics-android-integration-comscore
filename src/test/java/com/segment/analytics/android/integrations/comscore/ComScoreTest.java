@@ -18,6 +18,7 @@ import com.segment.analytics.Properties;
 import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.IdentifyPayload;
+import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
@@ -33,19 +34,33 @@ import org.mockito.Mockito;
 
 import org.mockito.MockitoAnnotations;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 @RunWith(RobolectricTestRunner.class)
+
+//specifying earlier android SDK so Robolectric doesn't ask for Java 9
+@Config(sdk = 28)
+
 public class ComScoreTest {
 
   private final static String EXPECTED_PARTNER_ID = "24186693";
 
-  @Mock Application context;
-  @Mock ComScoreAnalytics comScoreAnalytics;
-  @Mock com.segment.analytics.Analytics analytics;
-  @Mock StreamingAnalytics streamingAnalytics;
-  @Mock StreamingConfiguration streamingConfiguration;
+  @Mock
+  Application context;
+  @Mock
+  ComScoreAnalytics comScoreAnalytics;
+  @Mock
+  com.segment.analytics.Analytics analytics;
+  @Mock
+  StreamingAnalytics streamingAnalytics;
+  @Mock
+  StreamingConfiguration streamingConfiguration;
 
-  private ComScoreIntegration integration;
+
+  @Mock
+  ComScoreIntegration integration;
+
+  //
 
   @Before
   public void setUp() {
@@ -131,7 +146,7 @@ public class ComScoreTest {
     Settings integrationSettings = integration.getSettings();
     assertEquals("testApp", integrationSettings.getAppName());
     assertEquals(2000, integrationSettings.getAutoUpdateInterval());
-    assertTrue( integrationSettings.isForegroundOnly());
+    assertTrue(integrationSettings.isForegroundOnly());
   }
 
   @Test
@@ -271,7 +286,7 @@ public class ComScoreTest {
     expected.put("c6", "*null");
 
     Mockito.verify(streamingAnalytics).createPlaybackSession();
-    Mockito.verify(streamingAnalytics,atLeast(1))
+    Mockito.verify(streamingAnalytics, atLeast(1))
             .setMetadata(refEq(getContentMetadata(contentIdMapper)));
     Mockito.verify(streamingAnalytics.getConfiguration()).addLabels(expected);
   }
@@ -514,7 +529,7 @@ public class ComScoreTest {
 
     Mockito.verify(streamingAnalytics).startFromPosition(70);
     Mockito.verify(streamingAnalytics).notifyPlay();
-    Mockito.verify(streamingAnalytics,atLeast(1))
+    Mockito.verify(streamingAnalytics, atLeast(1))
             .setMetadata(refEq(getContentMetadata(expected)));
   }
 
@@ -561,7 +576,7 @@ public class ComScoreTest {
 
     Mockito.verify(streamingAnalytics).startFromPosition(70);
     Mockito.verify(streamingAnalytics).notifyPlay();
-    Mockito.verify(streamingAnalytics,atLeast(1))
+    Mockito.verify(streamingAnalytics, atLeast(1))
             .setMetadata(refEq(getContentMetadata(expected)));
   }
 
@@ -577,7 +592,8 @@ public class ComScoreTest {
   @Test
   public void videoContentPlaying() {
     setupWithVideoPlaybackStarted();
-    Mockito.when(streamingAnalytics.getConfiguration().containsLabel("ns_st_ad")).thenReturn(true);
+    //Mockito.when(streamingAnalytics.getConfiguration().containsLabel("ns_st_ad")).thenReturn(true);
+
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Playing")
             .properties(new Properties().putValue("assetId", 123214)
                     .putValue("title", "Look Who's Purging Now")
@@ -593,28 +609,36 @@ public class ComScoreTest {
                     .putValue("playbackPosition", 70))
             .build());
 
-    Mockito.verify(streamingAnalytics).startFromPosition(70);
-    Mockito.verify(streamingAnalytics).notifyPlay();
-  }
+
+    Mockito.verify(streamingAnalytics).
+
+  startFromPosition(70);
+    Mockito.verify(streamingAnalytics).
+
+  notifyPlay();
+
+}
 
   @Test
   public void videoContentPlayingWithAdType() {
     setupWithVideoPlaybackStarted();
 
-    Mockito.when(streamingAnalytics.getConfiguration().containsLabel("ns_st_ad")).thenReturn(true);
-    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Playing")
-            .properties(new Properties().putValue("assetId", 123214)
-                    .putValue("title", "Look Who's Purging Now")
-                    .putValue("season", 2)
-                    .putValue("episode", 9)
-                    .putValue("genre", "cartoon")
-                    .putValue("program", "Rick and Morty")
-                    .putValue("channel", "cartoon network")
-                    .putValue("publisher", "Turner Broadcasting System")
-                    .putValue("fullEpisode", true)
-                    .putValue("podId", "segment A")
-                    .putValue("playbackPosition", 70))
-            .build());
+    //Mockito.when(streamingAnalytics.getConfiguration().containsLabel("ns_st_ad")).thenReturn(true);
+
+     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Playing")
+             .properties(new Properties().putValue("assetId", 123214)
+                     .putValue("title", "Look Who's Purging Now")
+                     .putValue("season", 2)
+                     .putValue("episode", 9)
+                     .putValue("genre", "cartoon")
+                     .putValue("program", "Rick and Morty")
+                     .putValue("channel", "cartoon network")
+                     .putValue("publisher", "Turner Broadcasting System")
+                     .putValue("fullEpisode", true)
+                     .putValue("podId", "segment A")
+                     .putValue("playbackPosition", 70))
+             .build());
+
 
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
