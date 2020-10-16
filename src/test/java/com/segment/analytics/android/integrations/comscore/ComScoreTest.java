@@ -8,6 +8,8 @@ import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.when;
 import android.app.Application;
+import android.content.pm.ApplicationInfo;
+
 import com.comscore.PublisherConfiguration;
 import com.comscore.streaming.AdvertisementMetadata;
 import com.comscore.streaming.ContentMetadata;
@@ -57,6 +59,8 @@ public class ComScoreTest {
   StreamingConfiguration streamingConfiguration;
 
 
+
+
   @Mock
   ComScoreIntegration integration;
 
@@ -82,7 +86,12 @@ public class ComScoreTest {
     ValueMap destinationSettings = new ValueMap();
     destinationSettings.putValue("c2", "foobarbar");
     destinationSettings.putValue("publisherSecret", "illnevertell");
+    when(context.getPackageName()).thenReturn("Code is running");
+    when(context.getApplicationContext()).thenReturn(context);
 
+    ApplicationInfo testApplicationInfo = Mockito.mock(ApplicationInfo.class);
+
+    when(context.getApplicationInfo()).thenReturn(testApplicationInfo);
     integration = (ComScoreIntegration) ComScoreIntegration.FACTORY.create(destinationSettings, analytics);
 
     Settings settings = integration.getSettings();

@@ -83,6 +83,7 @@ public interface ComScoreAnalytics {
             Analytics.getConfiguration().addClient(publisher);
 
             logger.verbose("Starting ComScore Analytics");
+
             Analytics.start(context);
         }
 
