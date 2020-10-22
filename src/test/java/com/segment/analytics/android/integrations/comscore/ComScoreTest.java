@@ -36,6 +36,7 @@ import org.mockito.Mockito;
 
 import org.mockito.MockitoAnnotations;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
 @RunWith(RobolectricTestRunner.class)
@@ -58,13 +59,9 @@ public class ComScoreTest {
   @Mock
   StreamingConfiguration streamingConfiguration;
 
-
-
-
   @Mock
   ComScoreIntegration integration;
 
-  //
 
   @Before
   public void setUp() {
@@ -87,7 +84,9 @@ public class ComScoreTest {
     destinationSettings.putValue("c2", "foobarbar");
     destinationSettings.putValue("publisherSecret", "illnevertell");
     when(context.getPackageName()).thenReturn("Code is running");
-    when(context.getApplicationContext()).thenReturn(context);
+
+    //updating Context mock to return roboelectric's RunTimeEnvironment object
+    when(context.getApplicationContext()).thenReturn(RuntimeEnvironment.application.getApplicationContext());
 
     ApplicationInfo testApplicationInfo = Mockito.mock(ApplicationInfo.class);
 
@@ -117,6 +116,9 @@ public class ComScoreTest {
     destinationSettings.putValue("foregroundOnly", false);
     destinationSettings.putValue("autoUpdate", true);
     destinationSettings.putValue("autoUpdateInterval", 12345);
+
+    //updating Context mock to return roboelectric's RunTimeEnvironment object
+    when(context.getApplicationContext()).thenReturn(RuntimeEnvironment.application.getApplicationContext());
 
     integration = (ComScoreIntegration) ComScoreIntegration.FACTORY.create(destinationSettings, analytics);
 
