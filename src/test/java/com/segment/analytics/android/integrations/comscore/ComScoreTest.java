@@ -25,6 +25,7 @@ import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.Before;
@@ -603,7 +604,7 @@ public class ComScoreTest {
   @Test
   public void videoContentPlaying() {
     setupWithVideoPlaybackStarted();
-    //Mockito.when(streamingAnalytics.getConfiguration().containsLabel("ns_st_ad")).thenReturn(true);
+    assertTrue(integration.configurationLabels.containsKey("ns_st_ad") && integration.configurationLabels.get("ns_st_ad") != null);
 
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Playing")
             .properties(new Properties().putValue("assetId", 123214)
@@ -633,10 +634,9 @@ public class ComScoreTest {
   @Test
   public void videoContentPlayingWithAdType() {
     setupWithVideoPlaybackStarted();
+    assertTrue(integration.configurationLabels.containsKey("ns_st_ad") && integration.configurationLabels.get("ns_st_ad") != null);
 
-    //Mockito.when(streamingAnalytics.getConfiguration().containsLabel("ns_st_ad")).thenReturn(true);
-
-     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Playing")
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Playing")
              .properties(new Properties().putValue("assetId", 123214)
                      .putValue("title", "Look Who's Purging Now")
                      .putValue("season", 2)
@@ -697,7 +697,7 @@ public class ComScoreTest {
   @Test
   public void videoAdStarted() {
     setupWithVideoPlaybackStarted();
-
+    assertTrue(integration.configurationLabels.containsKey("ns_st_ad") && integration.configurationLabels.get("ns_st_ad") != null);
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Ad Started")
             .properties(new Properties().putValue("asset_id", 4311)
                     .putValue("pod_id", "adSegmentA")
@@ -794,17 +794,18 @@ public class ComScoreTest {
   @Test
   public void videoAdPlaying() {
     setupWithVideoPlaybackStarted();
-
+    assertTrue(integration.configurationLabels.containsKey("ns_st_ad") && integration.configurationLabels.get("ns_st_ad") != null);
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Ad Playing")
             .properties(new Properties().putValue("assetId", 4311)
                     .putValue("podId", "adSegmentA")
-                    .putValue("type", "pre-roll")
+                    .putValue("adType", "pre-roll")
                     .putValue("totalLength", 120)
                     .putValue("playbackPosition", 20)
                     .putValue("title", "Helmet Ad"))
             .build());
     streamingAnalytics.startFromPosition(20);
     Mockito.verify(streamingAnalytics).notifyPlay();
+
   }
 
   @Test

@@ -37,8 +37,9 @@ public class ComScoreIntegration extends Integration<Void> {
 
   //initalizing empty hashmap to store video labels. This replaces the methods
   //getConfiguration().getLabel and getConfiguration().containsLabel. Both methods were deprecated
-  // as of Comscores's 6.1.+ SDK
-  private HashMap<String, String> configurationLabels = new HashMap<String, String>();
+  // as of Comscores's 6.1.+ SDK. Both asset id and ad type are added during trackVideoPlayback()
+  // and ad_type only is added during trackVideoAd() methods
+  public HashMap<String, String> configurationLabels = new HashMap<String, String>();
   private Settings settings;
   private ComScoreAnalytics comScoreAnalytics;
   private StreamingAnalytics streamingAnalytics;
@@ -201,11 +202,9 @@ public class ComScoreIntegration extends Integration<Void> {
       case "mid-roll":
       case "post-roll":
         asset.put("ns_st_ad", adType);
-        configurationLabels.put("ns_st_ad", adType);
         break;
       default:
         asset.put("ns_st_ad", "1");
-        configurationLabels.put("ns_st_ad", adType);
     }
 
     setNullIfNotProvided(asset, options, properties, "c3");
@@ -238,11 +237,19 @@ public class ComScoreIntegration extends Integration<Void> {
           TrackPayload track, Properties properties, Map<String, Object> comScoreOptions) {
     String name = track.event();
     long playbackPosition = properties.getLong("playbackPosition", 0);
-    String videoPlayer = properties.getString("video_player");
-    String content_asset_id = properties.getString("content_asset_id");
     if (playbackPosition == 0) {
       playbackPosition = properties.getLong("position", 0);
     }
+    String adType = properties.getString("adType");
+    if (adType == null || adType.trim().isEmpty()) {
+      adType = properties.getString("ad_type");
+      if(adType == null){
+        adType = properties.getString("type");
+      }
+    }
+
+    configurationLabels.clear();
+
 
     Map<String, String> playbackMapper = new LinkedHashMap<>();
     playbackMapper.put("videoPlayer", "ns_st_mp");
@@ -254,13 +261,13 @@ public class ComScoreIntegration extends Integration<Void> {
 
     if (name.equals("Video Playback Started")) {
       streamingAnalytics = comScoreAnalytics.createStreamingAnalytics();
-
-//      configurationLabels.put("ns_st_mp", videoPlayer);
-//      configurationLabels.put("ns_st_ci", content_asset_id);
-
       streamingAnalytics.createPlaybackSession();
       streamingAnalytics.getConfiguration().addLabels(mappedPlaybackProperties);
 
+      // adding ad_type to configurationLabels assuming pre-roll ad plays before video content
+      if(adType != null) {
+        configurationLabels.put("ns_st_ad", adType);
+      }
 
 
       // The label ns_st_ci must be set through a setAsset call
@@ -270,10 +277,11 @@ public class ComScoreIntegration extends Integration<Void> {
 
 
       Map<String, String> mappedContentProperties = mapSpecialKeys(properties, contentIdMapper);
-
       streamingAnalytics.setMetadata(getContentMetadata(mappedContentProperties));
-      configurationLabels.put("ns_st_mp", videoPlayer);
-      configurationLabels.put("ns_st_ci", content_asset_id);
+
+
+      configurationLabels.put("ns_st_ci", mappedContentProperties.get("ns_st_ci"));
+
       return;
     }
 
@@ -321,8 +329,6 @@ public class ComScoreIntegration extends Integration<Void> {
   private void trackVideoContent(
           TrackPayload track, Properties properties, Map<String, Object> comScoreOptions) {
     String name = track.event();
-    String videoPlayer = properties.getString("video_player");
-    String content_asset_id = properties.getString("content_asset_id");
     long playbackPosition = properties.getLong("playbackPosition", 0);
     if (playbackPosition == 0) {
       playbackPosition = properties.getLong("position", 0);
@@ -354,7 +360,6 @@ public class ComScoreIntegration extends Integration<Void> {
       case "Video Content Started":
         streamingAnalytics.setMetadata(getContentMetadata(mappedContentProperties));
         logger.verbose("streamingAnalytics.setMetadata(%s)", mappedContentProperties);
-        configurationLabels.putAll(mappedContentProperties);
         streamingAnalytics.startFromPosition(playbackPosition);
         streamingAnalytics.notifyPlay();
         logger.verbose("streamingAnalytics.notifyPlay(%s)", playbackPosition);
@@ -365,7 +370,6 @@ public class ComScoreIntegration extends Integration<Void> {
         // we need to call setAsset with the content metadata.  If ns_st_ad is not present, that means the last
         // observed event was related to content, in which case a setAsset call should not be made (because asset
         // did not change).
-        //if(streamingAnalytics.getConfiguration().containsLabel("ns_st_ad")) {
         if(configurationLabels.containsKey("ns_st_ad")){
           streamingAnalytics.setMetadata(getContentMetadata(mappedContentProperties));
           logger.verbose("streamingAnalytics.setMetadata(%s)", mappedContentProperties);
@@ -390,12 +394,24 @@ public class ComScoreIntegration extends Integration<Void> {
     if (playbackPosition == 0) {
       playbackPosition = properties.getLong("position", 0);
     }
+    String adType = properties.getString("adType");
+    if (adType == null || adType.trim().isEmpty()) {
+      adType = properties.getString("ad_type");
+      if(adType == null){
+        adType = properties.getString("type");
+      }
+    }
 
     Map<String, String> adMapper = new LinkedHashMap<>();
     adMapper.put("assetId", "ns_st_ami");
     adMapper.put("asset_id", "ns_st_ami");
     adMapper.put("title", "ns_st_amt");
     adMapper.put("publisher", "ns_st_pu");
+
+    if (adType != null){
+      configurationLabels.put("ns_st_ad", adType);
+    }
+
 
     Map<String, String> mappedAdProperties = mapAdProperties(properties, comScoreOptions, adMapper);
 
@@ -411,8 +427,9 @@ public class ComScoreIntegration extends Integration<Void> {
         // StreamingAnalytics's asset. This is because ns_st_ci will have already been set on Content Started
         // calls (if this is a mid or post-roll), or on Video Playback Started (if this is a pre-roll).
 
-        //String contentId = streamingAnalytics.getConfiguration().getLabel("ns_st_ci");
         String contentId = configurationLabels.get("ns_st_ci");
+
+
         if (!isNullOrEmpty(contentId)) {
           mappedAdProperties.put("ns_st_ci", contentId);
         }
@@ -432,7 +449,6 @@ public class ComScoreIntegration extends Integration<Void> {
 
       case "Video Ad Completed":
         streamingAnalytics.notifyEnd();
-        configurationLabels.clear();
         logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
         break;
     }
