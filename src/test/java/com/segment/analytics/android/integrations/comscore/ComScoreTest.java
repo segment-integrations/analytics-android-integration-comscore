@@ -621,13 +621,10 @@ public class ComScoreTest {
                     .putValue("playbackPosition", 70))
             .build());
 
-
     Mockito.verify(streamingAnalytics).
 
-  startFromPosition(70);
-    Mockito.verify(streamingAnalytics).
-
-  notifyPlay();
+    startFromPosition(70);
+    Mockito.verify(streamingAnalytics).notifyPlay();
 
 }
 
