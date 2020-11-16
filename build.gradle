@@ -23,7 +23,7 @@ android {
   buildToolsVersion '28.0.3'
 
   defaultConfig {
-    minSdkVersion 16
+    minSdkVersion 21
     targetSdkVersion 28
   }
 
@@ -74,13 +74,16 @@ dependencies {
   }
 
   api 'com.segment.analytics.android:analytics:4.3.1'
-  api 'com.comscore:android-analytics:6.0.0'
+  api 'com.comscore:android-analytics:6.5.0'
 
   testImplementation 'com.segment.analytics.android:analytics-tests:4.3.1'
   testImplementation 'junit:junit:4.12'
   testImplementation 'com.android.support.test:runner:1.0.2'
   testImplementation 'org.robolectric:robolectric:4.3.1'
   testImplementation 'org.mockito:mockito-core:3.1.0'
+
+  //adding so Roboelectic can retrieve application context
+  testImplementation 'androidx.test:core:1.2.0'
 
   // Required for local (non-android) testing
   testImplementation 'org.json:json:20180813'

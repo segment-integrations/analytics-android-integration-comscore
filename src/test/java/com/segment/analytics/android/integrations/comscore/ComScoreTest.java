@@ -8,6 +8,8 @@ import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.when;
 import android.app.Application;
+import android.content.pm.ApplicationInfo;
+
 import com.comscore.PublisherConfiguration;
 import com.comscore.streaming.AdvertisementMetadata;
 import com.comscore.streaming.ContentMetadata;
@@ -18,10 +20,12 @@ import com.segment.analytics.Properties;
 import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.IdentifyPayload;
+import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.Before;
@@ -33,19 +37,32 @@ import org.mockito.Mockito;
 
 import org.mockito.MockitoAnnotations;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.RuntimeEnvironment;
+import org.robolectric.annotation.Config;
 
 @RunWith(RobolectricTestRunner.class)
+
+//specifying earlier android SDK so Robolectric doesn't ask for Java 9
+@Config(sdk = 28)
+
 public class ComScoreTest {
 
   private final static String EXPECTED_PARTNER_ID = "24186693";
 
-  @Mock Application context;
-  @Mock ComScoreAnalytics comScoreAnalytics;
-  @Mock com.segment.analytics.Analytics analytics;
-  @Mock StreamingAnalytics streamingAnalytics;
-  @Mock StreamingConfiguration streamingConfiguration;
+  @Mock
+  Application context;
+  @Mock
+  ComScoreAnalytics comScoreAnalytics;
+  @Mock
+  com.segment.analytics.Analytics analytics;
+  @Mock
+  StreamingAnalytics streamingAnalytics;
+  @Mock
+  StreamingConfiguration streamingConfiguration;
 
-  private ComScoreIntegration integration;
+  @Mock
+  ComScoreIntegration integration;
+
 
   @Before
   public void setUp() {
@@ -67,7 +84,14 @@ public class ComScoreTest {
     ValueMap destinationSettings = new ValueMap();
     destinationSettings.putValue("c2", "foobarbar");
     destinationSettings.putValue("publisherSecret", "illnevertell");
+    when(context.getPackageName()).thenReturn("Code is running");
 
+    //updating Context mock to return roboelectric's RunTimeEnvironment object
+    when(context.getApplicationContext()).thenReturn(RuntimeEnvironment.application.getApplicationContext());
+
+    ApplicationInfo testApplicationInfo = Mockito.mock(ApplicationInfo.class);
+
+    when(context.getApplicationInfo()).thenReturn(testApplicationInfo);
     integration = (ComScoreIntegration) ComScoreIntegration.FACTORY.create(destinationSettings, analytics);
 
     Settings settings = integration.getSettings();
@@ -93,6 +117,9 @@ public class ComScoreTest {
     destinationSettings.putValue("foregroundOnly", false);
     destinationSettings.putValue("autoUpdate", true);
     destinationSettings.putValue("autoUpdateInterval", 12345);
+
+    //updating Context mock to return roboelectric's RunTimeEnvironment object
+    when(context.getApplicationContext()).thenReturn(RuntimeEnvironment.application.getApplicationContext());
 
     integration = (ComScoreIntegration) ComScoreIntegration.FACTORY.create(destinationSettings, analytics);
 
@@ -131,7 +158,7 @@ public class ComScoreTest {
     Settings integrationSettings = integration.getSettings();
     assertEquals("testApp", integrationSettings.getAppName());
     assertEquals(2000, integrationSettings.getAutoUpdateInterval());
-    assertTrue( integrationSettings.isForegroundOnly());
+    assertTrue(integrationSettings.isForegroundOnly());
   }
 
   @Test
@@ -271,7 +298,7 @@ public class ComScoreTest {
     expected.put("c6", "*null");
 
     Mockito.verify(streamingAnalytics).createPlaybackSession();
-    Mockito.verify(streamingAnalytics,atLeast(1))
+    Mockito.verify(streamingAnalytics, atLeast(1))
             .setMetadata(refEq(getContentMetadata(contentIdMapper)));
     Mockito.verify(streamingAnalytics.getConfiguration()).addLabels(expected);
   }
@@ -514,7 +541,7 @@ public class ComScoreTest {
 
     Mockito.verify(streamingAnalytics).startFromPosition(70);
     Mockito.verify(streamingAnalytics).notifyPlay();
-    Mockito.verify(streamingAnalytics,atLeast(1))
+    Mockito.verify(streamingAnalytics, atLeast(1))
             .setMetadata(refEq(getContentMetadata(expected)));
   }
 
@@ -561,7 +588,7 @@ public class ComScoreTest {
 
     Mockito.verify(streamingAnalytics).startFromPosition(70);
     Mockito.verify(streamingAnalytics).notifyPlay();
-    Mockito.verify(streamingAnalytics,atLeast(1))
+    Mockito.verify(streamingAnalytics, atLeast(1))
             .setMetadata(refEq(getContentMetadata(expected)));
   }
 
@@ -577,7 +604,8 @@ public class ComScoreTest {
   @Test
   public void videoContentPlaying() {
     setupWithVideoPlaybackStarted();
-    Mockito.when(streamingAnalytics.getConfiguration().containsLabel("ns_st_ad")).thenReturn(true);
+    assertTrue(integration.configurationLabels.containsKey("ns_st_ad") && integration.configurationLabels.get("ns_st_ad") != null);
+
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Playing")
             .properties(new Properties().putValue("assetId", 123214)
                     .putValue("title", "Look Who's Purging Now")
@@ -593,28 +621,32 @@ public class ComScoreTest {
                     .putValue("playbackPosition", 70))
             .build());
 
-    Mockito.verify(streamingAnalytics).startFromPosition(70);
+    Mockito.verify(streamingAnalytics).
+
+    startFromPosition(70);
     Mockito.verify(streamingAnalytics).notifyPlay();
-  }
+
+}
 
   @Test
   public void videoContentPlayingWithAdType() {
     setupWithVideoPlaybackStarted();
+    assertTrue(integration.configurationLabels.containsKey("ns_st_ad") && integration.configurationLabels.get("ns_st_ad") != null);
 
-    Mockito.when(streamingAnalytics.getConfiguration().containsLabel("ns_st_ad")).thenReturn(true);
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Playing")
-            .properties(new Properties().putValue("assetId", 123214)
-                    .putValue("title", "Look Who's Purging Now")
-                    .putValue("season", 2)
-                    .putValue("episode", 9)
-                    .putValue("genre", "cartoon")
-                    .putValue("program", "Rick and Morty")
-                    .putValue("channel", "cartoon network")
-                    .putValue("publisher", "Turner Broadcasting System")
-                    .putValue("fullEpisode", true)
-                    .putValue("podId", "segment A")
-                    .putValue("playbackPosition", 70))
-            .build());
+             .properties(new Properties().putValue("assetId", 123214)
+                     .putValue("title", "Look Who's Purging Now")
+                     .putValue("season", 2)
+                     .putValue("episode", 9)
+                     .putValue("genre", "cartoon")
+                     .putValue("program", "Rick and Morty")
+                     .putValue("channel", "cartoon network")
+                     .putValue("publisher", "Turner Broadcasting System")
+                     .putValue("fullEpisode", true)
+                     .putValue("podId", "segment A")
+                     .putValue("playbackPosition", 70))
+             .build());
+
 
 
     LinkedHashMap<String, String> expected = new LinkedHashMap<>();
@@ -662,7 +694,7 @@ public class ComScoreTest {
   @Test
   public void videoAdStarted() {
     setupWithVideoPlaybackStarted();
-
+    assertTrue(integration.configurationLabels.containsKey("ns_st_ad") && integration.configurationLabels.get("ns_st_ad") != null);
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Ad Started")
             .properties(new Properties().putValue("asset_id", 4311)
                     .putValue("pod_id", "adSegmentA")
@@ -759,17 +791,18 @@ public class ComScoreTest {
   @Test
   public void videoAdPlaying() {
     setupWithVideoPlaybackStarted();
-
+    assertTrue(integration.configurationLabels.containsKey("ns_st_ad") && integration.configurationLabels.get("ns_st_ad") != null);
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Ad Playing")
             .properties(new Properties().putValue("assetId", 4311)
                     .putValue("podId", "adSegmentA")
-                    .putValue("type", "pre-roll")
+                    .putValue("adType", "pre-roll")
                     .putValue("totalLength", 120)
                     .putValue("playbackPosition", 20)
                     .putValue("title", "Helmet Ad"))
             .build());
     streamingAnalytics.startFromPosition(20);
     Mockito.verify(streamingAnalytics).notifyPlay();
+
   }
 
   @Test
