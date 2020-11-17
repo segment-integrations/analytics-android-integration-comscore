@@ -1,3 +1,10 @@
+Version 4.2.0 (2020-11-16)
+==============================
+*(Supports analytics-android 4.3.1 and Comscore 6.5.0)*
+
+* Adding local configurationlabels dictionary
+
+
 Version 4.1.1 (22nd June, 2020)
 ==============================
 *(Supports analytics-android 4.3.1 and Comscore 6.0.0)*
