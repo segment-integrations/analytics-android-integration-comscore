@@ -4,31 +4,31 @@ analytics-android-integration-comscore
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.segment.analytics.android.integrations/comscore/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.segment.analytics.android.integrations/comscore)
 [![Javadocs](http://javadoc-badge.appspot.com/com.segment.analytics.android.integrations/comscore.svg?label=javadoc)](http://javadoc-badge.appspot.com/com.segment.analytics.android.integrations/comscore)
 
-comScore integration for [analytics-android](https://github.com/segmentio/analytics-android).
+ComScore integration for [analytics-android](https://github.com/segmentio/analytics-android).
 
 
 ## Installation
 
-To install the Segment-comScore integration, simply add the following to your gradle file:
-
-
-```
-compile 'com.segment.analytics.android.integrations:comscore:+'
-```
+To install the Segment-ComScore integration, first include mavenCentral as a source repository in your gradle file:
 
 ```
 allprojects {
   repositories {
-    maven {
-      url "https://comscore.bintray.com/Analytics"
-    }
+    mavenCentral()
   }
 }
 ```
 
+Then include the Segment-Comscore integration as a dependency, in the dependencies section of your gradle file:
+
+```
+implementation 'com.segment.analytics.android.integrations:comscore:+'
+```
+
+
 ## Usage
 
-After adding the dependency, you must register the integration with our SDK.  To do this, import the comScore integration:
+After adding the dependency, you must register the integration with our SDK.  To do this, import the ComScore integration:
 
 
 ```
