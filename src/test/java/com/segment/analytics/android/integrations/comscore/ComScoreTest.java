@@ -1,12 +1,5 @@
 package com.segment.analytics.android.integrations.comscore;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.refEq;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.when;
 import android.app.Application;
 import android.content.pm.ApplicationInfo;
 
@@ -20,25 +13,31 @@ import com.segment.analytics.Properties;
 import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.IdentifyPayload;
-import com.segment.analytics.integrations.Integration;
 import com.segment.analytics.integrations.Logger;
 import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-
 import org.mockito.MockitoAnnotations;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.refEq;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 
@@ -72,6 +71,7 @@ public class ComScoreTest {
     ValueMap settings = new ValueMap();
     settings.putValue("customerC2", "foobarbar");
     settings.putValue("publisherSecret", "illnevertell");
+    settings.putValue("consentFlag", "consentFlag");
 
     when(analytics.logger("comScore")).thenReturn(Logger.with(Analytics.LogLevel.VERBOSE));
     when(analytics.getApplication()).thenReturn(context);
@@ -84,6 +84,7 @@ public class ComScoreTest {
     ValueMap destinationSettings = new ValueMap();
     destinationSettings.putValue("c2", "foobarbar");
     destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlag");
     when(context.getPackageName()).thenReturn("Code is running");
 
     //updating Context mock to return roboelectric's RunTimeEnvironment object
@@ -117,6 +118,7 @@ public class ComScoreTest {
     destinationSettings.putValue("foregroundOnly", false);
     destinationSettings.putValue("autoUpdate", true);
     destinationSettings.putValue("autoUpdateInterval", 12345);
+    destinationSettings.putValue("consentFlag", "consentFlag");
 
     //updating Context mock to return roboelectric's RunTimeEnvironment object
     when(context.getApplicationContext()).thenReturn(RuntimeEnvironment.application.getApplicationContext());
@@ -145,6 +147,7 @@ public class ComScoreTest {
     settings.putValue("autoUpdateInterval", 2000);
     settings.putValue("autoUpdate", true);
     settings.putValue("foregroundOnly", true);
+    settings.putValue("consentFlag", "consentFlag");
 
     Mockito.reset(comScoreAnalytics);
     integration = new ComScoreIntegration(analytics, settings, comScoreAnalytics);
@@ -172,6 +175,7 @@ public class ComScoreTest {
     settings.putValue("autoUpdateInterval", null);
     settings.putValue("autoUpdate", false);
     settings.putValue("foregroundOnly", false);
+
 
     integration = new ComScoreIntegration(analytics, settings, comScoreAnalytics);
 

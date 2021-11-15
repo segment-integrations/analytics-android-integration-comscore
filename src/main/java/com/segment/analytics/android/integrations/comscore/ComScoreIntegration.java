@@ -1,9 +1,9 @@
 package com.segment.analytics.android.integrations.comscore;
 
-import static com.segment.analytics.internal.Utils.isNullOrEmpty;
 import com.comscore.streaming.AdvertisementMetadata;
 import com.comscore.streaming.ContentMetadata;
 import com.comscore.streaming.StreamingAnalytics;
+import com.segment.analytics.AnalyticsContext;
 import com.segment.analytics.Properties;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.IdentifyPayload;
@@ -16,6 +16,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static com.segment.analytics.internal.Utils.isNullOrEmpty;
 
 public class ComScoreIntegration extends Integration<Void> {
   @SuppressWarnings("WeakerAccess")
@@ -454,6 +458,46 @@ public class ComScoreIntegration extends Integration<Void> {
   public void track(TrackPayload track) {
     String event = track.event();
     Properties properties = track.properties();
+    // Consent flag change. Declare context object of the payload
+    AnalyticsContext analyticsContext = track.context();
+    // Consent flag change. If consent flag is mapped in the settings:
+    if (settings.getConsentFlagProp() != null && !settings.getConsentFlagProp().trim().isEmpty() ) {
+      String consentFlagKey = settings.getConsentFlagProp();
+      String consentFlagValue;
+      HashMap<String, String> label = new HashMap<String,String>();
+
+      // Check if consent flag property is in the properties object and declare consentFlagValue
+      if (properties.containsKey(consentFlagKey) ) {
+        // Dot notation
+        consentFlagValue = properties.getString(consentFlagKey);
+      } else {
+        // Dot notation?
+        consentFlagValue = analyticsContext.getString(consentFlagKey);
+      }
+      // Parse consent flag value
+      Pattern privacyStringPattern = Pattern.compile("/^1(-|Y|N){3}/g");
+      Matcher privacyStringMatcher = privacyStringPattern.matcher(consentFlagValue);
+      // If consentFlag value is not null and is US Privacy String and the 3rd character is not "-"
+      if (consentFlagValue != null &&
+              !(privacyStringMatcher.find() && consentFlagValue.split("")[2] == "-")
+      ) {
+        if (consentFlagValue == "true" || consentFlagValue == "1" || (
+                privacyStringMatcher.find() && consentFlagValue.split("")[2] == "N")
+        ) {
+          consentFlagValue = "1";
+        } else if (consentFlagValue == "false" || consentFlagValue == "0" || (
+                privacyStringMatcher.find() && consentFlagValue.split("")[2] == "Y")
+        ) {
+          consentFlagValue = "0";
+        } else {
+          consentFlagValue = "";
+        }
+        label.put("cs_ucfr", consentFlagValue);
+        comScoreAnalytics.setPersistentLabels(label);
+        comScoreAnalytics.notifyHiddenEvent(label);
+      }
+    }
+
 
     Map<String, Object> comScoreOptions = track.integrations().getValueMap("comScore");
     if (isNullOrEmpty(comScoreOptions)) {
