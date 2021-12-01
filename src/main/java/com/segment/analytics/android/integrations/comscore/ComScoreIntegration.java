@@ -68,6 +68,7 @@ public class ComScoreIntegration extends Integration<Void> {
     comScoreAnalytics.start(
         analytics.getApplication(), PARTNER_ID, settings.toPublisherConfiguration());
     settings.analyticsConfig();
+    System.out.println(destinationSettings.toString());
   }
 
   /**
@@ -456,48 +457,65 @@ public class ComScoreIntegration extends Integration<Void> {
 
   @Override
   public void track(TrackPayload track) {
+
     String event = track.event();
     Properties properties = track.properties();
     // Consent flag change. Declare context object of the payload
     AnalyticsContext analyticsContext = track.context();
-    // Consent flag change. If consent flag is mapped in the settings:
+    // Consent flag change. If consent flag is mapped in the settings, proceed with processing
     if (settings.getConsentFlagProp() != null && !settings.getConsentFlagProp().trim().isEmpty() ) {
+      System.out.println("FOO");
       String consentFlagKey = settings.getConsentFlagProp();
+      // String consentFlagValue = properties.getString(consentFlagKey);
       String consentFlagValue;
-      HashMap<String, String> label = new HashMap<String,String>();
 
       // Check if consent flag property is in the properties object and declare consentFlagValue
-      if (properties.containsKey(consentFlagKey) ) {
+
+      if (properties.containsKey(consentFlagKey)) {
         // Dot notation
         consentFlagValue = properties.getString(consentFlagKey);
+        System.out.println("consentFlagValue A " + consentFlagValue + properties.toString());
       } else {
         // Dot notation?
         consentFlagValue = analyticsContext.getString(consentFlagKey);
+        System.out.println("consentFlagValue B " + consentFlagValue + properties.toString());
       }
-      // Parse consent flag value
-      Pattern privacyStringPattern = Pattern.compile("/^1(-|Y|N){3}/g");
-      Matcher privacyStringMatcher = privacyStringPattern.matcher(consentFlagValue);
-      // If consentFlag value is not null and is US Privacy String and the 3rd character is not "-"
-      if (consentFlagValue != null &&
-              !(privacyStringMatcher.find() && consentFlagValue.split("")[2] == "-")
-      ) {
-        if (consentFlagValue == "true" || consentFlagValue == "1" || (
-                privacyStringMatcher.find() && consentFlagValue.split("")[2] == "N")
-        ) {
-          consentFlagValue = "1";
-        } else if (consentFlagValue == "false" || consentFlagValue == "0" || (
-                privacyStringMatcher.find() && consentFlagValue.split("")[2] == "Y")
-        ) {
-          consentFlagValue = "0";
-        } else {
-          consentFlagValue = "";
+      if (consentFlagValue != null)
+      {
+        // Parse consent flag value
+        Pattern privacyStringPattern = Pattern.compile("/^1(-|Y|N){3}/g");
+        Matcher privacyStringMatcher = privacyStringPattern.matcher(consentFlagValue.toString());
+        // If consent value is a US Privacy String and the 3rd character is not "-"
+        if (!(privacyStringMatcher.find() && consentFlagValue.split("(?!^)")[2] == "-"))
+        {
+          // If consentFlagValue == 1, true or 3rd char in US Privacy string is "N"
+          System.out.println("If consent value is a US Privacy String and the 3rd character is not \"-\"");
+
+          if (consentFlagValue.equals("1") || consentFlagValue.toString() == "true" ||
+                  (privacyStringMatcher.find() && consentFlagValue.split("(?!^)")[2] == "N"))
+          {
+            System.out.println("consentFlagValue should be 1");
+            consentFlagValue = "1";
+            // If consentFlagValue == 0, false or 3rd char in US Privacy string is "Y"
+          } else if (consentFlagValue.equals("0") || consentFlagValue == "false" ||
+                  (privacyStringMatcher.find() && consentFlagValue.split("(?!^)")[2] == "Y"))
+            {
+              System.out.println("consentFlagValue should be 0");
+              consentFlagValue = "0";
+            } else
+              {
+                System.out.println("consentFlagValue should be nothing ");
+                System.out.println(consentFlagValue);
+                consentFlagValue = "";
+              }
+          HashMap<String, String> label = new HashMap<String,String>();
+          label.put("cs_ucfr", consentFlagValue);
+          System.out.println("consentFlagValue B " + consentFlagValue + properties.toString());
+          comScoreAnalytics.setPersistentLabels(label);
+          comScoreAnalytics.notifyHiddenEvent(label);
         }
-        label.put("cs_ucfr", consentFlagValue);
-        comScoreAnalytics.setPersistentLabels(label);
-        comScoreAnalytics.notifyHiddenEvent(label);
       }
     }
-
 
     Map<String, Object> comScoreOptions = track.integrations().getValueMap("comScore");
     if (isNullOrEmpty(comScoreOptions)) {

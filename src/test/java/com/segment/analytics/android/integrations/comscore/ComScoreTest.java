@@ -18,7 +18,10 @@ import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -71,20 +74,60 @@ public class ComScoreTest {
     ValueMap settings = new ValueMap();
     settings.putValue("customerC2", "foobarbar");
     settings.putValue("publisherSecret", "illnevertell");
-    settings.putValue("consentFlag", "consentFlag");
 
     when(analytics.logger("comScore")).thenReturn(Logger.with(Analytics.LogLevel.VERBOSE));
     when(analytics.getApplication()).thenReturn(context);
     when(streamingAnalytics.getConfiguration()).thenReturn(streamingConfiguration);
     integration = new ComScoreIntegration(analytics, settings, comScoreAnalytics);
   }
+  // ----
+  @Nested
+  @DisplayName("consent flag")
+    public class testConsentFlag {
+    @BeforeClass
+    public void init() {
+      MockitoAnnotations.initMocks(this);
+      when(comScoreAnalytics.createStreamingAnalytics()).thenReturn(streamingAnalytics);
 
+      ValueMap settings = new ValueMap();
+      settings.putValue("customerC2", "foobarbar");
+      settings.putValue("publisherSecret", "illnevertell");
+      settings.putValue("consentFlag", "consentFlagProp");
+
+      when(analytics.logger("comScore")).thenReturn(Logger.with(Analytics.LogLevel.VERBOSE));
+      when(analytics.getApplication()).thenReturn(context);
+      when(streamingAnalytics.getConfiguration()).thenReturn(streamingConfiguration);
+      integration = new ComScoreIntegration(analytics, settings, comScoreAnalytics);
+    }
+    @Test
+    public void trackWithConsentFlagInteger() {
+      integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+              .event("Test Event")
+              .properties(new Properties().putValue("consentFlagProp", "1").putValue("fruit", "banana"))
+              .build());
+
+      LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+      expectedProps.put("fruit", "banana");
+      expectedProps.put("name", "Test Event");
+      expectedProps.put("consentFlagProp", "1");
+      LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+      expectedFlag.put("cs_ucfr", "1");
+
+      Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+      Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+      Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+    }
+
+  }
+
+
+
+  // ----
   @Test
   public void initialize() {
     ValueMap destinationSettings = new ValueMap();
     destinationSettings.putValue("c2", "foobarbar");
     destinationSettings.putValue("publisherSecret", "illnevertell");
-    destinationSettings.putValue("consentFlag", "consentFlag");
     when(context.getPackageName()).thenReturn("Code is running");
 
     //updating Context mock to return roboelectric's RunTimeEnvironment object
@@ -118,7 +161,6 @@ public class ComScoreTest {
     destinationSettings.putValue("foregroundOnly", false);
     destinationSettings.putValue("autoUpdate", true);
     destinationSettings.putValue("autoUpdateInterval", 12345);
-    destinationSettings.putValue("consentFlag", "consentFlag");
 
     //updating Context mock to return roboelectric's RunTimeEnvironment object
     when(context.getApplicationContext()).thenReturn(RuntimeEnvironment.application.getApplicationContext());
@@ -147,7 +189,6 @@ public class ComScoreTest {
     settings.putValue("autoUpdateInterval", 2000);
     settings.putValue("autoUpdate", true);
     settings.putValue("foregroundOnly", true);
-    settings.putValue("consentFlag", "consentFlag");
 
     Mockito.reset(comScoreAnalytics);
     integration = new ComScoreIntegration(analytics, settings, comScoreAnalytics);
@@ -194,15 +235,72 @@ public class ComScoreTest {
     assertEquals(60, integrationSettings.getAutoUpdateInterval());
 //    assertEquals(UsagePropertiesAutoUpdateMode.DISABLED, publisher.getUsagePropertiesAutoUpdateMode());
   }
+// Original
+//  @Test
+//  public void track() {
+//    integration.track(new TrackPayload.Builder().anonymousId("foo").event("foo").build());
+//    Properties properties = new Properties();
+//
+//    properties.putValue("name", "foo");
+//    properties.putValue("consentFlag", "1");
+//    Map<String, String> expected = properties.toStringMap();
+//    LinkedHashMap<String, String> label = new LinkedHashMap<>();
+//    label.put("cs_ucfr", "1");
+//
+//    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expected);
+//    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(label);
+//  }
+
 
   @Test
-  public void track() {
-    integration.track(new TrackPayload.Builder().anonymousId("foo").event("foo").build());
-    Properties properties = new Properties().putValue("name", "foo");
-    Map<String, String> expected = properties.toStringMap();
+  public void trackWithNullConsentFlag() {
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("consentFlagProp", true).putValue("prop1", "foo"))
+            .build());
 
-    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expected);
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+    expectedProps.put("consentFlagProp", "true");
+    //LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    // expectedFlag.put("cs_ucfr", "1");
+
+    //Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+    //Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
   }
+
+  @Test
+  public void initializeWithConsentFlag() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("appName", "Agapito");
+    destinationSettings.putValue("useHTTPS", false);
+    destinationSettings.putValue("foregroundOnly", false);
+    destinationSettings.putValue("autoUpdate", true);
+    destinationSettings.putValue("autoUpdateInterval", 12345);
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    //updating Context mock to return roboelectric's RunTimeEnvironment object
+    when(context.getApplicationContext()).thenReturn(RuntimeEnvironment.application.getApplicationContext());
+
+    integration = (ComScoreIntegration) ComScoreIntegration.FACTORY.create(destinationSettings, analytics);
+
+    Settings settings = integration.getSettings();
+
+    assertEquals("foobarbar", settings.getCustomerId());
+    assertEquals("illnevertell", settings.getPublisherSecret());
+    assertEquals("Agapito", settings.getAppName());
+    assertEquals(12345, settings.getAutoUpdateInterval());
+    assertEquals("consentFlagProp", settings.getConsentFlagProp());
+    assertFalse(settings.isUseHTTPS());
+    assertTrue(settings.isAutoUpdate());
+    assertFalse(settings.isForegroundOnly());
+  }
+
+
 
   @Test
   public void trackWithProps() {
@@ -866,4 +964,9 @@ public class ComScoreTest {
             .customLabels(adAsset)
             .build();
   }
+
+
+
 }
+
+
