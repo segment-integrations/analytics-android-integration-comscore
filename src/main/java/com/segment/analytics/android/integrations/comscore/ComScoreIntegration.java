@@ -5,6 +5,7 @@ import com.comscore.streaming.ContentMetadata;
 import com.comscore.streaming.StreamingAnalytics;
 import com.segment.analytics.AnalyticsContext;
 import com.segment.analytics.Properties;
+import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
 import com.segment.analytics.integrations.IdentifyPayload;
 import com.segment.analytics.integrations.Integration;
@@ -68,7 +69,6 @@ public class ComScoreIntegration extends Integration<Void> {
     comScoreAnalytics.start(
         analytics.getApplication(), PARTNER_ID, settings.toPublisherConfiguration());
     settings.analyticsConfig();
-    System.out.println(destinationSettings.toString());
   }
 
   /**
@@ -455,66 +455,62 @@ public class ComScoreIntegration extends Integration<Void> {
     return new AdvertisementMetadata.Builder().customLabels(mappedAdProperties).build();
   }
 
-  @Override
-  public void track(TrackPayload track) {
-
-    String event = track.event();
-    Properties properties = track.properties();
-    // Consent flag change. Declare context object of the payload
-    AnalyticsContext analyticsContext = track.context();
-    // Consent flag change. If consent flag is mapped in the settings, proceed with processing
+  public HashMap<String, String> setConsentLabelValue(Map<String, String> main, Map<String, String> fallback, Settings settings) {
     if (settings.getConsentFlagProp() != null && !settings.getConsentFlagProp().trim().isEmpty() ) {
-      System.out.println("FOO");
       String consentFlagKey = settings.getConsentFlagProp();
-      // String consentFlagValue = properties.getString(consentFlagKey);
       String consentFlagValue;
-
-      // Check if consent flag property is in the properties object and declare consentFlagValue
-
-      if (properties.containsKey(consentFlagKey)) {
-        // Dot notation
-        consentFlagValue = properties.getString(consentFlagKey);
-        System.out.println("consentFlagValue A " + consentFlagValue + properties.toString());
+      if (main != null && main.containsKey(consentFlagKey)) {
+        consentFlagValue = main.get(consentFlagKey);
+      } else if (fallback != null && fallback.containsKey(consentFlagKey) ) {
+        consentFlagValue = fallback.get(consentFlagKey);
       } else {
-        // Dot notation?
-        consentFlagValue = analyticsContext.getString(consentFlagKey);
-        System.out.println("consentFlagValue B " + consentFlagValue + properties.toString());
+        consentFlagValue = null;
       }
+
       if (consentFlagValue != null)
       {
         // Parse consent flag value
-        Pattern privacyStringPattern = Pattern.compile("/^1(-|Y|N){3}/g");
-        Matcher privacyStringMatcher = privacyStringPattern.matcher(consentFlagValue.toString());
+        Pattern privacyStringPattern = Pattern.compile("^1(-|Y|N){3}");
+        Matcher privacyStringMatcher = privacyStringPattern.matcher(consentFlagValue);
         // If consent value is a US Privacy String and the 3rd character is not "-"
-        if (!(privacyStringMatcher.find() && consentFlagValue.split("(?!^)")[2] == "-"))
+        if (!(privacyStringMatcher.matches() && String.valueOf(consentFlagValue.toCharArray()[2]) == "-"))
         {
-          // If consentFlagValue == 1, true or 3rd char in US Privacy string is "N"
-          System.out.println("If consent value is a US Privacy String and the 3rd character is not \"-\"");
-
-          if (consentFlagValue.equals("1") || consentFlagValue.toString() == "true" ||
-                  (privacyStringMatcher.find() && consentFlagValue.split("(?!^)")[2] == "N"))
+          if (consentFlagValue.equals("1") || consentFlagValue.equals("true")  ||
+                  (privacyStringMatcher.matches() && String.valueOf(consentFlagValue.toCharArray()[2]).equals("N")))
           {
-            System.out.println("consentFlagValue should be 1");
             consentFlagValue = "1";
-            // If consentFlagValue == 0, false or 3rd char in US Privacy string is "Y"
-          } else if (consentFlagValue.equals("0") || consentFlagValue == "false" ||
-                  (privacyStringMatcher.find() && consentFlagValue.split("(?!^)")[2] == "Y"))
-            {
-              System.out.println("consentFlagValue should be 0");
-              consentFlagValue = "0";
-            } else
-              {
-                System.out.println("consentFlagValue should be nothing ");
-                System.out.println(consentFlagValue);
-                consentFlagValue = "";
-              }
+          } else if (consentFlagValue.equals("0") || consentFlagValue.equals("false") ||
+                  (privacyStringMatcher.matches() && String.valueOf(consentFlagValue.toCharArray()[2]).equals("Y")))
+          {
+            consentFlagValue = "0";
+          } else
+          {
+            consentFlagValue = "";
+          }
           HashMap<String, String> label = new HashMap<String,String>();
           label.put("cs_ucfr", consentFlagValue);
-          System.out.println("consentFlagValue B " + consentFlagValue + properties.toString());
-          comScoreAnalytics.setPersistentLabels(label);
-          comScoreAnalytics.notifyHiddenEvent(label);
+          return(label);
         }
+      } else {
+        return null;
       }
+    }
+    return null;
+  }
+
+
+  @Override
+  public void track(TrackPayload track) {
+    String event = track.event();
+    Properties properties = track.properties();
+    AnalyticsContext analyticsContext = track.context();
+    Traits traits = analyticsContext.traits();
+    HashMap label = setConsentLabelValue(properties !=null ? properties.toStringMap() : null,
+            traits != null ? traits.toStringMap() : null,
+            settings);
+    if (label != null) {
+      comScoreAnalytics.setPersistentLabels(label);
+      comScoreAnalytics.notifyHiddenEvent(label);
     }
 
     Map<String, Object> comScoreOptions = track.integrations().getValueMap("comScore");
@@ -558,7 +554,17 @@ public class ComScoreIntegration extends Integration<Void> {
     HashMap<String, String> traits = (HashMap<String, String>) identify.traits().toStringMap();
     traits.put("userId", userId);
     traits.put("anonymousId", anonymousId);
-    comScoreAnalytics.setPersistentLabels(traits);
+
+    HashMap label = setConsentLabelValue(traits, null, settings);
+
+    if (label != null) {
+      traits.putAll(label);
+
+      comScoreAnalytics.setPersistentLabels(traits);
+      comScoreAnalytics.notifyHiddenEvent(label);
+    } else {
+      comScoreAnalytics.setPersistentLabels(traits);
+    }
   }
 
   @Override
@@ -570,7 +576,16 @@ public class ComScoreIntegration extends Integration<Void> {
             screen.properties().toStringMap();
     properties.put("name", name);
     properties.put("category", category);
+
     comScoreAnalytics.notifyViewEvent(properties);
+
+    AnalyticsContext analyticsContext = screen.context();
+    Traits traits = analyticsContext.traits();
+    HashMap label = setConsentLabelValue(properties, traits != null ? traits.toStringMap() : null, settings);
+    if (label != null) {
+      comScoreAnalytics.setPersistentLabels(label);
+      comScoreAnalytics.notifyHiddenEvent(label);
+    }
   }
 
   /**

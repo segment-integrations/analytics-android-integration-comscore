@@ -9,6 +9,7 @@ import com.comscore.streaming.ContentMetadata;
 import com.comscore.streaming.StreamingAnalytics;
 import com.comscore.streaming.StreamingConfiguration;
 import com.segment.analytics.Analytics;
+import com.segment.analytics.AnalyticsContext;
 import com.segment.analytics.Properties;
 import com.segment.analytics.Traits;
 import com.segment.analytics.ValueMap;
@@ -18,10 +19,7 @@ import com.segment.analytics.integrations.ScreenPayload;
 import com.segment.analytics.integrations.TrackPayload;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -34,6 +32,8 @@ import org.robolectric.annotation.Config;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static com.segment.analytics.Utils.createContext;
+import static com.segment.analytics.Utils.createTraits;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -80,49 +80,7 @@ public class ComScoreTest {
     when(streamingAnalytics.getConfiguration()).thenReturn(streamingConfiguration);
     integration = new ComScoreIntegration(analytics, settings, comScoreAnalytics);
   }
-  // ----
-  @Nested
-  @DisplayName("consent flag")
-    public class testConsentFlag {
-    @BeforeClass
-    public void init() {
-      MockitoAnnotations.initMocks(this);
-      when(comScoreAnalytics.createStreamingAnalytics()).thenReturn(streamingAnalytics);
 
-      ValueMap settings = new ValueMap();
-      settings.putValue("customerC2", "foobarbar");
-      settings.putValue("publisherSecret", "illnevertell");
-      settings.putValue("consentFlag", "consentFlagProp");
-
-      when(analytics.logger("comScore")).thenReturn(Logger.with(Analytics.LogLevel.VERBOSE));
-      when(analytics.getApplication()).thenReturn(context);
-      when(streamingAnalytics.getConfiguration()).thenReturn(streamingConfiguration);
-      integration = new ComScoreIntegration(analytics, settings, comScoreAnalytics);
-    }
-    @Test
-    public void trackWithConsentFlagInteger() {
-      integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
-              .event("Test Event")
-              .properties(new Properties().putValue("consentFlagProp", "1").putValue("fruit", "banana"))
-              .build());
-
-      LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
-      expectedProps.put("fruit", "banana");
-      expectedProps.put("name", "Test Event");
-      expectedProps.put("consentFlagProp", "1");
-      LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
-      expectedFlag.put("cs_ucfr", "1");
-
-      Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
-      Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
-      Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
-    }
-
-  }
-
-
-
-  // ----
   @Test
   public void initialize() {
     ValueMap destinationSettings = new ValueMap();
@@ -217,7 +175,6 @@ public class ComScoreTest {
     settings.putValue("autoUpdate", false);
     settings.putValue("foregroundOnly", false);
 
-
     integration = new ComScoreIntegration(analytics, settings, comScoreAnalytics);
 
     Mockito.reset(comScoreAnalytics);
@@ -234,41 +191,6 @@ public class ComScoreTest {
     assertEquals("testApp", integrationSettings.getAppName());
     assertEquals(60, integrationSettings.getAutoUpdateInterval());
 //    assertEquals(UsagePropertiesAutoUpdateMode.DISABLED, publisher.getUsagePropertiesAutoUpdateMode());
-  }
-// Original
-//  @Test
-//  public void track() {
-//    integration.track(new TrackPayload.Builder().anonymousId("foo").event("foo").build());
-//    Properties properties = new Properties();
-//
-//    properties.putValue("name", "foo");
-//    properties.putValue("consentFlag", "1");
-//    Map<String, String> expected = properties.toStringMap();
-//    LinkedHashMap<String, String> label = new LinkedHashMap<>();
-//    label.put("cs_ucfr", "1");
-//
-//    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expected);
-//    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(label);
-//  }
-
-
-  @Test
-  public void trackWithNullConsentFlag() {
-    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
-            .event("Test Event")
-            .properties(new Properties().putValue("consentFlagProp", true).putValue("prop1", "foo"))
-            .build());
-
-    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
-    expectedProps.put("prop1", "foo");
-    expectedProps.put("name", "Test Event");
-    expectedProps.put("consentFlagProp", "true");
-    //LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
-    // expectedFlag.put("cs_ucfr", "1");
-
-    //Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
-    //Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
-    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
   }
 
   @Test
@@ -300,7 +222,14 @@ public class ComScoreTest {
     assertFalse(settings.isForegroundOnly());
   }
 
+  @Test
+  public void track() {
+    integration.track(new TrackPayload.Builder().anonymousId("foo").event("foo").build());
+    Properties properties = new Properties().putValue("name", "foo");
+    Map<String, String> expected = properties.toStringMap();
 
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expected);
+  }
 
   @Test
   public void trackWithProps() {
@@ -725,10 +654,10 @@ public class ComScoreTest {
 
     Mockito.verify(streamingAnalytics).
 
-    startFromPosition(70);
+            startFromPosition(70);
     Mockito.verify(streamingAnalytics).notifyPlay();
 
-}
+  }
 
   @Test
   public void videoContentPlayingWithAdType() {
@@ -736,18 +665,18 @@ public class ComScoreTest {
     assertTrue(integration.configurationLabels.containsKey("ns_st_ad") && integration.configurationLabels.get("ns_st_ad") != null);
 
     integration.track(new TrackPayload.Builder().anonymousId("foo").event("Video Content Playing")
-             .properties(new Properties().putValue("assetId", 123214)
-                     .putValue("title", "Look Who's Purging Now")
-                     .putValue("season", 2)
-                     .putValue("episode", 9)
-                     .putValue("genre", "cartoon")
-                     .putValue("program", "Rick and Morty")
-                     .putValue("channel", "cartoon network")
-                     .putValue("publisher", "Turner Broadcasting System")
-                     .putValue("fullEpisode", true)
-                     .putValue("podId", "segment A")
-                     .putValue("playbackPosition", 70))
-             .build());
+            .properties(new Properties().putValue("assetId", 123214)
+                    .putValue("title", "Look Who's Purging Now")
+                    .putValue("season", 2)
+                    .putValue("episode", 9)
+                    .putValue("genre", "cartoon")
+                    .putValue("program", "Rick and Morty")
+                    .putValue("channel", "cartoon network")
+                    .putValue("publisher", "Turner Broadcasting System")
+                    .putValue("fullEpisode", true)
+                    .putValue("podId", "segment A")
+                    .putValue("playbackPosition", 70))
+            .build());
 
 
 
@@ -954,6 +883,559 @@ public class ComScoreTest {
     Mockito.verify(comScoreAnalytics, Mockito.times(1))
             .notifyViewEvent(expected);
   }
+
+
+  @Test
+  public void trackWithConsentFlagPropBoolTrue() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("consentFlagProp", true).putValue("prop1", "foo"))
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+    expectedProps.put("consentFlagProp", "true");
+    LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    expectedFlag.put("cs_ucfr", "1");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+  }
+
+  @Test
+  public void trackWithConsentFlagPropStringTrue() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("consentFlagProp", "true").putValue("prop1", "foo"))
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+    expectedProps.put("consentFlagProp", "true");
+    LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    expectedFlag.put("cs_ucfr", "1");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+  }
+
+  @Test
+  public void trackWithConsentFlagPropIntOne() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("consentFlagProp", 1).putValue("prop1", "foo"))
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+    expectedProps.put("consentFlagProp", "1");
+    LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    expectedFlag.put("cs_ucfr", "1");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+  }
+
+  @Test
+  public void trackWithConsentFlagPropStringOne() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("consentFlagProp", "1").putValue("prop1", "foo"))
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+    expectedProps.put("consentFlagProp", "1");
+    LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    expectedFlag.put("cs_ucfr", "1");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+  }
+
+  @Test
+  public void trackWithConsentFlagPropBoolFalse() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("consentFlagProp",false).putValue("prop1", "foo"))
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+    expectedProps.put("consentFlagProp", "false");
+    LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    expectedFlag.put("cs_ucfr", "0");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+
+  }
+
+  @Test
+  public void trackWithConsentFlagPropStringFalse() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("consentFlagProp","false").putValue("prop1", "foo"))
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+    expectedProps.put("consentFlagProp", "false");
+    LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    expectedFlag.put("cs_ucfr", "0");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+
+  }
+
+  @Test
+  public void trackWithConsentFlagPropIntZero() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("consentFlagProp",0).putValue("prop1", "foo"))
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+    expectedProps.put("consentFlagProp", "0");
+    LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    expectedFlag.put("cs_ucfr", "0");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+
+  }
+
+
+  @Test
+  public void trackWithConsentFlagPropStringZero() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("consentFlagProp","0").putValue("prop1", "foo"))
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+    expectedProps.put("consentFlagProp", "0");
+    LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    expectedFlag.put("cs_ucfr", "0");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+  }
+
+  @Test
+  public void trackWithConsentFlagPropUsPrivacyStringN() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("consentFlagProp","1YNY").putValue("prop1", "foo"))
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+    expectedProps.put("consentFlagProp", "1YNY");
+    LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    expectedFlag.put("cs_ucfr", "1");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+  }
+
+  @Test
+  public void trackWithConsentFlagPropUsPrivacyStringY() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("consentFlagProp","1YYY").putValue("prop1", "foo"))
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+    expectedProps.put("consentFlagProp", "1YYY");
+    LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    expectedFlag.put("cs_ucfr", "0");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+  }
+
+  @Test
+  public void trackWithConsentFlagPropUsPrivacyStringDash() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("consentFlagProp","1Y-Y").putValue("prop1", "foo"))
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+    expectedProps.put("consentFlagProp", "1Y-Y");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+  }
+
+  @Test
+  public void trackWithConsentFlagPropValueNull() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("consentFlagProp",null).putValue("prop1", "foo"))
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+    expectedProps.put("consentFlagProp", "null");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+  }
+
+  @Test
+  public void trackWithConsentFlagPropAdhocVal() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("consentFlagProp","somevalue").putValue("prop1", "foo"))
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+    expectedProps.put("consentFlagProp", "somevalue");
+    LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    expectedFlag.put("cs_ucfr", "");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+  }
+
+  @Test
+  public void trackWithConsentFlagPropMissing() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("prop1", "foo"))
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+  }
+
+  @Test
+  public void trackWithConsentFlagContextStringOne() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    Traits traits = createTraits("bar").putValue("consentFlagProp", "1");
+    AnalyticsContext analyticsContext = createContext(traits);
+
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("prop1", "foo"))
+            .context(analyticsContext)
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+
+    LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    expectedFlag.put("cs_ucfr", "1");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+  }
+
+  @Test
+  public void trackWithConsentFlagContextUsPrivacyStringDash() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    Traits traits = createTraits("bar").putValue("consentFlagProp", "1---");
+    AnalyticsContext analyticsContext = createContext(traits);
+
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("prop1", "foo"))
+            .context(analyticsContext)
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+  }
+
+  @Test
+  public void trackWithConsentFlagContextIntZero() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    Traits traits = createTraits("bar").putValue("consentFlagProp", 0);
+    AnalyticsContext analyticsContext = createContext(traits);
+
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .properties(new Properties().putValue("prop1", "foo"))
+            .context(analyticsContext)
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("prop1", "foo");
+    expectedProps.put("name", "Test Event");
+
+    LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    expectedFlag.put("cs_ucfr", "0");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+  }
+
+  @Test
+  public void trackWithConsentFlagNull() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.track(new TrackPayload.Builder().anonymousId("foo anon id") //
+            .event("Test Event")
+            .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("name", "Test Event");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedProps);
+  }
+
+  @Test
+  public void identifyConsentFlagStringOne() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagTrait");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    Traits traits = new Traits();
+    traits.putValue("firstName", "Kylo");
+    traits.putValue("lastName", "Ren");
+    traits.putValue("consentFlagTrait", "1");
+
+    integration.identify(new IdentifyPayload.Builder().userId("foo")
+            .anonymousId("foobar").traits(traits).build());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("anonymousId", "foobar");
+    expected.put("firstName", "Kylo");
+    expected.put("lastName", "Ren");
+    expected.put("userId", "foo");
+    expected.put("consentFlagTrait", "1");
+    expected.put("cs_ucfr", "1");
+
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expected);
+    LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    expectedFlag.put("cs_ucfr", "1");
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+  }
+
+  @Test
+  public void screenConsentFlagPropStringOne() {
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.screen(
+            new ScreenPayload.Builder()
+                    .anonymousId("foo")
+                    .name("SmartWatches")
+                    .category("Purchase Screen")
+                    .properties(new Properties().putValue("consentFlagProp","1"))
+                    .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("name", "SmartWatches");
+    expectedProps.put("category", "Purchase Screen");
+    expectedProps.put("consentFlagProp", "1");
+
+    LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    expectedFlag.put("cs_ucfr", "1");
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyViewEvent(expectedProps);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+  }
+
+  @Test
+  public void screenConsentFlagContextStringOne() {
+
+    ValueMap destinationSettings = new ValueMap();
+    destinationSettings.putValue("c2", "foobarbar");
+    destinationSettings.putValue("publisherSecret", "illnevertell");
+    destinationSettings.putValue("consentFlag", "consentFlagProp");
+
+    Traits traits = createTraits("bar").putValue("consentFlagProp", "1");
+    AnalyticsContext analyticsContext = createContext(traits);
+
+    integration = new ComScoreIntegration(analytics, destinationSettings, comScoreAnalytics);
+
+    integration.screen(
+            new ScreenPayload.Builder()
+                    .anonymousId("foo")
+                    .name("SmartWatches")
+                    .category("Purchase Screen")
+                    .context(analyticsContext)
+                    .build());
+
+    LinkedHashMap<String, String> expectedProps = new LinkedHashMap<>();
+    expectedProps.put("name", "SmartWatches");
+    expectedProps.put("category", "Purchase Screen");
+
+    LinkedHashMap<String, String> expectedFlag = new LinkedHashMap<>();
+    expectedFlag.put("cs_ucfr", "1");
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyViewEvent(expectedProps);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).setPersistentLabels(expectedFlag);
+    Mockito.verify(comScoreAnalytics, Mockito.times(1)).notifyHiddenEvent(expectedFlag);
+  }
+
   private ContentMetadata getContentMetadata(Map<String, String> asset){
     return new ContentMetadata.Builder()
             .customLabels(asset)
@@ -964,9 +1446,4 @@ public class ComScoreTest {
             .customLabels(adAsset)
             .build();
   }
-
-
-
 }
-
-
