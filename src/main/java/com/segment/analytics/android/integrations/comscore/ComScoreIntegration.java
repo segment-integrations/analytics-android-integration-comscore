@@ -454,6 +454,8 @@ public class ComScoreIntegration extends Integration<Void> {
   private AdvertisementMetadata getAdvertisementMetadata(Map<String, String> mappedAdProperties) {
     return new AdvertisementMetadata.Builder().customLabels(mappedAdProperties).build();
   }
+  // A pattern to parse consent flag value
+  Pattern privacyStringPattern = Pattern.compile("^1(-|Y|N){3}");
 
   public HashMap<String, String> setConsentLabelValue(Map<String, String> main, Map<String, String> fallback, Settings settings) {
     if (settings.getConsentFlagProp() != null && !settings.getConsentFlagProp().trim().isEmpty() ) {
@@ -469,10 +471,8 @@ public class ComScoreIntegration extends Integration<Void> {
 
       if (consentFlagValue != null)
       {
-        // Parse consent flag value
-        Pattern privacyStringPattern = Pattern.compile("^1(-|Y|N){3}");
         Matcher privacyStringMatcher = privacyStringPattern.matcher(consentFlagValue);
-        // If consent value is a US Privacy String and the 3rd character is not "-"
+        // If consent value is not a US Privacy String with the 3rd character = "-"
         if (!(privacyStringMatcher.matches() && String.valueOf(consentFlagValue.toCharArray()[2]) == "-"))
         {
           if (consentFlagValue.equals("1") || consentFlagValue.equals("true")  ||
