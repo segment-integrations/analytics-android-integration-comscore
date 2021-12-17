@@ -5,6 +5,8 @@ import com.comscore.PublisherConfiguration;
 import com.comscore.UsagePropertiesAutoUpdateMode;
 import com.segment.analytics.ValueMap;
 
+import java.util.HashMap;
+
 /** Encapsulates all settings required to initialize the ComsCore destination. */
 public class Settings {
 
@@ -20,6 +22,7 @@ public class Settings {
   private int autoUpdateInterval;
   private boolean useHTTPS;
   private boolean foregroundOnly;
+  private String consentFlagProp; // Consent Flag change
 
   /**
    * Creates the settings from the provided map.
@@ -34,6 +37,8 @@ public class Settings {
     this.foregroundOnly = destinationSettings.getBoolean("foregroundOnly", DEFAULT_FOREGROUND);
     this.useHTTPS = destinationSettings.getBoolean("useHTTPS", DEFAULT_HTTPS);
     this.appName = destinationSettings.getString("appName");
+    this.consentFlagProp = destinationSettings.getString("consentFlag"); // Consent Flag change
+
 
     if (appName != null && appName.trim().length() == 0) {
       // Application name as null
@@ -106,6 +111,20 @@ public class Settings {
   }
 
   /**
+   * Retrieves mapped consent flag property
+   *
+   * @return <code>string</code> mapped property name.
+   */
+  public String getConsentFlagProp() {
+    return consentFlagProp;
+  }
+
+  public HashMap<String,String> setConsentFlag() {
+    HashMap<String, String> consentFlag = new HashMap<String,String>();
+    consentFlag.put("cs_ucfr", "" );
+    return consentFlag;
+  }
+  /**
    * Creates the publisher configuration with the specified settings.
    *
    * @return Publisher configuration for ComScore.
@@ -114,6 +133,7 @@ public class Settings {
     PublisherConfiguration.Builder publisher = new PublisherConfiguration.Builder();
     publisher.publisherId(c2);
     publisher.secureTransmission(useHTTPS);
+    publisher.persistentLabels(setConsentFlag());
     return publisher.build();
   }
 

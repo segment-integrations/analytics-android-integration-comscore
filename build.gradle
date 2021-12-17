@@ -50,23 +50,10 @@ android {
   }
 }
 
-allprojects {
-  repositories {
-    maven {
-      url "https://comscore.bintray.com/Analytics"
-    }
-  }
-}
 
-allprojects {
-  repositories {
-    maven {
-      url "https://comscore.bintray.com/Analytics"
-    }
-  }
-}
 
 dependencies {
+
   repositories {
     mavenCentral()
     jcenter()
@@ -81,6 +68,9 @@ dependencies {
   testImplementation 'com.android.support.test:runner:1.0.2'
   testImplementation 'org.robolectric:robolectric:4.3.1'
   testImplementation 'org.mockito:mockito-core:3.1.0'
+  testImplementation "org.junit.jupiter:junit-jupiter-api:5.3.2"
+
+
 
   //adding so Roboelectic can retrieve application context
   testImplementation 'androidx.test:core:1.2.0'
