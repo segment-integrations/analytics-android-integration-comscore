@@ -1,3 +1,8 @@
+
+Version 4.3.1 (2022-06-14)
+==============================
+* address google policy violation by updating to the latest android-analytics
+
 Version 4.2.0 (2020-11-16)
 ==============================
 *(Supports analytics-android 4.3.1 and Comscore 6.5.0)*
