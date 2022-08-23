@@ -59,7 +59,7 @@ dependencies {
   }
 
   api 'com.segment.analytics.android:analytics:4.10.4'
-  api 'com.comscore:android-analytics:6.5.0'
+  api 'com.comscore:android-analytics:6.9.0'
 
   testImplementation 'com.segment.analytics.android:analytics-tests:4.3.1'
   testImplementation 'junit:junit:4.13.2'
