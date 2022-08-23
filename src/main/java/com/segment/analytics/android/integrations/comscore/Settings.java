@@ -39,7 +39,6 @@ public class Settings {
     this.appName = destinationSettings.getString("appName");
     this.consentFlagProp = destinationSettings.getString("consentFlag"); // Consent Flag change
 
-
     if (appName != null && appName.trim().length() == 0) {
       // Application name as null
       appName = null;
@@ -119,9 +118,9 @@ public class Settings {
     return consentFlagProp;
   }
 
-  public HashMap<String,String> setConsentFlag() {
-    HashMap<String, String> consentFlag = new HashMap<String,String>();
-    consentFlag.put("cs_ucfr", "" );
+  public HashMap<String, String> setConsentFlag() {
+    HashMap<String, String> consentFlag = new HashMap<String, String>();
+    consentFlag.put("cs_ucfr", "");
     return consentFlag;
   }
   /**
