@@ -22,8 +22,8 @@ afterEvaluate { project ->
       mavenDeployer {
         beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
-        def userName = NEXUS_USERNAME
-        def password = NEXUS_PASSWORD
+        def userName = System.getenv("NEXUS_USERNAME")
+        def password = System.getenv("NEXUS_PASSWORD")
 
         pom.groupId = GROUP
         pom.artifactId = POM_ARTIFACT_ID
