@@ -1,3 +1,7 @@
+Version 4.3.5 (2023-09-26)
+==============================
+* Updated version of comscore library to (6.10.0)
+
 Version 4.3.4 (2022-10-05)
 ==============================
 * Updated version of comscore library to (6.9.1)
