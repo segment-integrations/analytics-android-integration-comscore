@@ -311,7 +311,7 @@ public class ComScoreIntegration extends Integration<Void> {
       case "Video Playback Seek Completed":
         streamingAnalytics.startFromPosition(playbackPosition);
         streamingAnalytics.notifyPlay();
-        logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
+        logger.verbose("streamingAnalytics.notifyPlay(%s)", playbackPosition);
         break;
       case "Video Playback Resumed":
         streamingAnalytics.startFromPosition(playbackPosition);
@@ -372,7 +372,7 @@ public class ComScoreIntegration extends Integration<Void> {
 
         streamingAnalytics.startFromPosition(playbackPosition);
         streamingAnalytics.notifyPlay();
-        logger.verbose("streamingAnalytics.notifyEnd(%s)", playbackPosition);
+        logger.verbose("streamingAnalytics.notifyPlay(%s)", playbackPosition);
         break;
 
       case "Video Content Completed":
